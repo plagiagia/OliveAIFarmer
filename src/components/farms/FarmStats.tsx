@@ -253,12 +253,7 @@ export default function FarmStats({ farm }: FarmStatsProps) {
               <div key={section.id} className="p-4 border border-gray-200 rounded-lg">
                 <h4 className="font-semibold text-gray-900 mb-2">{section.name}</h4>
                 <div className="space-y-2 text-sm text-gray-600">
-                  {section.area && (
-                    <div className="flex justify-between">
-                      <span>Έκταση:</span>
-                      <span className="font-medium">{section.area} εκτάρια</span>
-                    </div>
-                  )}
+                                    {section.area && (                    <div className="flex justify-between">                      <span>Έκταση:</span>                      <span className="font-medium">{section.area} στρέμματα</span>                    </div>                  )}
                   <div className="flex justify-between">
                     <span>Δέντρα:</span>
                     <span className="font-medium">{section.trees?.length || 0}</span>

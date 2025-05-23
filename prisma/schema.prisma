@@ -35,7 +35,7 @@ model Farm {
   name        String   // e.g., "Ελαιώνας Μεσσηνίας"
   location    String   // e.g., "Καλαμάτα, Μεσσηνία"
   coordinates String?  // GPS coordinates (optional)
-  totalArea   Float?   // Total farm area in hectares
+  totalArea   Float?   // Total farm area in stremmata (στρέμματα)
   description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -59,7 +59,7 @@ model Farm {
 model OliveSection {
   id          String   @id @default(cuid())
   name        String   // e.g., "Βόρειο Τμήμα", "Νότιο Τμήμα"
-  area        Float?   // Area in hectares
+  area        Float?   // Area in stremmata (στρέμματα)
   soilType    String?  // e.g., "Αργιλώδες", "Αμμώδες"
   elevation   Int?     // Elevation in meters
   description String?

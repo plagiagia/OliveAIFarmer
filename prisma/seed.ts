@@ -28,7 +28,7 @@ async function main() {
       name: 'Ελαιώνας Μεσσηνίας',
       location: 'Καλαμάτα, Μεσσηνία',
       coordinates: '37.0421,22.1121',
-      totalArea: 5.2,
+      totalArea: 52, // 5.2 hectares = 52 stremmata
       description: 'Παραδοσιακός ελαιώνας με κορωνέικη ποικιλία',
       userId: testUser.id,
     },
@@ -43,7 +43,7 @@ async function main() {
     create: {
       id: 'north-section-id',
       name: 'Βόρειο Τμήμα',
-      area: 2.5,
+      area: 25, // 2.5 hectares = 25 stremmata
       soilType: 'Αργιλώδες',
       elevation: 120,
       description: 'Το βόρειο τμήμα του ελαιώνα με παλιότερα δέντρα',
@@ -57,7 +57,7 @@ async function main() {
     create: {
       id: 'south-section-id',
       name: 'Νότιο Τμήμα',
-      area: 2.7,
+      area: 27, // 2.7 hectares = 27 stremmata
       soilType: 'Αμμώδες',
       elevation: 100,
       description: 'Το νότιο τμήμα με νεότερα δέντρα',

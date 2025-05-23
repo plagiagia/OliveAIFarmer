@@ -1,8 +1,6 @@
 'use client'
 
-import { ArrowLeft, Loader2, MapPin, Save } from 'lucide-react'
-import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { ArrowLeft, Loader2, MapPin, Save } from 'lucide-react'import { useRouter } from 'next/navigation'import { useState } from 'react'import { convertToStremmata, type AreaUnit } from '@/lib/area-conversions'
 
 interface FarmCreationFormProps {
   userId: string
@@ -35,11 +33,14 @@ export default function FarmCreationForm({ userId }: FarmCreationFormProps) {
     customLocation: '',
     coordinates: '',
     totalArea: '',
+    areaUnit: 'στρέμματα' as AreaUnit, // Default to stremmata
     description: '',
   })
   
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
+
+    // Using the utility function for conversions
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -52,6 +53,11 @@ export default function FarmCreationForm({ userId }: FarmCreationFormProps) {
         ? formData.customLocation 
         : formData.location
 
+      // Convert area to stremmata for storage
+      const areaInStremmata = formData.totalArea 
+        ? convertToStremmata(parseFloat(formData.totalArea), formData.areaUnit)
+        : null
+
       const response = await fetch('/api/farms/create', {
         method: 'POST',
         headers: {
@@ -61,7 +67,7 @@ export default function FarmCreationForm({ userId }: FarmCreationFormProps) {
           name: formData.name,
           location: finalLocation,
           coordinates: formData.coordinates,
-          totalArea: formData.totalArea,
+          totalArea: areaInStremmata,
           description: formData.description,
         }),
       })
@@ -173,22 +179,47 @@ export default function FarmCreationForm({ userId }: FarmCreationFormProps) {
               </div>
             )}
 
-            {/* Total Area */}
+            {/* Total Area with Unit Selection */}
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-3">
-                Συνολική Έκταση (εκτάρια)
+                Συνολική Έκταση
               </label>
-              <input
-                type="number"
-                step="0.1"
-                min="0"
-                value={formData.totalArea}
-                onChange={(e) => handleInputChange('totalArea', e.target.value)}
-                placeholder="π.χ. 5.2"
-                className="w-full px-4 py-4 text-lg border-2 border-gray-300 rounded-xl focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all duration-200 placeholder-gray-400"
-              />
+              <div className="grid grid-cols-2 gap-3">
+                {/* Area Value Input */}
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  value={formData.totalArea}
+                  onChange={(e) => handleInputChange('totalArea', e.target.value)}
+                  placeholder="π.χ. 52"
+                  className="w-full px-4 py-4 text-lg border-2 border-gray-300 rounded-xl focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all duration-200 placeholder-gray-400"
+                />
+                
+                {/* Unit Selection */}
+                <select
+                  value={formData.areaUnit}
+                  onChange={(e) => handleInputChange('areaUnit', e.target.value)}
+                  className="w-full px-4 py-4 text-lg border-2 border-gray-300 rounded-xl focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all duration-200 bg-white"
+                >
+                  <option value="στρέμματα">Στρέμματα</option>
+                  <option value="εκτάρια">Εκτάρια</option>
+                  <option value="τετραγωνικά μέτρα">Τ.μ.</option>
+                  <option value="τετραγωνικά χιλιόμετρα">Χλμ²</option>
+                </select>
+              </div>
+              
+              {/* Conversion Preview */}
+              {formData.totalArea && formData.areaUnit !== 'στρέμματα' && (
+                <div className="mt-3 p-3 bg-green-50 rounded-lg border border-green-200">
+                  <p className="text-sm text-green-700">
+                    <strong>Μετατροπή:</strong> {formData.totalArea} {formData.areaUnit} = {convertToStremmata(parseFloat(formData.totalArea), formData.areaUnit).toFixed(1)} στρέμματα
+                  </p>
+                </div>
+              )}
+              
               <p className="text-sm text-gray-500 mt-2">
-                Προαιρετικό - μπορείτε να το προσθέσετε αργότερα
+                Προαιρετικό - μπορείτε να το προσθέσετε αργότερα. Όλες οι μετρήσεις αποθηκεύονται σε στρέμματα.
               </p>
             </div>
 

@@ -193,13 +193,7 @@ function FarmsView({ user, showSuccessMessage }: { user: User; showSuccessMessag
           <div className="text-sm text-gray-600">Συνολικά Δέντρα</div>
         </div>
         
-        <div className="bg-white rounded-2xl p-6 shadow-sm">
-          <div className="text-olive-600 mb-2">📊</div>
-          <div className="text-2xl font-bold text-gray-800">
-            {user.farms.reduce((sum, farm) => sum + (farm.totalArea || 0), 0).toFixed(1)}
-          </div>
-          <div className="text-sm text-gray-600">Εκτάρια</div>
-        </div>
+                <div className="bg-white rounded-2xl p-6 shadow-sm">          <div className="text-olive-600 mb-2">📊</div>          <div className="text-2xl font-bold text-gray-800">            {user.farms.reduce((sum, farm) => sum + (farm.totalArea || 0), 0).toFixed(1)}          </div>          <div className="text-sm text-gray-600">Στρέμματα</div>        </div>
         
         <div className="bg-white rounded-2xl p-6 shadow-sm">
           <div className="text-olive-600 mb-2">📝</div>
@@ -258,12 +252,7 @@ function FarmCard({ farm }: { farm: Farm }) {
           <div className="text-lg font-semibold text-olive-700">{farm.sectionsCount}</div>
           <div className="text-xs text-gray-600">Τμήματα</div>
         </div>
-        <div className="text-center">
-          <div className="text-lg font-semibold text-olive-700">
-            {farm.totalArea?.toFixed(1) || '-'}
-          </div>
-          <div className="text-xs text-gray-600">Εκτάρια</div>
-        </div>
+                <div className="text-center">          <div className="text-lg font-semibold text-olive-700">            {farm.totalArea?.toFixed(1) || '-'}          </div>          <div className="text-xs text-gray-600">Στρέμματα</div>        </div>
       </div>
 
       {farm.lastActivityDate && (

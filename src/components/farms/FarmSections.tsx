@@ -29,12 +29,7 @@ export default function FarmSections({ farm }: FarmSectionsProps) {
               </div>
               
               <div className="space-y-2 text-sm text-gray-600">
-                {section.area && (
-                  <div className="flex justify-between">
-                    <span>Έκταση:</span>
-                    <span className="font-medium">{section.area} εκτάρια</span>
-                  </div>
-                )}
+                                {section.area && (                  <div className="flex justify-between">                    <span>Έκταση:</span>                    <span className="font-medium">{section.area} στρέμματα</span>                  </div>                )}
                 <div className="flex justify-between">
                   <span>Δέντρα:</span>
                   <span className="font-medium">{section.trees?.length || 0}</span>

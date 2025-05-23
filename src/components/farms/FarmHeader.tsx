@@ -48,12 +48,7 @@ export default function FarmHeader({ farm, user, onEdit, onBack }: FarmHeaderPro
                 <span>{farm.location}</span>
               </div>
               
-              {farm.totalArea && (
-                <div className="flex items-center space-x-2">
-                  <Ruler className="w-4 h-4 text-green-600" />
-                  <span>{farm.totalArea} εκτάρια</span>
-                </div>
-              )}
+                            {farm.totalArea && (                <div className="flex items-center space-x-2">                  <Ruler className="w-4 h-4 text-green-600" />                  <span>{farm.totalArea} στρέμματα</span>                </div>              )}
               
               <div className="flex items-center space-x-2">
                 <Calendar className="w-4 h-4 text-green-600" />
