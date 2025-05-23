@@ -149,18 +149,31 @@ model TreeActivity {
 
 // Harvest records
 model Harvest {
-  id               String    @id @default(cuid())
-  year             Int       // Harvest year
+  id               String        @id @default(cuid())
+  year             Int           // Harvest year
   startDate        DateTime
   endDate          DateTime?
-  totalYield       Float?    // Total yield in kg
-  qualityGrade     String?   // e.g., "Εξαιρετικό", "Καλό"
-  oilExtracted     Float?    // Liters of oil extracted
-  oilYieldPercent  Float?    // Oil yield percentage
+  totalYield       Float?        // Total yield in kg
+  totalYieldTons   Float?        // Total yield in tons (calculated from totalYield)
+  qualityGrade     String?       // e.g., "Εξαιρετικό", "Καλό"
+  oilExtracted     Float?        // Liters of oil extracted
+  oilYieldPercent  Float?        // Oil yield percentage
+  
+  // Enhanced pricing information
+  pricePerKg       Float?        // Price per kilogram
+  pricePerTon      Float?        // Price per ton
+  priceUnit        PriceUnit     @default(PER_KG)
+  totalValue       Float?        // Total harvest value (calculated)
+  currency         String        @default("EUR")
+  
+  // Enhanced production metrics
+  yieldPerTree     Float?        // Average yield per tree (calculated)
+  yieldPerStremma  Float?        // Yield per stremma (calculated)
+  
   notes            String?
-  completed        Boolean   @default(false)
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  completed        Boolean       @default(false)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
 
   // Parent farm
   farmId String
@@ -219,4 +232,10 @@ enum ActivityType {
   MAINTENANCE   // Συντήρηση
   INSPECTION    // Επιθεώρηση
   OTHER         // Άλλο
+}
+
+enum PriceUnit {
+  PER_KG        // Ανά κιλό
+  PER_TON       // Ανά τόνο
+  PER_LITER     // Ανά λίτρο (για λάδι)
 }
