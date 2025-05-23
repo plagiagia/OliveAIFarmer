@@ -235,6 +235,57 @@ You should see: `{"success": true, "message": "Database connection successful!"}
 - Greek olive varieties
 - Greek locations and descriptions
 
+## 🤖 MCP Servers Configuration
+
+### **Model Context Protocol (MCP) Integration**
+
+OliveLog is configured with MCP servers for enhanced AI-assisted development:
+
+1. **Neon MCP Server**: Database management and operations
+2. **Git MCP Server**: Version control and repository management
+
+### **Setup (Automatic)**
+
+The MCP servers are pre-configured in `.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "Neon": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://mcp.neon.tech/sse"]
+    },
+    "git": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-git"]
+    }
+  }
+}
+```
+
+### **MCP Capabilities**
+
+**With these servers, you can ask the AI assistant to:**
+
+- 🗄️ **Database Operations**: Create tables, run queries, manage schema
+- 🌿 **Git Operations**: Commit changes, create branches, push to remote
+- 🔄 **Integrated Workflows**: Coordinate database migrations with version control
+- 📊 **Performance Analysis**: Optimize queries and monitor database performance
+
+### **Usage Examples**
+
+```
+"Add a new table for olive tree diseases"
+"Commit all changes with message: Add disease tracking"
+"Create a feature branch for harvest management"
+"Optimize the slow query for farm analytics"
+"Push changes to the main branch"
+```
+
+### **Documentation**
+
+For detailed MCP server documentation, see: `docs/MCP_SERVERS.md`
+
 ---
 
 For the latest Clerk documentation, visit: https://clerk.com/docs/quickstarts/nextjs
