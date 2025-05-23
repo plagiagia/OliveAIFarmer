@@ -20,10 +20,7 @@
    NEXT_PUBLIC_APP_URL=http://localhost:3000
    NODE_ENV=development
 
-   # Future integrations (for later phases)
-   # DATABASE_URL="postgresql://username:password@host:5432/olivelog?sslmode=require"
-   # MAPBOX_ACCESS_TOKEN=pk.eyJ1...
-   # OPENAI_API_KEY=sk-...
+         # Database (Required for full functionality)   DATABASE_URL="postgresql://username:password@host:5432/olivelog?sslmode=require"      # Future integrations (for later phases)   # MAPBOX_ACCESS_TOKEN=pk.eyJ1...   # OPENAI_API_KEY=sk-...
    ```
 
 3. **Clerk Setup (Required)**
@@ -176,6 +173,67 @@ After setup, you can:
 - **Follow App Router patterns** (not pages/ directory)
 - **Import from correct packages**: `@clerk/nextjs` and `@clerk/nextjs/server`
 - **Test on mobile devices** - primary target for Greek farmers
+
+## 🗄️ Database Setup (Neon PostgreSQL)
+
+### **Setting up Neon Database**
+
+1. **Create Neon Account:**
+
+   - Go to [neon.tech](https://neon.tech)
+   - Sign up with GitHub, Google, or email
+   - Choose the **Free** tier (perfect for development)
+
+2. **Create Database Project:**
+
+   - Click "Create a project"
+   - Name: "olivelog-database"
+   - Select EU region (closest to Greece)
+   - Choose latest PostgreSQL version
+
+3. **Get Connection String:**
+   - Copy the connection string from dashboard
+   - Add to `.env.local`: `DATABASE_URL="your_neon_connection_string"`
+
+### **Initialize Database**
+
+```bash
+# Generate Prisma client
+npm run db:generate
+
+# Push schema to database (first time)
+npm run db:push
+
+# Seed with sample Greek olive farm data
+npm run db:seed
+
+# Open Prisma Studio to view data
+npm run db:studio
+```
+
+### **Test Database Connection**
+
+Visit: `http://localhost:3000/api/test-db`
+
+You should see: `{"success": true, "message": "Database connection successful!"}`
+
+### **Database Features**
+
+✅ **Complete Olive Farming Schema:**
+
+- Users (integrated with Clerk)
+- Farms/Olive Groves
+- Olive Sections (for organization)
+- Individual Olive Trees (with varieties like Κορωνέικη, Καλαμών)
+- Activities (watering, pruning, fertilizing, etc.)
+- Harvest Records
+- Tree-specific data tracking
+
+✅ **Greek Language Support:**
+
+- All sample data in Greek
+- Greek olive varieties
+- Greek locations and descriptions
 
 ---
 
