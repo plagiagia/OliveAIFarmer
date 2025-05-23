@@ -1,5 +1,6 @@
 'use client'
 
+import FarmEditModal from '@/components/farms/FarmEditModal'
 import MapPreview from '@/components/map/MapPreview'
 import { parseCoordinates } from '@/lib/mapbox-utils'
 import { format } from 'date-fns'
