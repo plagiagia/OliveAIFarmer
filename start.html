@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ΕλαιοLog - Ψηφιακό Ημερολόγιο Ελαιοδέντρων</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(45deg, #2E7D32, #4CAF50, #81C784);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            max-width: 1000px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 25px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.15);
+            overflow: hidden;
+            min-height: 600px;
+        }
+
+        .info-panel {
+            background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 100%);
+            color: white;
+            padding: 60px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .info-panel::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="rgba(255,255,255,0.1)"/></svg>') repeat;
+            animation: float 20s infinite linear;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg); }
+            100% { transform: translateY(-20px) rotate(360deg); }
+        }
+
+        .brand-logo {
+            font-size: 60px;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .brand-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .brand-subtitle {
+            font-size: 18px;
+            opacity: 0.9;
+            margin-bottom: 40px;
+            line-height: 1.5;
+            position: relative;
+            z-index: 2;
+        }
+
+        .benefits {
+            position: relative;
+            z-index: 2;
+        }
+
+        .benefit {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+
+        .benefit-icon {
+            width: 24px;
+            height: 24px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 12px;
+        }
+
+        .auth-panel {
+            padding: 60px 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .welcome-text {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .welcome-title {
+            font-size: 28px;
+            color: #1B5E20;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .welcome-subtitle {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .auth-tabs {
+            display: flex;
+            background: #f5f5f5;
+            border-radius: 15px;
+            padding: 5px;
+            margin-bottom: 30px;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .auth-tab.active {
+            background: white;
+            color: #1B5E20;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .auth-tab:not(.active) {
+            color: #666;
+        }
+
+        .google-signin {
+            margin-bottom: 25px;
+        }
+
+        .google-btn {
+            width: 100%;
+            background: white;
+            border: 2px solid #e0e0e0;
+            padding: 15px 20px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            color: #333;
+            transition: all 0.3s ease;
+        }
+
+        .google-btn:hover {
+            border-color: #1B5E20;
+            box-shadow: 0 5px 20px rgba(27, 94, 32, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .divider {
+            position: relative;
+            text-align: center;
+            margin: 25px 0;
+            color: #999;
+        }
+
+        .divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #e0e0e0;
+        }
+
+        .divider span {
+            background: white;
+            padding: 0 20px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #fafafa;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #1B5E20;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(27, 94, 32, 0.1);
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #2E7D32, #4CAF50);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(76, 175, 80, 0.3);
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4CAF50;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                max-width: 400px;
+            }
+            
+            .info-panel {
+                padding: 40px 30px;
+                text-align: center;
+            }
+            
+            .auth-panel {
+                padding: 40px 30px;
+            }
+            
+            .brand-title {
+                font-size: 24px;
+            }
+            
+            .welcome-title {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="info-panel">
+            <div class="brand-logo">🫒</div>
+            <h1 class="brand-title">ΕλαιοLog</h1>
+            <p class="brand-subtitle">Το ψηφιακό ημερολόγιο που θα σας βοηθήσει να διαχειριστείτε τον ελαιώνα σας αποτελεσματικά</p>
+            
+            <div class="benefits">
+                <div class="benefit">
+                    <div class="benefit-icon">📊</div>
+                    <span>Παρακολούθηση παραγωγής & ποιότητας</span>
+                </div>
+                <div class="benefit">
+                    <div class="benefit-icon">🌱</div>
+                    <span>Καταγραφή φροντίδας δέντρων</span>
+                </div>
+                <div class="benefit">
+                    <div class="benefit-icon">📱</div>
+                    <span>Απλή χρήση από κινητό & υπολογιστή</span>
+                </div>
+                <div class="benefit">
+                    <div class="benefit-icon">☁️</div>
+                    <span>Ασφαλής αποθήκευση στο cloud</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="auth-panel">
+            <div class="welcome-text">
+                <h2 class="welcome-title">Καλώς ήρθατε</h2>
+                <p class="welcome-subtitle">Ξεκινήστε τη διαχείριση του ελαιώνα σας σήμερα</p>
+            </div>
+
+            <div class="auth-tabs">
+                <div class="auth-tab active" onclick="switchTab('login')">Σύνδεση</div>
+                <div class="auth-tab" onclick="switchTab('register')">Εγγραφή</div>
+            </div>
+
+            <div class="google-signin">
+                <button class="google-btn" onclick="handleGoogleAuth()">
+                    <svg width="20" height="20" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    Συνέχεια με Google
+                </button>
+            </div>
+
+            <div class="divider">
+                <span>ή με email</span>
+            </div>
+
+            <form id="authForm">
+                <div class="form-group">
+                    <label class="form-label" for="email">Διεύθυνση Email</label>
+                    <input type="email" id="email" class="form-input" placeholder="example@email.gr" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">Κωδικός Πρόσβασης</label>
+                    <input type="password" id="password" class="form-input" placeholder="Εισάγετε τον κωδικό σας" required>
+                </div>
+
+                <div class="form-group" id="nameGroup" style="display: none;">
+                    <label class="form-label" for="fullName">Πλήρες Όνομα</label>
+                    <input type="text" id="fullName" class="form-input" placeholder="π.χ. Γιάννης Παπαδόπουλος">
+                </div>
+
+                <div class="form-group" id="farmGroup" style="display: none;">
+                    <label class="form-label" for="farmName">Όνομα Ελαιώνα</label>
+                    <input type="text" id="farmName" class="form-input" placeholder="π.χ. Ελαιώνας Μεσσηνίας">
+                </div>
+
+                <div class="form-group" id="locationGroup" style="display: none;">
+                    <label class="form-label" for="location">Τοποθεσία</label>
+                    <input type="text" id="location" class="form-input" placeholder="π.χ. Καλαμάτα, Μεσσηνία">
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    Σύνδεση
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="notification" id="notification">
+        Επιτυχής σύνδεση! Καλώς ήρθατε στο ΕλαιοLog.
+    </div>
+
+    <script>
+        let currentMode = 'login';
+
+        function switchTab(mode) {
+            currentMode = mode;
+            const tabs = document.querySelectorAll('.auth-tab');
+            const nameGroup = document.getElementById('nameGroup');
+            const farmGroup = document.getElementById('farmGroup');
+            const locationGroup = document.getElementById('locationGroup');
+            const submitBtn = document.getElementById('submitBtn');
+
+            tabs.forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+
+            if (mode === 'login') {
+                nameGroup.style.display = 'none';
+                farmGroup.style.display = 'none';
+                locationGroup.style.display = 'none';
+                submitBtn.textContent = 'ΣΥΝΔΕΣΗ';
+                document.getElementById('fullName').required = false;
+                document.getElementById('farmName').required = false;
+                document.getElementById('location').required = false;
+            } else {
+                nameGroup.style.display = 'block';
+                farmGroup.style.display = 'block';
+                locationGroup.style.display = 'block';
+                submitBtn.textContent = 'ΕΓΓΡΑΦΗ';
+                document.getElementById('fullName').required = true;
+                document.getElementById('farmName').required = true;
+                document.getElementById('location').required = true;
+            }
+        }
+
+        function handleGoogleAuth() {
+            showNotification('Συνδέεστε με Google...', '#2196F3');
+            
+            // Simulate Google authentication process
+            setTimeout(() => {
+                showNotification('Επιτυχής σύνδεση με Google! Καλώς ήρθατε στο ΕλαιοLog.', '#4CAF50');
+                setTimeout(() => {
+                    alert('Καλώς ήρθατε στο ΕλαιοLog! Η εφαρμογή θα αναπτυχθεί περαιτέρω με περισσότερες λειτουργίες.');
+                }, 1500);
+            }, 1000);
+        }
+
+        function showNotification(message, color = '#4CAF50') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.style.background = color;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        document.getElementById('authForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (currentMode === 'login') {
+                showNotification('Συνδέεστε...', '#2196F3');
+                setTimeout(() => {
+                    showNotification('Επιτυχής σύνδεση! Καλώς ήρθατε στο ΕλαιοLog.');
+                    setTimeout(() => {
+                        alert('Καλώς ήρθατε στο ΕλαιοLog! Η εφαρμογή θα αναπτυχθεί περαιτέρω.');
+                    }, 1500);
+                }, 1000);
+            } else {
+                const fullName = document.getElementById('fullName').value;
+                const farmName = document.getElementById('farmName').value;
+                const location = document.getElementById('location').value;
+                
+                showNotification('Δημιουργία λογαριασμού...', '#2196F3');
+                setTimeout(() => {
+                    showNotification(`Καλώς ήρθατε ${fullName}! Ο λογαριασμός σας δημιουργήθηκε επιτυχώς.`);
+                    setTimeout(() => {
+                        alert(`Καλώς ήρθατε ${fullName}! Ο ελαιώνας "${farmName}" στην περιοχή ${location} καταχωρήθηκε επιτυχώς στο σύστημα.`);
+                    }, 1500);
+                }, 1000);
+            }
+        });
+
+        // Add some interactive animations
+        document.querySelectorAll('.form-input').forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.style.transform = 'scale(1.02)';
+                this.parentElement.style.transition = 'transform 0.2s ease';
+            });
+            
+            input.addEventListener('blur', function() {
+                this.parentElement.style.transform = 'scale(1)';
+            });
+        });
+    </script>
+</body>
+</html>
