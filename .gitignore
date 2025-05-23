@@ -3,11 +3,13 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 
 # Next.js
 .next/
 out/
 build/
+dist/
 
 # Environment variables
 .env
@@ -23,19 +25,33 @@ build/
 *.tsbuildinfo
 next-env.d.ts
 
+# Prisma
+prisma/migrations/dev.db*
+*.db
+*.sqlite
+
+# Database
+database.db
+dev.db
+
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
+.cursor-settings/
 
 # OS
 .DS_Store
 Thumbs.db
+*.pem
 
 # Logs
 logs
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # Runtime data
 pids
@@ -74,7 +90,7 @@ jspm_packages/
 # Yarn Integrity file
 .yarn-integrity
 
-# parcel-bundler cache (https://parceljs.org/)
+# parcel-bundler cache
 .cache
 .parcel-cache
 
@@ -83,4 +99,10 @@ jspm_packages/
 
 # Temporary folders
 tmp/
-temp/ 
+temp/
+
+# Clerk
+.clerk/
+
+# Local development
+.local 
