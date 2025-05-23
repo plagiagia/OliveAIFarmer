@@ -229,8 +229,15 @@ function FarmsView({ user, showSuccessMessage }: { user: User; showSuccessMessag
 }
 
 function FarmCard({ farm }: { farm: Farm }) {
+  const handleFarmClick = () => {
+    window.location.href = `/dashboard/farms/${farm.id}`
+  }
+
   return (
-    <div className="bg-white rounded-3xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-200 cursor-pointer">
+    <div 
+      onClick={handleFarmClick}
+      className="bg-white rounded-3xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-200 cursor-pointer"
+    >
       <div className="flex justify-between items-start mb-4">
         <div>
           <h3 className="text-xl font-bold text-olive-800">{farm.name}</h3>

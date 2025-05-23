@@ -101,4 +101,91 @@ export async function getUserByClerkId(clerkId: string) {
     console.error('❌ Error getting user:', error)
     throw error
   }
+}
+
+// Get farm by ID with all related data
+export async function getFarmById(farmId: string) {
+  try {
+    const farm = await prisma.farm.findUnique({
+      where: { id: farmId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        },
+        sections: {
+          include: {
+            trees: {
+              include: {
+                treeActivities: {
+                  include: {
+                    activity: true
+                  },
+                  orderBy: { createdAt: 'desc' },
+                  take: 5
+                },
+                treeHarvests: {
+                  include: {
+                    harvest: true
+                  },
+                  orderBy: { harvestDate: 'desc' },
+                  take: 3
+                }
+              }
+            }
+          },
+          orderBy: { name: 'asc' }
+        },
+        trees: {
+          include: {
+            section: true,
+            treeActivities: {
+              include: {
+                activity: true
+              },
+              orderBy: { createdAt: 'desc' },
+              take: 3
+            },
+            treeHarvests: {
+              include: {
+                harvest: true
+              },
+              orderBy: { harvestDate: 'desc' },
+              take: 2
+            }
+          },
+          orderBy: { treeNumber: 'asc' }
+        },
+        activities: {
+          include: {
+            treeActivities: {
+              include: {
+                tree: true
+              }
+            }
+          },
+          orderBy: { date: 'desc' }
+        },
+        harvests: {
+          include: {
+            treeHarvests: {
+              include: {
+                tree: true
+              }
+            }
+          },
+          orderBy: { year: 'desc' }
+        }
+      }
+    })
+    
+    return farm
+  } catch (error) {
+    console.error('❌ Error getting farm:', error)
+    throw error
+  }
 } 
