@@ -30,16 +30,9 @@ interface DashboardContentProps {
   clerkUserId: string
 }
 
-export default function DashboardContent({ user, clerkUserId }: DashboardContentProps) {
-  const [isLoading, setIsLoading] = useState(!user)
-  const [userData, setUserData] = useState(user)
+export default function DashboardContent({ user, clerkUserId }: DashboardContentProps) {  const [isLoading, setIsLoading] = useState(!user)  const [userData, setUserData] = useState(user)  const [showSuccessMessage, setShowSuccessMessage] = useState(false)
 
-  useEffect(() => {
-    // If user is not in database, sync them
-    if (!user) {
-      syncUserWithDatabase()
-    }
-  }, [user])
+    useEffect(() => {    // If user is not in database, sync them    if (!user) {      syncUserWithDatabase()    }        // Check for success message    const urlParams = new URLSearchParams(window.location.search)    if (urlParams.get('created') === 'true') {      setShowSuccessMessage(true)      // Remove the parameter from URL      const newUrl = window.location.pathname      window.history.replaceState({}, '', newUrl)      // Hide message after 5 seconds      setTimeout(() => setShowSuccessMessage(false), 5000)    }  }, [user])
 
   const syncUserWithDatabase = async () => {
     try {
@@ -77,8 +70,7 @@ export default function DashboardContent({ user, clerkUserId }: DashboardContent
     return <OnboardingView user={userData} />
   }
 
-  // Show dashboard with farms
-  return <FarmsView user={userData} />
+    // Show dashboard with farms  return <FarmsView user={userData} showSuccessMessage={showSuccessMessage} />
 }
 
 function OnboardingView({ user }: { user: User | null }) {
@@ -123,8 +115,7 @@ function OnboardingView({ user }: { user: User | null }) {
           
           <button 
             onClick={() => {
-              // TODO: Navigate to farm creation
-              alert('Σύντομα: Φόρμα δημιουργίας ελαιώνα!')
+              window.location.href = '/dashboard/farms/new'
             }}
             className="bg-gradient-to-r from-olive-700 to-olive-600 hover:from-olive-800 hover:to-olive-700 text-white py-3 px-8 rounded-2xl font-semibold transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 flex items-center gap-2 mx-auto"
           >
@@ -137,11 +128,7 @@ function OnboardingView({ user }: { user: User | null }) {
   )
 }
 
-function FarmsView({ user }: { user: User }) {
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-8">
+function FarmsView({ user, showSuccessMessage }: { user: User; showSuccessMessage: boolean }) {  return (    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">      {/* Success Message */}      {showSuccessMessage && (        <div className="bg-green-50 border border-green-200 text-green-700 px-6 py-4 rounded-xl mb-6 flex items-center">          <div className="text-2xl mr-3">🎉</div>          <div>            <strong>Επιτυχής δημιουργία!</strong>            <p className="text-sm mt-1">Ο ελαιώνας σας δημιουργήθηκε επιτυχώς. Μπορείτε τώρα να προσθέσετε δέντρα και δραστηριότητες.</p>          </div>        </div>      )}            {/* Header */}      <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold text-olive-800">
             Καλώς ήρθατε, {user.firstName}!
@@ -150,7 +137,12 @@ function FarmsView({ user }: { user: User }) {
             Διαχειριστείτε {user.farms.length === 1 ? 'τον ελαιώνα σας' : `τους ${user.farms.length} ελαιώνες σας`}
           </p>
         </div>
-        <button className="bg-gradient-to-r from-olive-700 to-olive-600 hover:from-olive-800 hover:to-olive-700 text-white py-2 px-4 rounded-xl font-semibold transition-all duration-200 hover:shadow-lg flex items-center gap-2">
+        <button 
+          onClick={() => {
+            window.location.href = '/dashboard/farms/new'
+          }}
+          className="bg-gradient-to-r from-olive-700 to-olive-600 hover:from-olive-800 hover:to-olive-700 text-white py-2 px-4 rounded-xl font-semibold transition-all duration-200 hover:shadow-lg flex items-center gap-2"
+        >
           <Plus className="w-4 h-4" />
           Νέος Ελαιώνας
         </button>
