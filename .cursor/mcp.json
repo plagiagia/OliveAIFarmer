@@ -3,10 +3,6 @@
     "Neon": {
       "command": "npx",
       "args": ["-y", "mcp-remote", "https://mcp.neon.tech/sse"]
-    },
-    "git": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-git"]
     }
   }
 } 

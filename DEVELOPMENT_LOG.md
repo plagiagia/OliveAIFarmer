@@ -18,11 +18,7 @@
 - **Responsive Design**: Mobile-first approach with excellent mobile experience
 - **Visual Feedback**: Loading states, error handling, success messages
 
-#### **✅ MCP Integration**
-
-- **Neon MCP Server**: Configured `.cursor/mcp.json` for enhanced database management
-- **OAuth Setup**: Automated Neon account integration with Cursor
-- **Database Tools**: Direct database interaction capabilities within Cursor
+#### **✅ MCP Integration**- **Neon MCP Server**: Configured `.cursor/mcp.json` for enhanced database management- **Git MCP Server**: Added git operations integration for seamless version control- **OAuth Setup**: Automated Neon account integration with Cursor- **Database Tools**: Direct database interaction capabilities within Cursor- **Git Tools**: Integrated git operations (commit, push, branch management) within Cursor
 
 #### **✅ Project Structure & Cleanup**
 
@@ -220,3 +216,66 @@ src/
 The foundation is **solid and scalable**, ready for the next phase of feature development. The code is **clean, well-organized, and maintainable**, with excellent user experience and performance.
 
 **Status**: ✅ **Farm Creation System Complete & Production Ready**
+
+---
+
+## 🐛 **Bug Fix: Authentication Flow** _(Latest Update)_
+
+### **Issue Identified**
+
+- **Problem**: Logged-in users were being shown the login/signup page instead of being automatically redirected to the dashboard
+- **Root Cause**: The `AuthPage` component was only checking if Clerk was loaded but not checking if user was already authenticated
+- **Impact**: Poor user experience for returning users who expected to see their dashboard immediately
+
+### **Solution Implemented**
+
+#### **✅ Authentication State Management**
+
+- **Added User Detection**: Enhanced `AuthPage` component to check `isSignedIn` status from Clerk
+- **Automatic Redirect**: Implemented `useEffect` hook to redirect authenticated users to `/dashboard`
+- **Loading State**: Added proper loading message during redirect ("Μεταφορά στον πίνακα ελέγχου...")
+
+#### **Code Changes**
+
+```typescript
+// Enhanced AuthPage component
+const { isLoaded, isSignedIn, user } = useUser()
+const router = useRouter()
+
+// Redirect authenticated users to dashboard
+useEffect(() => {
+  if (isLoaded && isSignedIn) {
+    router.push('/dashboard')
+  }
+}, [isLoaded, isSignedIn, router])
+
+// Show loading during redirect
+if (isSignedIn) {
+  return (
+    <div className="min-h-screen olive-gradient flex items-center justify-center">
+      <div className="glass-effect rounded-3xl p-8">
+        <Loader2 className="w-8 h-8 animate-spin text-olive-700" />
+        <p className="text-olive-700 mt-4">Μεταφορά στον πίνακα ελέγχου...</p>
+      </div>
+    </div>
+  )
+}
+```
+
+#### **✅ User Experience Improvements**
+
+- **Seamless Authentication**: Logged-in users now automatically see their dashboard
+- **Visual Feedback**: Clear loading state with Greek message during redirect
+- **No Double Authentication**: Eliminates confusion for authenticated users
+
+#### **✅ Technical Validation**
+
+- **Dashboard Protection**: Verified `/dashboard` page has proper authentication checks
+- **Redirect Flow**: Tested authentication state detection and automatic redirect
+- **Loading States**: Both loading states (Clerk initialization + redirect) properly handled
+
+### **Result**
+
+✅ **Authentication flow now works perfectly** - logged-in users see their dashboard immediately, new users see the beautiful login/signup page.
+
+**Status**: ✅ **Authentication Bug Fixed & Tested**

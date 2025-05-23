@@ -1,15 +1,17 @@
 'use client'
 
-import { useState } from 'react'
 import { useUser } from '@clerk/nextjs'
 import { Loader2 } from 'lucide-react'
-import GoogleSignInButton from './GoogleSignInButton'
-import AuthForm from './AuthForm'
-import InfoPanel from './InfoPanel'
+import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import Notification from '../ui/Notification'
+import AuthForm from './AuthForm'
+import GoogleSignInButton from './GoogleSignInButton'
+import InfoPanel from './InfoPanel'
 
 export default function AuthPage() {
-  const { isLoaded } = useUser()
+  const { isLoaded, isSignedIn, user } = useUser()
+  const router = useRouter()
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login')
   const [notification, setNotification] = useState<{
     message: string
@@ -28,6 +30,13 @@ export default function AuthPage() {
     }, 3000)
   }
 
+  // Redirect authenticated users to dashboard
+  useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      router.push('/dashboard')
+    }
+  }, [isLoaded, isSignedIn, router])
+
   // Show loading state while Clerk is initializing
   if (!isLoaded) {
     return (
@@ -35,6 +44,18 @@ export default function AuthPage() {
         <div className="glass-effect rounded-3xl p-8">
           <Loader2 className="w-8 h-8 animate-spin text-olive-700" />
           <p className="text-olive-700 mt-4">Φόρτωση...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // If user is signed in, show loading while redirecting
+  if (isSignedIn) {
+    return (
+      <div className="min-h-screen olive-gradient flex items-center justify-center">
+        <div className="glass-effect rounded-3xl p-8">
+          <Loader2 className="w-8 h-8 animate-spin text-olive-700" />
+          <p className="text-olive-700 mt-4">Μεταφορά στον πίνακα ελέγχου...</p>
         </div>
       </div>
     )
