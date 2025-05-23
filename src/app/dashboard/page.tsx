@@ -23,6 +23,7 @@ export default async function DashboardPage() {
       id: farm.id,
       name: farm.name,
       location: farm.location,
+      coordinates: farm.coordinates,
       totalArea: farm.totalArea,
       treesCount: farm.trees?.length || 0,
       sectionsCount: farm.sections?.length || 0,

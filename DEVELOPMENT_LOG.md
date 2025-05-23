@@ -18,7 +18,13 @@
 - **Responsive Design**: Mobile-first approach with excellent mobile experience
 - **Visual Feedback**: Loading states, error handling, success messages
 
-#### **✅ MCP Integration**- **Neon MCP Server**: Configured `.cursor/mcp.json` for enhanced database management- **Git MCP Server**: Added git operations integration for seamless version control- **OAuth Setup**: Automated Neon account integration with Cursor- **Database Tools**: Direct database interaction capabilities within Cursor- **Git Tools**: Integrated git operations (commit, push, branch management) within Cursor
+#### **✅ MCP Integration**
+
+- **Neon MCP Server**: Configured `.cursor/mcp.json` for enhanced database management
+- **Git MCP Server**: Added git operations integration for seamless version control
+- **OAuth Setup**: Automated Neon account integration with Cursor
+- **Database Tools**: Direct database interaction capabilities within Cursor
+- **Git Tools**: Integrated git operations (commit, push, branch management) within Cursor
 
 #### **✅ Project Structure & Cleanup**
 
@@ -621,6 +627,454 @@ area        Float?   // Area in stremmata (στρέμματα)
 
 ---
 
+## 🗺️ **Phase 3: Comprehensive Mapbox Integration** _(December 23, 2025)_
+
+### **Feature: Complete Mapping System Implementation**
+
+#### **🎯 Business Requirement**
+
+Implement comprehensive Mapbox integration to provide Greek olive farmers with:
+
+- Interactive maps for farm location selection
+- Map previews in dashboard farm cards
+- Location autocomplete with Greek place names
+- Precise coordinate extraction from map interactions
+- Enhanced user experience with satellite imagery
+
+#### **✅ Implementation Completed**
+
+##### **📦 Dependencies & Setup**
+
+- **Core Packages**: Installed `react-map-gl@7.1.7`, `mapbox-gl@3.12.0`
+- **TypeScript Support**: Added `@types/react-map-gl`, `@types/mapbox-gl`
+- **Geocoding**: Integrated `@mapbox/mapbox-gl-geocoder@5.0.3`
+- **MCP Integration**: Successfully tested Mapbox MCP server for enhanced functionality
+
+##### **🗺️ Core Map Components**
+
+**MapboxMap.tsx** - Interactive Map Component:
+
+```typescript
+// Features implemented:
+- Greece-focused bounds (19.3-29.7 lng, 34.8-41.8 lat)
+- Satellite-streets style for agricultural context
+- Click-to-select location functionality
+- Navigation controls and geolocation
+- Loading states and error handling
+- Graceful fallback when no API token
+```
+
+**LocationAutocomplete.tsx** - Smart Location Search:
+
+```typescript
+// Features implemented:
+- Real-time search using Mapbox Geocoding API
+- Greece-restricted results (country: 'GR')
+- Greek language preference (language: 'el')
+- 300ms debounced search for performance
+- Keyboard navigation (arrows, enter, escape)
+- Clear functionality and loading states
+```
+
+**MapPreview.tsx** - Dashboard Map Cards:
+
+```typescript
+// Features implemented:
+- Static map component for farm cards
+- 120px height optimized for dashboard
+- Green markers with farm name overlay
+- Non-interactive for performance
+- Error handling and placeholder states
+```
+
+##### **🛠️ Utility Functions**
+
+**mapbox-utils.ts** - Comprehensive Map Utilities:
+
+```typescript
+// Functions implemented:
+parseCoordinates() - Parse various coordinate formats
+formatCoordinates() - Format for display and storage
+isWithinGreece() - Validate Greece bounds
+getGreeceCenter() - Default map center
+calculateZoomLevel() - Auto-zoom based on farm area
+generateStaticMapUrl() - Static map URLs
+GREEK_REGIONS - Region name translations
+```
+
+#### **✅ Farm Creation Form Redesign**
+
+##### **🎨 Two-Column Layout**
+
+- **Left Column**: Form fields with LocationAutocomplete
+- **Right Column**: Interactive map for precise selection
+- **Progressive Disclosure**: Map appears after location search
+- **Real-time Coordination**: Form and map sync automatically
+
+##### **📍 Location Selection Workflow**
+
+1. **Search Location**: Type in LocationAutocomplete
+2. **Select from Suggestions**: Choose from Greek places
+3. **Refine on Map**: Click map for precise coordinates
+4. **Auto-Extract Coordinates**: No manual input needed
+5. **Visual Confirmation**: See coordinates update in real-time
+
+##### **🔄 Replaced Manual Input**
+
+- **Removed**: Manual coordinate input fields
+- **Added**: Automatic coordinate extraction from map pins
+- **Enhanced**: Location dropdown → intelligent autocomplete
+- **Improved**: Static form → interactive map experience
+
+#### **✅ Dashboard Integration**
+
+##### **🏠 Farm Cards with Map Previews**
+
+- **Visual Enhancement**: Satellite map previews at top of each card
+- **Farm Identification**: Green markers with farm names
+- **Coordinate Parsing**: Extract coordinates from database strings
+- **Fallback Handling**: Graceful degradation without coordinates
+
+##### **📊 Enhanced Farm Display**
+
+```typescript
+// Updated Farm interface to include coordinates
+interface Farm {
+  id: string
+  name: string
+  location: string
+  coordinates: string | null // Added for map integration
+  totalArea: number | null
+  // ... other fields
+}
+```
+
+#### **✅ Database Integration**
+
+##### **💾 Coordinate Storage**
+
+- **Format**: Stored as "latitude, longitude" strings
+- **Parsing**: Robust coordinate parsing from various formats
+- **Validation**: Greece bounds checking for data integrity
+- **Migration**: Updated dashboard queries to include coordinates
+
+##### **🔍 Data Retrieval**
+
+- **Farm Creation**: Coordinates saved during farm creation
+- **Dashboard Display**: Coordinates parsed for map previews
+- **Farm Details**: Coordinates available for detailed views
+
+#### **🔧 Technical Implementation**
+
+##### **⚡ Performance Optimizations**
+
+- **Debounced Search**: 300ms delay for autocomplete
+- **Lazy Loading**: Maps load only when needed
+- **Static Previews**: Non-interactive maps for dashboard
+- **Efficient Queries**: Optimized database coordinate retrieval
+
+##### **🛡️ Error Handling**
+
+- **No API Token**: Graceful fallback with informative messages
+- **Network Errors**: Retry logic and user feedback
+- **Invalid Coordinates**: Bounds checking and validation
+- **Loading States**: Smooth transitions and progress indicators
+
+##### **🌍 Greece-Focused Features**
+
+- **Bounds Restriction**: Maps limited to Greece region
+- **Greek Language**: Autocomplete in Greek (language: 'el')
+- **Local Places**: Prioritized Greek place names
+- **Cultural Context**: Agricultural-focused satellite imagery
+
+#### **✅ Build Error Resolution**
+
+##### **🔧 Import Statement Fixes**
+
+- **Issue**: Module not found error with react-map-gl imports
+- **Solution**: Corrected import syntax for react-map-gl v7.1.7
+- **Fixed**: Changed from named imports to default + named imports
+- **Result**: Successful build and compilation
+
+##### **📝 TypeScript Integration**
+
+- **Type Safety**: Full TypeScript support for all map components
+- **Interface Updates**: Added coordinates field to Farm interface
+- **Proper Imports**: Correct import statements for all dependencies
+- **Build Success**: Clean compilation with no type errors
+
+#### **🎯 User Experience Improvements**
+
+##### **👨‍🌾 Farmer-Friendly Features**
+
+- **Visual Location Selection**: Click on satellite imagery
+- **Familiar Place Names**: Greek location names in autocomplete
+- **Intuitive Interface**: Progressive disclosure of map features
+- **Mobile Optimized**: Touch-friendly controls for field use
+
+##### **🎨 Professional Design**
+
+- **Olive Theme**: Green markers and agricultural context
+- **Consistent Styling**: Matches existing design system
+- **Loading Feedback**: Smooth animations and progress indicators
+- **Error Messages**: Clear Greek error messages
+
+#### **🔜 Enhanced Functionality**
+
+##### **🗺️ MCP Server Integration**
+
+- **Geocoding**: Direct access to Mapbox geocoding via MCP
+- **Directions**: Capability for route planning (future feature)
+- **Tilesets**: Custom map styling options (future feature)
+- **Enhanced Search**: Server-side location intelligence
+
+##### **📍 Location Intelligence**
+
+```typescript
+// MCP Mapbox integration example:
+// Successfully tested: "Get geocoded coordinates for Kalamata, Greece"
+// Result: Longitude: 22.113083, Latitude: 37.04318
+```
+
+#### **📊 Quality Metrics**
+
+##### **✅ Technical Quality**
+
+- **Build Success**: Clean compilation with no errors
+- **Type Safety**: Full TypeScript coverage
+- **Performance**: Optimized loading and rendering
+- **Error Handling**: Comprehensive error boundaries
+
+##### **✅ User Experience**
+
+- **Intuitive Navigation**: Easy location selection workflow
+- **Visual Feedback**: Clear loading and success states
+- **Mobile Responsive**: Excellent mobile experience
+- **Accessibility**: Proper ARIA labels and keyboard navigation
+
+##### **✅ Agricultural Context**
+
+- **Satellite Imagery**: Perfect for farm visualization
+- **Greece Focus**: Culturally appropriate and locally relevant
+- **Precision**: Accurate coordinate extraction for farming
+- **Professional**: Enterprise-grade mapping solution
+
+### **🎉 Mapbox Integration Achieved**
+
+**OliveLog** now provides **comprehensive mapping capabilities** allowing Greek olive farmers to:
+
+1. **🗺️ Interactive Farm Location Selection** - Click on satellite maps to pinpoint farm locations
+2. **🔍 Intelligent Location Search** - Autocomplete with Greek place names and real-time suggestions
+3. **📍 Automatic Coordinate Extraction** - No manual coordinate input required
+4. **🏠 Visual Farm Previews** - Satellite map previews in dashboard farm cards
+5. **📱 Mobile-Optimized Maps** - Touch-friendly controls for field use
+6. **🛡️ Graceful Fallbacks** - Works with or without Mapbox API token
+
+#### **🏗️ Technical Foundation**
+
+- **✅ Complete Component Library**: MapboxMap, LocationAutocomplete, MapPreview
+- **✅ Utility Functions**: Comprehensive mapbox-utils.ts with all needed functions
+- **✅ Database Integration**: Coordinate storage and retrieval working
+- **✅ Build System**: Clean compilation and deployment ready
+- **✅ MCP Integration**: Enhanced functionality via Mapbox MCP server
+
+**Feature Status**: ✅ **Comprehensive Mapbox Integration Complete & Production Ready**
+
+---
+
+## ✏️ **Phase 4: Farm Edit & Delete System** _(December 23, 2025)_
+
+### **Feature: Comprehensive Farm Management**
+
+#### **🎯 Business Requirement**
+
+Implement full CRUD operations for farm management allowing Greek olive farmers to:
+
+- Edit all farm properties (name, location, area, description, coordinates)
+- Update location using intelligent autocomplete and interactive maps
+- Delete farms with proper confirmation and cascade handling
+- Maintain data integrity and provide clear user feedback
+
+#### **✅ Implementation Completed**
+
+##### **🔧 API Endpoints Created**
+
+**`/api/farms/[farmId]/route.ts`** - Complete CRUD Operations:
+
+```typescript
+// Endpoints implemented:
+GET    - Retrieve specific farm with relationships
+PUT    - Update farm data with validation
+DELETE - Remove farm with cascade cleanup
+```
+
+##### **🏗️ Database Architecture**
+
+- **Security**: Ownership verification on all operations
+- **Validation**: Server-side input validation and sanitization
+- **Cascade Delete**: Automatic cleanup of related sections, trees, activities, harvests
+- **Error Handling**: Comprehensive error catching with Greek messages
+
+#### **✅ Farm Edit Modal Implementation**
+
+##### **📝 Comprehensive Edit Form**
+
+**Features Implemented**:
+
+- **Two-Column Layout**: Form fields + Interactive map
+- **Location Autocomplete**: Real-time Greek place search
+- **Interactive Map**: Click-to-select precise coordinates
+- **Area Conversion**: Multi-unit input with stremmata conversion
+- **Validation**: Real-time form validation with Greek feedback
+- **Coordinate Display**: GPS coordinates shown in blue info box
+
+##### **🎨 User Interface Design**
+
+- **Modal Design**: Large 4xl modal with proper scrolling
+- **Visual Hierarchy**: Clear sections for easy navigation
+- **Loading States**: Spinner animations during save operations
+- **Error Feedback**: Beautiful error messages with icons
+- **Success Handling**: Automatic page refresh on successful edit
+
+#### **✅ Delete Functionality**
+
+##### **🛡️ Safety Features**
+
+- **Confirmation Dialog**: Two-step confirmation process
+- **Warning Messages**: Clear explanation of consequences
+- **Cascade Information**: Explains what will be deleted
+- **Non-Reversible Notice**: Warns about permanent deletion
+- **Visual Design**: Red color scheme for destructive actions
+
+##### **📊 Cascade Deletion**
+
+```typescript
+// Data automatically deleted:
+- Farm sections and areas
+- Individual olive trees
+- All farming activities
+- Harvest records
+- Related tree activities and harvests
+```
+
+#### **✅ Dashboard Integration**
+
+##### **💬 Success Messages**
+
+- **Edit Success**: Green notification when farm updated
+- **Delete Success**: Orange notification when farm deleted
+- **Auto-Redirect**: Smooth navigation after operations
+- **URL Cleanup**: Parameters removed from URL after display
+
+##### **🔄 Real-time Updates**
+
+- **Instant Refresh**: Dashboard updates immediately after edits
+- **State Management**: Proper state synchronization
+- **Error Recovery**: Graceful handling of network issues
+
+#### **🔧 Technical Implementation**
+
+##### **⚡ Performance Features**
+
+- **Optimistic Updates**: UI updates before server confirmation
+- **Efficient Queries**: Targeted database operations
+- **Memory Management**: Proper cleanup of event listeners
+- **Error Boundaries**: Comprehensive error catching
+
+##### **🔒 Security Implementation**
+
+- **Authentication**: Clerk-based user verification
+- **Authorization**: Farm ownership verification on all operations
+- **Input Sanitization**: SQL injection prevention
+- **Data Validation**: Client and server-side validation
+
+##### **📱 Mobile Optimization**
+
+- **Touch-Friendly**: Large buttons and touch targets
+- **Responsive Modal**: Adapts to all screen sizes
+- **Keyboard Support**: Full keyboard navigation
+- **Accessibility**: ARIA labels and screen reader support
+
+#### **✅ User Experience Features**
+
+##### **👨‍🌾 Farmer-Friendly Design**
+
+- **Greek Language**: Complete localization throughout
+- **Visual Feedback**: Icons, colors, and animations
+- **Intuitive Flow**: Logical progression through forms
+- **Help Text**: Explanatory text for complex fields
+
+##### **🎯 Key User Stories**
+
+1. **Edit Farm Details**: Click "Επεξεργασία" → modify any field → save changes
+2. **Update Location**: Search new location → refine on map → auto-update coordinates
+3. **Change Area**: Enter new area in any unit → see stremmata conversion
+4. **Delete Farm**: Click delete → confirm action → auto-redirect to dashboard
+
+#### **🔧 Error Handling & Validation**
+
+##### **🛡️ Comprehensive Validation**
+
+- **Required Fields**: Name and location validation
+- **Area Validation**: Positive numbers only
+- **Coordinate Bounds**: Greece geographical boundaries
+- **Format Validation**: Proper data type checking
+
+##### **📝 Error Messages**
+
+```typescript
+// Greek error messages:
+'Το όνομα και η τοποθεσία είναι υποχρεωτικά'
+'Αποτυχία ενημέρωσης ελαιώνα'
+'Αποτυχία διαγραφής ελαιώνα'
+```
+
+#### **📊 Quality Metrics**
+
+##### **✅ Technical Quality**
+
+- **Build Success**: Clean compilation with TypeScript
+- **Type Safety**: Full type coverage for all operations
+- **Performance**: Fast response times for all operations
+- **Error Handling**: Graceful failure recovery
+
+##### **✅ User Experience**
+
+- **Intuitive Interface**: Clear edit and delete workflows
+- **Visual Feedback**: Loading states and success messages
+- **Mobile Responsive**: Excellent mobile experience
+- **Accessibility**: Full keyboard and screen reader support
+
+##### **✅ Data Integrity**
+
+- **Ownership Security**: Users can only edit their farms
+- **Cascade Safety**: Proper cleanup of related data
+- **Validation**: Prevents invalid data entry
+- **Backup**: Database-level constraints for safety
+
+### **🎉 Farm Edit & Delete Achieved**
+
+**OliveLog** now provides **complete farm management capabilities** allowing Greek olive farmers to:
+
+1. **✏️ Edit All Farm Properties** - Update name, location, area, description with validation
+2. **🗺️ Interactive Location Updates** - Search and select new locations with maps
+3. **📐 Area Unit Conversion** - Input area in any unit with automatic stremmata conversion
+4. **🗑️ Safe Farm Deletion** - Two-step confirmation with cascade cleanup
+5. **📱 Mobile-Optimized Interface** - Full functionality on all devices
+6. **🔒 Secure Operations** - Ownership verification and data protection
+
+#### **🏗️ Technical Foundation**
+
+- **✅ Complete CRUD API**: GET, PUT, DELETE endpoints with security
+- **✅ Interactive Modal**: Comprehensive edit form with maps
+- **✅ Delete System**: Safe deletion with confirmation dialogs
+- **✅ Dashboard Integration**: Success messages and state management
+- **✅ Error Handling**: Robust validation and error recovery
+
+**Feature Status**: ✅ **Farm Edit & Delete System Complete & Production Ready**
+
+---
+
 ## 📋 **Development Session Summary**
 
 ### **🏆 Major Achievements This Session**
@@ -628,12 +1082,14 @@ area        Float?   // Area in stremmata (στρέμματα)
 1. **✅ Authentication Bug Fix** - Resolved redirect loop for logged-in users
 2. **✅ Farm Detail Pages** - Complete tabbed interface with statistics
 3. **✅ Stremmata Conversion** - Full Greek agricultural unit system
-4. **✅ Syntax Error Resolution** - Clean, production-ready codebase
-5. **✅ Database Migration** - Successful data conversion to stremmata
+4. **✅ Comprehensive Mapbox Integration** - Complete mapping system with interactive features
+5. **✅ Farm Edit & Delete System** - Full CRUD operations with security and validation
+6. **✅ Build Error Resolution** - Clean, production-ready codebase
+7. **✅ Database Migration** - Successful data conversion to stremmata
 
 ### **🎯 Next Development Priorities**
 
-#### **Immediate Next Phase (Phase 3)**
+#### **Immediate Next Phase (Phase 5)**
 
 1. **🌳 Tree Management** - Individual olive tree tracking and management
 2. **📋 Section Management** - Farm section creation and organization
@@ -648,6 +1104,8 @@ area        Float?   // Area in stremmata (στρέμματα)
 - **✅ Navigation System** - Organized information architecture
 - **✅ Cultural Localization** - Greek language and measurements
 - **✅ Mobile Optimization** - Responsive design for field use
+- **✅ Mapping System** - Complete Mapbox integration for location services
+- **✅ CRUD Operations** - Full farm management capabilities
 
 ### **🎉 Production Status**
 
@@ -655,9 +1113,11 @@ area        Float?   // Area in stremmata (στρέμματα)
 
 - **Complete Authentication** - Secure user management with Clerk
 - **Farm Creation & Management** - Beautiful Greek interface for farm setup
+- **Farm Editing & Deletion** - Full CRUD operations with security
 - **Detailed Farm Overview** - Comprehensive statistics and visual insights
+- **Interactive Mapping** - Satellite imagery and location selection
 - **Cultural Authenticity** - Traditional Greek agricultural measurements
 - **Mobile Responsive** - Perfect for use in olive groves
 - **Production Ready** - Clean codebase, error-free deployment
 
-**Current Status**: ✅ **MVP Complete - Ready for Advanced Farm Management Features**
+**Current Status**: ✅ **MVP Complete with Full Farm Management - Ready for Tree & Activity Management Features**
