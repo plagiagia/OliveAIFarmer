@@ -1,16 +1,15 @@
 'use client'
 
+import { useState } from 'react'
 import { useUser } from '@clerk/nextjs'
 import { Loader2 } from 'lucide-react'
-import { redirect } from 'next/navigation'
-import { useEffect, useState } from 'react'
-import Notification from '../ui/Notification'
-import AuthForm from './AuthForm'
 import GoogleSignInButton from './GoogleSignInButton'
+import AuthForm from './AuthForm'
 import InfoPanel from './InfoPanel'
+import Notification from '../ui/Notification'
 
 export default function AuthPage() {
-  const { isSignedIn, isLoaded } = useUser()
+  const { isLoaded } = useUser()
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login')
   const [notification, setNotification] = useState<{
     message: string
@@ -22,13 +21,6 @@ export default function AuthPage() {
     show: false
   })
 
-  // Redirect if user is already signed in
-  useEffect(() => {
-    if (isLoaded && isSignedIn) {
-      redirect('/dashboard')
-    }
-  }, [isLoaded, isSignedIn])
-
   const showNotification = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
     setNotification({ message, type, show: true })
     setTimeout(() => {
@@ -39,7 +31,7 @@ export default function AuthPage() {
   // Show loading state while Clerk is initializing
   if (!isLoaded) {
     return (
-      <div className="min-h-screen bg-olive-gradient flex items-center justify-center">
+      <div className="min-h-screen olive-gradient flex items-center justify-center">
         <div className="glass-effect rounded-3xl p-8">
           <Loader2 className="w-8 h-8 animate-spin text-olive-700" />
           <p className="text-olive-700 mt-4">Φόρτωση...</p>

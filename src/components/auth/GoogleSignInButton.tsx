@@ -11,7 +11,7 @@ interface GoogleSignInButtonProps {
 
 export default function GoogleSignInButton({ onNotification, mode }: GoogleSignInButtonProps) {
   const { signIn } = useSignIn()
-  const { signUp } = useSignUp()
+  const { signUp, setActive } = useSignUp()
   const [isLoading, setIsLoading] = useState(false)
 
   const handleGoogleAuth = async () => {
@@ -25,13 +25,12 @@ export default function GoogleSignInButton({ onNotification, mode }: GoogleSignI
         throw new Error('Authentication method not available')
       }
 
-      await authMethod.authenticateWithRedirect({
+      const result = await authMethod.authenticateWithRedirect({
         strategy: 'oauth_google',
-        redirectUrl: '/onboarding',
+        redirectUrl: '/',
         redirectUrlComplete: '/dashboard'
       })
       
-      onNotification('Επιτυχής σύνδεση με Google!', 'success')
     } catch (error: any) {
       console.error('Google auth error:', error)
       onNotification(

@@ -1,4 +1,4 @@
-import { ClerkProvider } from '@clerk/nextjs'
+import { ClerkProvider, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
@@ -70,7 +70,35 @@ export default function RootLayout({
           <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         </head>
         <body className={`${inter.className} greek-font antialiased`}>
-          {children}
+          {/* Show auth page only when signed out */}
+          <SignedOut>
+            {children}
+          </SignedOut>
+          
+          {/* Show app content when signed in */}
+          <SignedIn>
+            <header className="bg-white border-b border-gray-200">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex justify-between items-center h-16">
+                  <div className="flex items-center space-x-3">
+                    <span className="text-2xl">🫒</span>
+                    <h1 className="text-xl font-bold text-olive-800">ΕλαιοLog</h1>
+                  </div>
+                  <UserButton 
+                    appearance={{
+                      elements: {
+                        avatarBox: "w-10 h-10",
+                        userButtonPopoverCard: "shadow-lg",
+                        userButtonPopoverActionButton: "text-olive-700 hover:bg-olive-50"
+                      }
+                    }}
+                    showName={true}
+                  />
+                </div>
+              </div>
+            </header>
+            {children}
+          </SignedIn>
         </body>
       </html>
     </ClerkProvider>

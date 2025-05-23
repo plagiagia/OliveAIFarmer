@@ -50,18 +50,23 @@ export default function AuthForm({ mode, onNotification }: AuthFormProps) {
           throw new Error('Sign up not available')
         }
 
-        await signUp.create({
+        const result = await signUp.create({
           emailAddress: formData.email,
           password: formData.password,
           firstName: formData.fullName.split(' ')[0] || formData.fullName,
           lastName: formData.fullName.split(' ').slice(1).join(' ') || ''
         })
 
-        await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
-        onNotification(
-          `Καλώς ήρθατε ${formData.fullName}! Παρακαλώ ελέγξτε το email σας για επιβεβαίωση.`,
-          'success'
-        )
+        if (result.status === 'complete') {
+          onNotification('Επιτυχής εγγραφή! Καλώς ήρθατε στο ΕλαιοLog.', 'success')
+        } else {
+          // If email verification is required
+          await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
+          onNotification(
+            `Καλώς ήρθατε ${formData.fullName}! Παρακαλώ ελέγξτε το email σας για επιβεβαίωση.`,
+            'success'
+          )
+        }
       }
     } catch (error: any) {
       console.error('Auth error:', error)
