@@ -62,7 +62,21 @@ export async function createUser(clerkUser: {
   }
 }
 
-// Get user by Clerk ID
+// Get user by Clerk ID (basic info only)
+export async function getUserByClerkIdBasic(clerkId: string) {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { clerkId }
+    })
+    
+    return user
+  } catch (error) {
+    console.error('❌ Error getting user:', error)
+    throw error
+  }
+}
+
+// Get user by Clerk ID (with all related data)
 export async function getUserByClerkId(clerkId: string) {
   try {
     const user = await prisma.user.findUnique({
@@ -72,7 +86,10 @@ export async function getUserByClerkId(clerkId: string) {
           include: {
             sections: true,
             trees: true,
-            activities: true,
+            activities: {
+              orderBy: { date: 'desc' },
+              take: 1 // Only get the most recent activity for each farm
+            },
             harvests: true,
           }
         }
