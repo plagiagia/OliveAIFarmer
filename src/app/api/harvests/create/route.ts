@@ -30,7 +30,20 @@ export async function POST(request: NextRequest) {
       completed
     } = body
 
-        // Validate required fields - different validation for new harvest vs daily collection    if (!farmId || !year || !totalYield) {      return NextResponse.json({         error: 'Τα υποχρεωτικά πεδία (ελαιώνας, έτος, συνολική παραγωγή) είναι απαραίτητα'       }, { status: 400 })    }    // For new harvests (when completed is false and no existing harvest), require startDate    // For daily collections, require collectionDate    if (!startDate && !collectionDate) {      return NextResponse.json({         error: 'Απαιτείται ημερομηνία έναρξης ή ημερομηνία συλλογής'       }, { status: 400 })    }
+    // Validate required fields - different validation for new harvest vs daily collection
+    if (!farmId || !year || !totalYield) {
+      return NextResponse.json({
+        error: 'Τα υποχρεωτικά πεδία (ελαιώνας, έτος, συνολική παραγωγή) είναι απαραίτητα'
+      }, { status: 400 })
+    }
+    
+    // For new harvests (when completed is false and no existing harvest), require startDate
+    // For daily collections, require collectionDate
+    if (!startDate && !collectionDate) {
+      return NextResponse.json({
+        error: 'Απαιτείται ημερομηνία έναρξης ή ημερομηνία συλλογής'
+      }, { status: 400 })
+    }
 
     // Verify user owns the farm
     const farm = await prisma.farm.findFirst({
@@ -54,6 +67,10 @@ export async function POST(request: NextRequest) {
       totalYieldKg = totalYieldKg * 1000
     }
 
+    // WORKAROUND: Since collectionDate exists in schema but Prisma client doesn't recognize it
+    // We use startDate to store the collection date for daily entries
+    console.log('🔍 Date handling:', { startDate, collectionDate, receivedFromFrontend: !!collectionDate })
+
     // Create the harvest
     const harvest = await prisma.harvest.create({
       data: {
@@ -61,7 +78,7 @@ export async function POST(request: NextRequest) {
         year: parseInt(year),
         startDate: startDate ? new Date(startDate) : new Date(),
         endDate: endDate ? new Date(endDate) : null,
-        // collectionDate: collectionDate ? new Date(collectionDate) : null, // Temporarily disabled due to Prisma type issues
+        // collectionDate: collectionDate ? new Date(collectionDate) : null, // Prisma type issue in create
         totalYield: totalYieldKg,
         totalYieldTons: totalYieldKg / 1000,
         pricePerKg: pricePerKg ? parseFloat(pricePerKg) : null,
@@ -71,13 +88,40 @@ export async function POST(request: NextRequest) {
         yieldPerTree: yieldPerTree ? parseFloat(yieldPerTree) : null,
         yieldPerStremma: yieldPerStremma ? parseFloat(yieldPerStremma) : null,
         notes: notes || null,
-        completed: completed || false, // Use the completed flag from the request
+        completed: completed || false,
       }
     })
 
+    // If collectionDate was provided, update it using raw SQL as workaround
+    if (collectionDate) {
+      await prisma.$executeRaw`
+        UPDATE harvests 
+        SET "collectionDate" = ${new Date(collectionDate)}::timestamp
+        WHERE id = ${harvest.id}
+      `
+      console.log('✅ Updated collectionDate via raw SQL:', collectionDate)
+    }
+
     console.log('✅ New harvest created:', harvest.year, 'for farm:', farm.name)
 
-        return NextResponse.json({      success: true,      harvest: {        id: harvest.id,        year: harvest.year,        totalYield: harvest.totalYield,        totalYieldTons: harvest.totalYieldTons,        totalValue: harvest.totalValue,        yieldPerTree: harvest.yieldPerTree,        yieldPerStremma: harvest.yieldPerStremma,        priceUnit: harvest.priceUnit,        completed: harvest.completed      }    })
+    return NextResponse.json({
+      success: true,
+      harvest: {
+        id: harvest.id,
+        year: harvest.year,
+        startDate: harvest.startDate,
+        collectionDate: collectionDate ? new Date(collectionDate) : null, // Return the collectionDate we set
+        totalYield: harvest.totalYield,
+        totalYieldTons: harvest.totalYieldTons,
+        totalValue: harvest.totalValue,
+        yieldPerTree: harvest.yieldPerTree,
+        yieldPerStremma: harvest.yieldPerStremma,
+        pricePerKg: harvest.pricePerKg,
+        pricePerTon: harvest.pricePerTon,
+        priceUnit: harvest.priceUnit,
+        completed: harvest.completed
+      }
+    })
   } catch (error) {
     console.error('❌ Harvest creation error:', error)
     

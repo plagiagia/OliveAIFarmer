@@ -1,0 +1,26 @@
+{
+  "name": "ΕλαιοLog - Ψηφιακό Ημερολόγιο Ελαιοδέντρων",
+  "short_name": "ΕλαιοLog",
+  "description": "Το ψηφιακό ημερολόγιο που βοηθάει τους Έλληνες αγρότες να διαχειριστούν τον ελαιώνα τους αποτελεσματικά.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#2E7D32",
+  "orientation": "portrait-primary",
+  "lang": "el",
+  "scope": "/",
+  "categories": ["agriculture", "business", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "32x32",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+} 

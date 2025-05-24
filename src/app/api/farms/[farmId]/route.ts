@@ -22,7 +22,17 @@ export async function GET(
           clerkId: userId
         }
       },
-            include: {        trees: true,        activities: {          orderBy: { date: 'desc' },          take: 5        },        harvests: {          orderBy: { year: 'desc' },          take: 5        }      }
+      include: {
+        trees: true,
+        activities: {
+          orderBy: { date: 'desc' },
+          take: 5
+        },
+        harvests: {
+          orderBy: { year: 'desc' },
+          take: 5
+        }
+      }
     })
 
     if (!farm) {
@@ -130,7 +140,11 @@ export async function DELETE(
           clerkId: userId
         }
       },
-            include: {        trees: true,        activities: true,        harvests: true      }
+      include: {
+        trees: true,
+        activities: true,
+        harvests: true
+      }
     })
 
     if (!existingFarm) {

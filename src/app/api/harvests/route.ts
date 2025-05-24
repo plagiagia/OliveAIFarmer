@@ -46,9 +46,26 @@ export async function GET(request: NextRequest) {
       whereConditions.completed = false
     }
 
-    // Get harvests
+    // Get harvests with farm name
     const harvests = await prisma.harvest.findMany({
       where: whereConditions,
+      include: {
+        farm: {
+          select: {
+            name: true
+          }
+        },
+        treeHarvests: {
+          include: {
+            tree: {
+              select: {
+                treeNumber: true,
+                variety: true
+              }
+            }
+          }
+        }
+      },
       orderBy: [
         { year: 'desc' },
         { startDate: 'desc' }

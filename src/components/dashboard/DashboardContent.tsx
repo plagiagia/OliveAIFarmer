@@ -340,10 +340,25 @@ function FarmCard({ farm, onEdit }: { farm: Farm; onEdit: (farm: Farm | null) =>
 
         {farm.lastActivityDate && (
           <div className="mt-4 pt-4 border-t border-gray-100">
-            <div className="flex items-center text-xs text-gray-500">
+            <div className={`flex items-center text-xs transition-colors ${
+              // Highlight if activity is within the last 7 days
+              new Date().getTime() - new Date(farm.lastActivityDate).getTime() <= 7 * 24 * 60 * 60 * 1000
+                ? 'text-green-600 bg-green-50 -mx-2 px-2 py-1 rounded-md'
+                : 'text-gray-500'
+            }`}>
               <Activity className="w-3 h-3 mr-1" />
               <span>
                 Τελευταία δραστηριότητα: {format(new Date(farm.lastActivityDate), 'dd/MM/yyyy', { locale: el })}
+                {/* Show how many days ago */}
+                {(() => {
+                  const daysDiff = Math.floor((new Date().getTime() - new Date(farm.lastActivityDate).getTime()) / (1000 * 60 * 60 * 24))
+                  if (daysDiff === 0) return ' (σήμερα)'
+                  if (daysDiff === 1) return ' (χθες)'
+                  if (daysDiff <= 7) return ` (πριν ${daysDiff} μέρες)`
+                  if (daysDiff <= 30) return ` (πριν ${Math.floor(daysDiff / 7)} εβδομάδες)`
+                  if (daysDiff <= 365) return ` (πριν ${Math.floor(daysDiff / 30)} μήνες)`
+                  return ` (πριν ${Math.floor(daysDiff / 365)} χρόνια)`
+                })()}
               </span>
             </div>
           </div>
