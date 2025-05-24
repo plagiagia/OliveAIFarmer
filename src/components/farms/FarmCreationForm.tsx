@@ -28,6 +28,8 @@ export default function FarmCreationForm({ userId }: FarmCreationFormProps) {
     latitude: null as number | null,
     totalArea: '',
     areaUnit: 'στρέμματα' as AreaUnit,
+    treeCount: '',
+    oliveVariety: '',
     description: '',
   })
   
@@ -61,6 +63,8 @@ export default function FarmCreationForm({ userId }: FarmCreationFormProps) {
           location: formData.location,
           coordinates,
           totalArea: areaInStremmata,
+          treeCount: formData.treeCount ? parseInt(formData.treeCount) : null,
+          oliveVariety: formData.oliveVariety || null,
           description: formData.description,
         }),
       })
@@ -238,6 +242,47 @@ export default function FarmCreationForm({ userId }: FarmCreationFormProps) {
                   </p>
                 </div>
 
+                {/* Tree Count */}
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-3">
+                    Αριθμός Δέντρων
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.treeCount}
+                    onChange={(e) => handleInputChange('treeCount', e.target.value)}
+                    placeholder="π.χ. 100"
+                    className="w-full px-4 py-4 text-lg border-2 border-gray-300 rounded-xl focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all duration-200 placeholder-gray-400"
+                  />
+                </div>
+
+                {/* Olive Variety */}
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-3">
+                    Ποικιλία Ελαιάς
+                  </label>
+                  <select
+                    value={formData.oliveVariety}
+                    onChange={(e) => handleInputChange('oliveVariety', e.target.value)}
+                    className="w-full px-4 py-4 text-lg border-2 border-gray-300 rounded-xl focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all duration-200 bg-white"
+                  >
+                    <option value="">Επιλέξτε ποικιλία (προαιρετικό)</option>
+                    <option value="Κορωνέϊκη">Κορωνέϊκη (Καλαμάτας)</option>
+                    <option value="Καλαμών">Καλαμών (Επιτραπέζια)</option>
+                    <option value="Μανάκι">Μανάκι (Χίου)</option>
+                    <option value="Κολοβή">Κολοβή (Αίγινας)</option>
+                    <option value="Αμφίσσης">Αμφίσσης (Κονσερβολιά)</option>
+                    <option value="Χονδρολιά">Χονδρολιά (Χαλκιδικής)</option>
+                    <option value="Τσουνάτη">Τσουνάτη (Κέρκυρας)</option>
+                    <option value="Μαστοειδής">Μαστοειδής (Κω)</option>
+                    <option value="Λιανολιά">Λιανολιά (Σάμου)</option>
+                    <option value="Άλλη">Άλλη ποικιλία</option>
+                  </select>
+                  <p className="text-sm text-gray-500 mt-2">
+                    Επιλέξτε την κύρια ποικιλία ελαιάς του ελαιώνα σας
+                  </p>
+                </div>
+
                 {/* Description */}
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-3">
@@ -347,7 +392,11 @@ export default function FarmCreationForm({ userId }: FarmCreationFormProps) {
               </li>
               <li className="flex items-start">
                 <span className="text-green-600 mr-2">•</span>
-                <span>Μετά τη δημιουργία θα μπορείτε να προσθέσετε δέντρα και δραστηριότητες</span>
+                <span>Προσθέστε τον αριθμό και την ποικιλία των δέντρων για πλήρη καταγραφή</span>
+              </li>
+              <li className="flex items-start">
+                <span className="text-green-600 mr-2">•</span>
+                <span>Μετά τη δημιουργία θα μπορείτε να προσθέσετε δραστηριότητες και συγκομιδές</span>
               </li>
             </ul>
           </div>

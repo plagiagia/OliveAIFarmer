@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, location, coordinates, totalArea, description } = body
+    const { name, location, coordinates, totalArea, treeCount, oliveVariety, description } = body
 
     // Validate required fields
     if (!name || !location) {
@@ -41,8 +41,33 @@ export async function POST(request: NextRequest) {
         description: description?.trim() || null,
         userId: user.id,
       },
-                  include: {        trees: true,        activities: true,        harvests: true,      }
+      include: {
+        trees: true,
+        activities: true,
+        harvests: true,
+      }
     })
+
+    // If tree count is provided, create tree records
+    if (treeCount && treeCount > 0) {
+      const treesToCreate = []
+      
+      for (let i = 1; i <= treeCount; i++) {
+        treesToCreate.push({
+          farmId: farm.id,
+          treeNumber: i,
+          variety: oliveVariety?.trim() || 'Άγνωστο',
+          plantedDate: null, // Can be updated later
+          notes: null,
+        })
+      }
+
+      await prisma.tree.createMany({
+        data: treesToCreate
+      })
+
+      console.log(`✅ Created ${treeCount} trees for farm: ${farm.name}`)
+    }
 
     console.log('✅ New farm created:', farm.name, 'for user:', user.email)
 
