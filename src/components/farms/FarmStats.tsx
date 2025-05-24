@@ -3,12 +3,12 @@
 import { format } from 'date-fns'
 import { el } from 'date-fns/locale'
 import {
-  Activity,
-  Calendar,
-  CheckCircle,
-  Clock,
-  TreePine,
-  Wheat
+    Activity,
+    Calendar,
+    CheckCircle,
+    Clock,
+    TreePine,
+    Wheat
 } from 'lucide-react'
 
 interface FarmStatsProps {
@@ -26,18 +26,6 @@ export default function FarmStats({ farm }: FarmStatsProps) {
   const upcomingActivities = farm.activities?.filter((activity: any) => 
     new Date(activity.date) > new Date() && !activity.completed
   ).slice(0, 3) || []
-
-  // Tree health distribution
-  const treeHealthStats = farm.trees?.reduce((acc: any, tree: any) => {
-    acc[tree.health] = (acc[tree.health] || 0) + 1
-    return acc
-  }, {}) || {}
-
-  // Tree varieties
-  const treeVarieties = farm.trees?.reduce((acc: any, tree: any) => {
-    acc[tree.variety] = (acc[tree.variety] || 0) + 1
-    return acc
-  }, {}) || {}
 
   const statCards = [
     {
@@ -84,79 +72,6 @@ export default function FarmStats({ farm }: FarmStatsProps) {
             </div>
           )
         })}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Tree Health Distribution */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-            <TreePine className="w-5 h-5 text-green-600 mr-2" />
-            Κατάσταση Υγείας Δέντρων
-          </h3>
-          
-          {Object.keys(treeHealthStats).length > 0 ? (
-            <div className="space-y-3">
-              {Object.entries(treeHealthStats).map(([health, count]: [string, any]) => {
-                const percentage = totalTrees > 0 ? (count / totalTrees) * 100 : 0
-                const healthLabels: { [key: string]: { label: string, color: string } } = {
-                  'EXCELLENT': { label: 'Εξαιρετική', color: 'bg-green-500' },
-                  'GOOD': { label: 'Καλή', color: 'bg-blue-500' },
-                  'HEALTHY': { label: 'Υγιής', color: 'bg-emerald-500' },
-                  'FAIR': { label: 'Μέτρια', color: 'bg-yellow-500' },
-                  'POOR': { label: 'Κακή', color: 'bg-red-500' }
-                }
-                
-                const healthInfo = healthLabels[health] || { label: health, color: 'bg-gray-500' }
-                
-                return (
-                  <div key={health} className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-3 h-3 rounded-full ${healthInfo.color}`}></div>
-                      <span className="text-sm font-medium text-gray-700">{healthInfo.label}</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-600">{count} δέντρα</span>
-                      <span className="text-xs text-gray-500">({percentage.toFixed(1)}%)</span>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          ) : (
-            <p className="text-gray-500 text-center py-8">Δεν υπάρχουν δέντρα ακόμα</p>
-          )}
-        </div>
-
-        {/* Tree Varieties */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-            <TreePine className="w-5 h-5 text-green-600 mr-2" />
-            Ποικιλίες Ελιών
-          </h3>
-          
-          {Object.keys(treeVarieties).length > 0 ? (
-            <div className="space-y-3">
-              {Object.entries(treeVarieties).map(([variety, count]: [string, any]) => {
-                const percentage = totalTrees > 0 ? (count / totalTrees) * 100 : 0
-                
-                return (
-                  <div key={variety} className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-3 h-3 rounded-full bg-green-600"></div>
-                      <span className="text-sm font-medium text-gray-700">{variety}</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-600">{count} δέντρα</span>
-                      <span className="text-xs text-gray-500">({percentage.toFixed(1)}%)</span>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          ) : (
-            <p className="text-gray-500 text-center py-8">Δεν υπάρχουν δέντρα ακόμα</p>
-          )}
-        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

@@ -75,6 +75,14 @@ export default function FarmHeader({ farm, user, onEdit, onBack }: FarmHeaderPro
           <div className="bg-green-50 rounded-xl p-6">
             <h3 className="font-semibold text-green-900 mb-4">Γρήγορα Στατιστικά</h3>
             <div className="space-y-3">
+              {farm.trees?.length > 0 && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-green-700">Ποικιλία:</span>
+                  <span className="font-semibold text-green-900">
+                    {[...new Set(farm.trees.map((tree: any) => tree.variety))].join(', ')}
+                  </span>
+                </div>
+              )}
               <div className="flex justify-between items-center">
                 <span className="text-sm text-green-700">Δέντρα:</span>
                 <span className="font-semibold text-green-900">{farm.trees?.length || 0}</span>
