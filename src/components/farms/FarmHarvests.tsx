@@ -1,11 +1,21 @@
 'use client'
 
-import { BarChart3, Calendar, Edit, Euro, Plus, TreePine, TrendingUp, Wheat } from 'lucide-react'
+import { BarChart3, Calendar, CheckCircle, Clock, Edit, Euro, MapPin, Plus, TreePine, TrendingUp, Wheat } from 'lucide-react'
 import { useState } from 'react'
 import HarvestCreateModal from './HarvestCreateModal'
 
 interface FarmHarvestsProps {
   farm: any
+}
+
+interface GroupedHarvest {
+  year: number
+  collections: any[]
+  totalYield: number
+  totalValue: number
+  isCompleted: boolean
+  startDate: Date
+  endDate?: Date
 }
 
 export default function FarmHarvests({ farm }: FarmHarvestsProps) {
@@ -18,9 +28,65 @@ export default function FarmHarvests({ farm }: FarmHarvestsProps) {
     window.location.reload()
   }
 
-  // Calculate some aggregate statistics
+  const handleCompleteHarvest = async (harvestId: string) => {
+    try {
+      const response = await fetch('/api/harvests/complete', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          harvestId,
+          endDate: new Date().toISOString().split('T')[0]
+        }),
+      })
+
+      if (response.ok) {
+        handleCreateSuccess() // Refresh the data
+      } else {
+        console.error('Failed to complete harvest')
+      }
+    } catch (error) {
+      console.error('Error completing harvest:', error)
+    }
+  }
+
+  // Group harvests by year
+  const groupHarvestsByYear = (harvests: any[]): GroupedHarvest[] => {
+    const grouped = harvests.reduce((acc: Record<number, any[]>, harvest: any) => {
+      if (!acc[harvest.year]) {
+        acc[harvest.year] = []
+      }
+      acc[harvest.year].push(harvest)
+      return acc
+    }, {})
+
+    return Object.entries(grouped)
+      .map(([year, collections]) => {
+        const sortedCollections = collections.sort((a, b) => 
+          new Date(a.startDate || a.collectionDate).getTime() - new Date(b.startDate || b.collectionDate).getTime()
+        )
+
+        return {
+          year: parseInt(year),
+          collections: sortedCollections,
+          totalYield: collections.reduce((sum, h) => sum + (h.totalYield || 0), 0),
+          totalValue: collections.reduce((sum, h) => sum + (h.totalValue || 0), 0),
+          isCompleted: collections.every(h => h.completed),
+          startDate: new Date(Math.min(...collections.map(h => new Date(h.startDate || h.collectionDate).getTime()))),
+          endDate: collections.some(h => h.endDate) ? 
+            new Date(Math.max(...collections.filter(h => h.endDate).map(h => new Date(h.endDate).getTime()))) : 
+            undefined
+        }
+      })
+      .sort((a, b) => b.year - a.year)
+  }
+
+  const groupedHarvests = farm.harvests ? groupHarvestsByYear(farm.harvests) : []
+
+  // Calculate aggregate statistics
   const totalYield = farm.harvests?.reduce((sum: number, h: any) => sum + (h.totalYield || 0), 0) || 0
-  const averageYield = farm.harvests?.length > 0 ? totalYield / farm.harvests.length : 0
+  const averageYield = groupedHarvests.length > 0 ? totalYield / groupedHarvests.length : 0
   const totalValue = farm.harvests?.reduce((sum: number, h: any) => sum + (h.totalValue || 0), 0) || 0
 
   return (
@@ -37,7 +103,7 @@ export default function FarmHarvests({ farm }: FarmHarvestsProps) {
       </div>
 
       {/* Summary Statistics */}
-      {farm.harvests && farm.harvests.length > 0 && (
+      {groupedHarvests.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4">
             <div className="flex items-center justify-between">
@@ -72,8 +138,8 @@ export default function FarmHarvests({ farm }: FarmHarvestsProps) {
           <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Συγκομιδές</p>
-                <p className="text-2xl font-bold text-purple-700">{farm.harvests.length}</p>
+                <p className="text-sm text-gray-600">Έτη Συγκομιδών</p>
+                <p className="text-2xl font-bold text-purple-700">{groupedHarvests.length}</p>
               </div>
               <Wheat className="w-8 h-8 text-purple-600" />
             </div>
@@ -81,130 +147,169 @@ export default function FarmHarvests({ farm }: FarmHarvestsProps) {
         </div>
       )}
 
-      {farm.harvests && farm.harvests.length > 0 ? (
-        <div className="space-y-4">
-          {farm.harvests
-            .sort((a: any, b: any) => b.year - a.year) // Sort by year, newest first
-            .map((harvest: any) => (
-            <div key={harvest.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-amber-100 rounded-lg">
-                    <Wheat className="w-5 h-5 text-amber-600" />
+      {groupedHarvests.length > 0 ? (
+        <div className="space-y-6">
+          {groupedHarvests.map((harvest) => (
+            <div key={harvest.year} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+              {/* Harvest Year Header */}
+              <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-100 p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="p-3 bg-amber-100 rounded-xl">
+                      <Wheat className="w-6 h-6 text-amber-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900">Συγκομιδή {harvest.year}</h3>
+                      <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
+                        <div className="flex items-center space-x-1">
+                          <Calendar className="w-4 h-4" />
+                          <span>
+                            {harvest.startDate.toLocaleDateString('el-GR')}
+                            {harvest.endDate && ` - ${harvest.endDate.toLocaleDateString('el-GR')}`}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <MapPin className="w-4 h-4" />
+                          <span>{harvest.collections.length} συλλογή{harvest.collections.length > 1 ? 'ές' : ''}</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900">Συγκομιδή {harvest.year}</h3>
+                  
+                  <div className="flex items-center space-x-4">
+                    <span className={`px-4 py-2 rounded-full text-sm font-medium ${
+                      harvest.isCompleted 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {harvest.isCompleted ? 'Ολοκληρώθηκε' : 'Σε εξέλιξη'}
+                    </span>
                     
+                    {!harvest.isCompleted && (
+                      <button
+                        onClick={() => {
+                          // Find the first incomplete harvest to complete
+                          const incompleteHarvest = harvest.collections.find(c => !c.completed)
+                          if (incompleteHarvest) {
+                            handleCompleteHarvest(incompleteHarvest.id)
+                          }
+                        }}
+                        className="flex items-center space-x-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                        <span>Ολοκλήρωση</span>
+                      </button>
+                    )}
+                    
+                    <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                      <Edit className="w-4 h-4 text-gray-600" />
+                    </button>
                   </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    harvest.completed 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-yellow-100 text-yellow-800'
-                  }`}>
-                    {harvest.completed ? 'Ολοκληρώθηκε' : 'Σε εξέλιξη'}
-                  </span>
-                  <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                    <Edit className="w-4 h-4 text-gray-600" />
-                  </button>
-                </div>
-              </div>
-              
-              {/* Main metrics */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-olive-700">{harvest.totalYield || 0}</div>
-                  <div className="text-sm text-gray-600">kg</div>
-                </div>
-                
-                {harvest.totalYieldTons && (
+
+                {/* Year Summary Metrics */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-green-700">{harvest.totalYieldTons.toFixed(2)}</div>
+                    <div className="text-2xl font-bold text-olive-700">{harvest.totalYield.toFixed(0)}</div>
+                    <div className="text-sm text-gray-600">kg συνολικά</div>
+                  </div>
+                  
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-700">{(harvest.totalYield / 1000).toFixed(2)}</div>
                     <div className="text-sm text-gray-600">τόνοι</div>
                   </div>
-                )}
-                
-                {harvest.yieldPerTree && farm.trees && farm.trees.length > 0 && (
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-700 flex items-center justify-center">
-                      <TreePine className="w-5 h-5 mr-1" />
-                      {harvest.yieldPerTree.toFixed(1)}
+                  
+                  {farm.trees && farm.trees.length > 0 && (
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-700 flex items-center justify-center">
+                        <TreePine className="w-5 h-5 mr-1" />
+                        {(harvest.totalYield / farm.trees.length).toFixed(1)}
+                      </div>
+                      <div className="text-sm text-gray-600">kg/δέντρο</div>
                     </div>
-                    <div className="text-sm text-gray-600">kg/δέντρο</div>
-                  </div>
-                )}
-                
-                {harvest.yieldPerStremma && farm.totalArea && (
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-purple-700">{harvest.yieldPerStremma.toFixed(1)}</div>
-                    <div className="text-sm text-gray-600">kg/στρέμμα</div>
+                  )}
+                  
+                  {farm.totalArea && (
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-purple-700">{(harvest.totalYield / farm.totalArea).toFixed(1)}</div>
+                      <div className="text-sm text-gray-600">kg/στρέμμα</div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Total Value */}
+                {harvest.totalValue > 0 && (
+                  <div className="mt-4 pt-4 border-t border-amber-200">
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-green-700">€{harvest.totalValue.toFixed(2)}</div>
+                      <div className="text-sm text-gray-600">Συνολική Αξία</div>
+                    </div>
                   </div>
                 )}
               </div>
 
-              {/* Financial information */}
-              {(harvest.pricePerKg || harvest.pricePerTon || harvest.totalValue) && (
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 mb-4">
-                  <h4 className="font-medium text-gray-900 mb-2 flex items-center">
-                    <Euro className="w-4 h-4 mr-2 text-blue-600" />
-                    Οικονομικά Στοιχεία
-                  </h4>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-                    {harvest.pricePerKg && (
-                      <div>
-                        <span className="font-medium">Τιμή/kg:</span>
-                        <div className="text-blue-700">€{harvest.pricePerKg.toFixed(3)}</div>
-                      </div>
-                    )}
-                    {harvest.pricePerTon && (
-                      <div>
-                        <span className="font-medium">Τιμή/τόνο:</span>
-                        <div className="text-blue-700">€{harvest.pricePerTon.toFixed(2)}</div>
-                      </div>
-                    )}
-                    {harvest.totalValue && (
-                      <div>
-                        <span className="font-medium">Συνολική Αξία:</span>
-                        <div className="text-xl font-bold text-green-700">€{harvest.totalValue.toFixed(2)}</div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Additional details */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
-                <div>
-                  <span className="font-medium">Έναρξη:</span>
-                  <div className="flex items-center mt-1">
-                    <Calendar className="w-3 h-3 mr-1" />
-                    {new Date(harvest.startDate).toLocaleDateString('el-GR')}
-                  </div>
-                </div>
+              {/* Individual Collections */}
+              <div className="p-6">
+                <h4 className="font-semibold text-gray-900 mb-4 flex items-center space-x-2">
+                  <Calendar className="w-4 h-4 text-blue-600" />
+                  <span>Ημερήσιες Συλλογές</span>
+                </h4>
                 
-                {harvest.endDate && (
-                  <div>
-                    <span className="font-medium">Λήξη:</span>
-                    <div className="flex items-center mt-1">
-                      <Calendar className="w-3 h-3 mr-1" />
-                      {new Date(harvest.endDate).toLocaleDateString('el-GR')}
+                <div className="space-y-3">
+                  {harvest.collections.map((collection, index) => (
+                    <div key={collection.id} className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                          <div className="flex items-center space-x-2">
+                            <div className={`w-3 h-3 rounded-full ${collection.completed ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
+                            <span className="font-medium text-gray-900">
+                              Συλλογή #{index + 1}
+                            </span>
+                          </div>
+                          
+                          <div className="flex items-center space-x-1 text-sm text-gray-600">
+                            <Calendar className="w-3 h-3" />
+                            <span>
+                              {collection.collectionDate 
+                                ? new Date(collection.collectionDate).toLocaleDateString('el-GR')
+                                : new Date(collection.startDate).toLocaleDateString('el-GR')
+                              }
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center space-x-6">
+                          <div className="text-right">
+                            <div className="font-semibold text-gray-900">{(collection.totalYield || 0).toFixed(0)} kg</div>
+                            <div className="text-sm text-gray-600">{((collection.totalYield || 0) / 1000).toFixed(2)} τόνοι</div>
+                          </div>
+                          
+                          {collection.totalValue && (
+                            <div className="text-right">
+                              <div className="font-semibold text-green-700">€{collection.totalValue.toFixed(2)}</div>
+                              <div className="text-sm text-gray-600">Αξία</div>
+                            </div>
+                          )}
+
+                          <div className="flex items-center space-x-1">
+                            {collection.completed ? (
+                              <CheckCircle className="w-4 h-4 text-green-600" />
+                            ) : (
+                              <Clock className="w-4 h-4 text-yellow-600" />
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {collection.notes && (
+                        <div className="mt-2 pt-2 border-t border-gray-200">
+                          <p className="text-sm text-gray-600">{collection.notes}</p>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                )}
-                
-                
-                
-                
-              </div>
-
-              {harvest.notes && (
-                <div className="mt-4 pt-4 border-t border-gray-100">
-                  <p className="text-sm text-gray-600">
-                    <span className="font-medium">Σημειώσεις:</span> {harvest.notes}
-                  </p>
+                  ))}
                 </div>
-              )}
+              </div>
             </div>
           ))}
         </div>

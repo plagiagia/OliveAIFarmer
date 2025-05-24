@@ -1,6 +1,6 @@
 'use client'
 
-import { BarChart3, Calculator, Euro, TreePine, Wheat, X } from 'lucide-react'
+import { BarChart3, Calculator, Calendar, CheckCircle, Euro, TreePine, Wheat, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 interface HarvestCreateModalProps {
@@ -47,6 +47,51 @@ export default function HarvestCreateModal({
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [ongoingHarvest, setOngoingHarvest] = useState<any>(null)
+  const [isCheckingOngoing, setIsCheckingOngoing] = useState(true)
+  const [harvestMode, setHarvestMode] = useState<'new' | 'daily' | 'complete'>('new')
+
+  // Check for ongoing harvest when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      checkForOngoingHarvest()
+    }
+  }, [isOpen, farmId])
+
+  const checkForOngoingHarvest = async () => {
+    try {
+      setIsCheckingOngoing(true)
+      const currentYear = new Date().getFullYear()
+      const response = await fetch(`/api/harvests?farmId=${farmId}&year=${currentYear}&incomplete=true`)
+      
+      if (response.ok) {
+        const data = await response.json()
+        if (data.length > 0) {
+          // Found ongoing harvest
+          const ongoing = data[0] // Get the first incomplete harvest for this year
+          setOngoingHarvest(ongoing)
+          setHarvestMode('daily')
+          setFormData(prev => ({
+            ...prev,
+            year: ongoing.year,
+            pricePerKg: ongoing.pricePerKg?.toString() || '',
+            pricePerTon: ongoing.pricePerTon?.toString() || '',
+            priceUnit: ongoing.priceUnit || 'PER_KG',
+            collectionDate: new Date().toISOString().split('T')[0] // Default to today
+          }))
+        } else {
+          setOngoingHarvest(null)
+          setHarvestMode('new')
+        }
+      }
+    } catch (error) {
+      console.error('Error checking for ongoing harvest:', error)
+      setOngoingHarvest(null)
+      setHarvestMode('new')
+    } finally {
+      setIsCheckingOngoing(false)
+    }
+  }
 
   // Calculate metrics whenever relevant fields change
   useEffect(() => {
@@ -79,12 +124,20 @@ export default function HarvestCreateModal({
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
 
-    if (!formData.year || formData.year < 1900 || formData.year > new Date().getFullYear() + 1) {
-      newErrors.year = 'Παρακαλώ εισάγετε έγκυρη χρονιά'
+    if (harvestMode === 'new') {
+      if (!formData.year || formData.year < 1900 || formData.year > new Date().getFullYear() + 1) {
+        newErrors.year = 'Παρακαλώ εισάγετε έγκυρη χρονιά'
+      }
+
+      if (!formData.startDate) {
+        newErrors.startDate = 'Η ημερομηνία έναρξης είναι υποχρεωτική'
+      }
     }
 
-    if (!formData.startDate) {
-      newErrors.startDate = 'Η ημερομηνία έναρξης είναι υποχρεωτική'
+    if (harvestMode === 'daily') {
+      if (!formData.collectionDate) {
+        newErrors.collectionDate = 'Η ημερομηνία συλλογής είναι υποχρεωτική'
+      }
     }
 
     if (!formData.totalYield || parseFloat(formData.totalYield) <= 0) {
@@ -130,7 +183,9 @@ export default function HarvestCreateModal({
         oilExtracted: formData.oilExtracted ? parseFloat(formData.oilExtracted) : null,
         year: parseInt(formData.year.toString()),
         collectionDate: formData.collectionDate,
-        totalYieldUnit: formData.totalYieldUnit
+        totalYieldUnit: formData.totalYieldUnit,
+        // For daily collections, mark as not completed yet
+        completed: harvestMode === 'complete'
       }
 
       const response = await fetch('/api/harvests/create', {
@@ -158,6 +213,8 @@ export default function HarvestCreateModal({
           oilExtracted: '',
           notes: ''
         })
+        setOngoingHarvest(null)
+        setHarvestMode('new')
       } else {
         const errorData = await response.json()
         setErrors({ submit: errorData.error || 'Αποτυχία δημιουργίας συγκομιδής' })
@@ -169,7 +226,28 @@ export default function HarvestCreateModal({
     }
   }
 
+  const handleCompleteHarvest = () => {
+    setHarvestMode('complete')
+    setFormData(prev => ({
+      ...prev,
+      endDate: new Date().toISOString().split('T')[0]
+    }))
+  }
+
   if (!isOpen) return null
+
+  if (isCheckingOngoing) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-2xl p-8">
+          <div className="flex items-center space-x-3">
+            <div className="w-6 h-6 border-2 border-amber-600 border-t-transparent rounded-full animate-spin"></div>
+            <span>Έλεγχος για συγκομιδές σε εξέλιξη...</span>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -178,11 +256,20 @@ export default function HarvestCreateModal({
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-amber-100 rounded-lg">
-              <Wheat className="w-6 h-6 text-amber-600" />
+              {harvestMode === 'daily' ? <Calendar className="w-6 h-6 text-amber-600" /> : <Wheat className="w-6 h-6 text-amber-600" />}
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">Νέα Συγκομιδή</h2>
+              <h2 className="text-2xl font-bold text-gray-900">
+                {harvestMode === 'new' && 'Νέα Συγκομιδή'}
+                {harvestMode === 'daily' && `Συλλογή - Συγκομιδή ${formData.year}`}
+                {harvestMode === 'complete' && `Ολοκλήρωση Συγκομιδής ${formData.year}`}
+              </h2>
               <p className="text-gray-600">{farmData.name}</p>
+              {ongoingHarvest && harvestMode === 'daily' && (
+                <p className="text-sm text-green-600">
+                  Συγκομιδή σε εξέλιξη από {new Date(ongoingHarvest.startDate).toLocaleDateString('el-GR')}
+                </p>
+              )}
             </div>
           </div>
           <button
@@ -194,7 +281,36 @@ export default function HarvestCreateModal({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-8">
-          {/* Basic Information */}
+          {/* Mode Selection for Ongoing Harvest */}
+          {ongoingHarvest && harvestMode === 'daily' && (
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+              <h3 className="font-semibold text-green-900 mb-3">Συγκομιδή σε εξέλιξη</h3>
+              <div className="flex space-x-4">
+                <button
+                  type="button"
+                  onClick={() => setHarvestMode('daily')}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                    harvestMode === 'daily' 
+                      ? 'bg-green-600 text-white' 
+                      : 'bg-white text-green-700 border border-green-300 hover:bg-green-50'
+                  }`}
+                >
+                  <Calendar className="w-4 h-4" />
+                  <span>Καταγραφή Ημερήσιας Συλλογής</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCompleteHarvest}
+                  className="flex items-center space-x-2 px-4 py-2 bg-white text-amber-700 border border-amber-300 rounded-lg hover:bg-amber-50 transition-colors"
+                >
+                  <CheckCircle className="w-4 h-4" />
+                  <span>Ολοκλήρωση Συγκομιδής</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Basic Information - Different based on mode */}
           <div className="space-y-6">
             <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
               <Wheat className="w-5 h-5 text-amber-600" />
@@ -202,6 +318,7 @@ export default function HarvestCreateModal({
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Year - Locked for daily collections */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Έτος Συγκομιδής *
@@ -210,38 +327,63 @@ export default function HarvestCreateModal({
                   type="number"
                   value={formData.year}
                   onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  className={`w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 ${
+                    harvestMode === 'daily' ? 'bg-gray-100 cursor-not-allowed' : ''
+                  }`}
                   min="1900"
                   max={new Date().getFullYear() + 1}
+                  disabled={harvestMode === 'daily'}
                 />
                 {errors.year && <p className="text-red-500 text-sm mt-1">{errors.year}</p>}
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Ημερομηνία Έναρξης *
-                </label>
-                <input
-                  type="date"
-                  value={formData.startDate}
-                  onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                />
-                {errors.startDate && <p className="text-red-500 text-sm mt-1">{errors.startDate}</p>}
-              </div>
+              {/* Start Date - Only for new harvests */}
+              {harvestMode === 'new' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Ημερομηνία Έναρξης *
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.startDate}
+                    onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  />
+                  {errors.startDate && <p className="text-red-500 text-sm mt-1">{errors.startDate}</p>}
+                </div>
+              )}
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Ημερομηνία Λήξης
-                </label>
-                <input
-                  type="date"
-                  value={formData.endDate}
-                  onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                />
-                {errors.endDate && <p className="text-red-500 text-sm mt-1">{errors.endDate}</p>}
-              </div>
+              {/* Collection Date - Prominent for daily collections */}
+              {harvestMode === 'daily' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Ημερομηνία Συλλογής *
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.collectionDate}
+                    onChange={(e) => setFormData({ ...formData, collectionDate: e.target.value })}
+                    className="w-full px-4 py-3 border border-green-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-green-50"
+                  />
+                  {errors.collectionDate && <p className="text-red-500 text-sm mt-1">{errors.collectionDate}</p>}
+                </div>
+              )}
+
+              {/* End Date - Only for completing harvest */}
+              {harvestMode === 'complete' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Ημερομηνία Λήξης
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.endDate}
+                    onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  />
+                  {errors.endDate && <p className="text-red-500 text-sm mt-1">{errors.endDate}</p>}
+                </div>
+              )}
             </div>
           </div>
 
@@ -249,13 +391,15 @@ export default function HarvestCreateModal({
           <div className="space-y-6">
             <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
               <BarChart3 className="w-5 h-5 text-green-600" />
-              <span>Δεδομένα Παραγωγής</span>
+              <span>
+                {harvestMode === 'daily' ? 'Σημερινή Συλλογή' : 'Δεδομένα Παραγωγής'}
+              </span>
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Συνολική Παραγωγή *
+                  {harvestMode === 'daily' ? 'Παραγωγή Σήμερα *' : 'Συνολική Παραγωγή *'}
                 </label>
                 <div className="flex items-center gap-2">
                   <input
@@ -278,93 +422,120 @@ export default function HarvestCreateModal({
                 </div>
                 {errors.totalYield && <p className="text-red-500 text-sm mt-1">{errors.totalYield}</p>}
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Ημερομηνία Συλλογής
-                </label>
-                <input
-                  type="date"
-                  value={formData.collectionDate}
-                  onChange={e => setFormData({ ...formData, collectionDate: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                />
-              </div>
+              
+              {/* Collection Date for new harvests */}
+              {harvestMode === 'new' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Ημερομηνία Συλλογής
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.collectionDate}
+                    onChange={e => setFormData({ ...formData, collectionDate: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  />
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Pricing Information */}
-          <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
-              <Euro className="w-5 h-5 text-blue-600" />
-              <span>Οικονομικά Στοιχεία</span>
-            </h3>
+          {/* Pricing Information - Show existing prices for daily collections */}
+          {(harvestMode === 'new' || (harvestMode === 'daily' && !ongoingHarvest?.pricePerKg && !ongoingHarvest?.pricePerTon)) && (
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
+                <Euro className="w-5 h-5 text-blue-600" />
+                <span>Οικονομικά Στοιχεία</span>
+              </h3>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Μονάδα Τιμής
-                </label>
-                <div className="flex space-x-4">
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      value="PER_KG"
-                      checked={formData.priceUnit === 'PER_KG'}
-                      onChange={(e) => setFormData({ ...formData, priceUnit: e.target.value })}
-                      className="mr-2"
-                    />
-                    <span>Ανά κιλό (€/kg)</span>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    Μονάδα Τιμής
                   </label>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      value="PER_TON"
-                      checked={formData.priceUnit === 'PER_TON'}
-                      onChange={(e) => setFormData({ ...formData, priceUnit: e.target.value })}
-                      className="mr-2"
-                    />
-                    <span>Ανά τόνο (€/t)</span>
-                  </label>
+                  <div className="flex space-x-4">
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        value="PER_KG"
+                        checked={formData.priceUnit === 'PER_KG'}
+                        onChange={(e) => setFormData({ ...formData, priceUnit: e.target.value })}
+                        className="mr-2"
+                      />
+                      <span>Ανά κιλό (€/kg)</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        value="PER_TON"
+                        checked={formData.priceUnit === 'PER_TON'}
+                        onChange={(e) => setFormData({ ...formData, priceUnit: e.target.value })}
+                        className="mr-2"
+                      />
+                      <span>Ανά τόνο (€/t)</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {formData.priceUnit === 'PER_KG' ? (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Τιμή ανά Κιλό (€)
+                      </label>
+                      <input
+                        type="number"
+                        value={formData.pricePerKg}
+                        onChange={(e) => setFormData({ ...formData, pricePerKg: e.target.value })}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="π.χ. 4.50"
+                        step="0.01"
+                        min="0"
+                      />
+                      {errors.pricePerKg && <p className="text-red-500 text-sm mt-1">{errors.pricePerKg}</p>}
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Τιμή ανά Τόνο (€)
+                      </label>
+                      <input
+                        type="number"
+                        value={formData.pricePerTon}
+                        onChange={(e) => setFormData({ ...formData, pricePerTon: e.target.value })}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="π.χ. 4500.50"
+                        step="0.01"
+                        min="0"
+                      />
+                      {errors.pricePerTon && <p className="text-red-500 text-sm mt-1">{errors.pricePerTon}</p>}
+                    </div>
+                  )}
                 </div>
               </div>
+            </div>
+          )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {formData.priceUnit === 'PER_KG' ? (
+          {/* Show existing pricing for ongoing harvests */}
+          {harvestMode === 'daily' && ongoingHarvest && (ongoingHarvest.pricePerKg || ongoingHarvest.pricePerTon) && (
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+              <h4 className="font-medium text-blue-900 mb-2">Τιμές Συγκομιδής</h4>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                {ongoingHarvest.pricePerKg && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Τιμή ανά Κιλό (€)
-                    </label>
-                    <input
-                      type="number"
-                      value={formData.pricePerKg}
-                      onChange={(e) => setFormData({ ...formData, pricePerKg: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="π.χ. 4.50"
-                      step="0.01"
-                      min="0"
-                    />
-                    {errors.pricePerKg && <p className="text-red-500 text-sm mt-1">{errors.pricePerKg}</p>}
+                    <span className="text-blue-700">Τιμή/kg:</span>
+                    <div className="font-semibold">€{ongoingHarvest.pricePerKg.toFixed(3)}</div>
                   </div>
-                ) : (
+                )}
+                {ongoingHarvest.pricePerTon && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Τιμή ανά Τόνο (€)
-                    </label>
-                    <input
-                      type="number"
-                      value={formData.pricePerTon}
-                      onChange={(e) => setFormData({ ...formData, pricePerTon: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="π.χ. 4500.50"
-                      step="0.01"
-                      min="0"
-                    />
-                    {errors.pricePerTon && <p className="text-red-500 text-sm mt-1">{errors.pricePerTon}</p>}
+                    <span className="text-blue-700">Τιμή/τόνο:</span>
+                    <div className="font-semibold">€{ongoingHarvest.pricePerTon.toFixed(2)}</div>
                   </div>
                 )}
               </div>
             </div>
-          </div>
+          )}
 
           {/* Calculations Display */}
           {(formData.totalYield && parseFloat(formData.totalYield) > 0) && (
@@ -406,7 +577,9 @@ export default function HarvestCreateModal({
                     <div className="text-2xl font-bold text-amber-700">
                       €{calculations.totalValue.toFixed(2)}
                     </div>
-                    <div className="text-sm text-gray-600">Συνολική Αξία</div>
+                    <div className="text-sm text-gray-600">
+                      {harvestMode === 'daily' ? 'Αξία Σήμερα' : 'Συνολική Αξία'}
+                    </div>
                   </div>
                 )}
               </div>
@@ -438,7 +611,11 @@ export default function HarvestCreateModal({
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               rows={4}
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-olive-500 focus:border-olive-500"
-              placeholder="Προσθέστε τυχόν σημειώσεις για τη συγκομιδή..."
+              placeholder={
+                harvestMode === 'daily' 
+                  ? "Σημειώσεις για τη σημερινή συλλογή..."
+                  : "Προσθέστε τυχόν σημειώσεις για τη συγκομιδή..."
+              }
             />
           </div>
 
@@ -461,17 +638,37 @@ export default function HarvestCreateModal({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-xl hover:from-amber-700 hover:to-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+              className={`px-6 py-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 ${
+                harvestMode === 'complete'
+                  ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white'
+                  : harvestMode === 'daily'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white'
+                  : 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white'
+              }`}
             >
               {isSubmitting ? (
                 <>
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Δημιουργία...</span>
+                  <span>Αποθήκευση...</span>
                 </>
               ) : (
                 <>
-                  <Wheat className="w-5 h-5" />
-                  <span>Δημιουργία Συγκομιδής</span>
+                  {harvestMode === 'complete' ? (
+                    <>
+                      <CheckCircle className="w-5 h-5" />
+                      <span>Ολοκλήρωση Συγκομιδής</span>
+                    </>
+                  ) : harvestMode === 'daily' ? (
+                    <>
+                      <Calendar className="w-5 h-5" />
+                      <span>Καταγραφή Συλλογής</span>
+                    </>
+                  ) : (
+                    <>
+                      <Wheat className="w-5 h-5" />
+                      <span>Έναρξη Συγκομιδής</span>
+                    </>
+                  )}
                 </>
               )}
             </button>

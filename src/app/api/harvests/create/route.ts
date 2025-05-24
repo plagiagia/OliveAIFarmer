@@ -26,7 +26,8 @@ export async function POST(request: NextRequest) {
       totalValue,
       yieldPerTree,
       yieldPerStremma,
-      notes
+      notes,
+      completed
     } = body
 
     // Validate required fields
@@ -65,7 +66,7 @@ export async function POST(request: NextRequest) {
         year: parseInt(year),
         startDate: new Date(startDate),
         endDate: endDate ? new Date(endDate) : null,
-        collectionDate: collectionDate ? new Date(collectionDate) : null,
+        // collectionDate: collectionDate ? new Date(collectionDate) : null, // Temporarily commented out
         totalYield: totalYieldKg,
         totalYieldTons: totalYieldKg / 1000,
         pricePerKg: pricePerKg ? parseFloat(pricePerKg) : null,
@@ -75,27 +76,13 @@ export async function POST(request: NextRequest) {
         yieldPerTree: yieldPerTree ? parseFloat(yieldPerTree) : null,
         yieldPerStremma: yieldPerStremma ? parseFloat(yieldPerStremma) : null,
         notes: notes || null,
-        completed: false, // Can be updated later
+        completed: completed || false, // Use the completed flag from the request
       }
     })
 
     console.log('✅ New harvest created:', harvest.year, 'for farm:', farm.name)
 
-    return NextResponse.json({
-      success: true,
-      harvest: {
-        id: harvest.id,
-        year: harvest.year,
-        totalYield: harvest.totalYield,
-        totalYieldTons: harvest.totalYieldTons,
-        totalValue: harvest.totalValue,
-        yieldPerTree: harvest.yieldPerTree,
-        yieldPerStremma: harvest.yieldPerStremma,
-        priceUnit: harvest.priceUnit,
-        completed: harvest.completed,
-        collectionDate: harvest.collectionDate
-      }
-    })
+        return NextResponse.json({      success: true,      harvest: {        id: harvest.id,        year: harvest.year,        totalYield: harvest.totalYield,        totalYieldTons: harvest.totalYieldTons,        totalValue: harvest.totalValue,        yieldPerTree: harvest.yieldPerTree,        yieldPerStremma: harvest.yieldPerStremma,        priceUnit: harvest.priceUnit,        completed: harvest.completed      }    })
   } catch (error) {
     console.error('❌ Harvest creation error:', error)
     
