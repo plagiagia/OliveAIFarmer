@@ -27,6 +27,8 @@ export default function FarmEditModal({ farm, onClose, onSuccess }: FarmEditModa
     latitude: parseCoordinates(farm.coordinates)?.lat || null as number | null,
     totalArea: farm.totalArea ? convertFromStremmata(farm.totalArea, 'στρέμματα').toString() : '',
     areaUnit: 'στρέμματα' as AreaUnit,
+    treeCount: farm.trees?.length.toString() || '',
+    oliveVariety: farm.trees?.length > 0 ? farm.trees[0].variety : '',
     description: farm.description || '',
   })
 
@@ -61,6 +63,8 @@ export default function FarmEditModal({ farm, onClose, onSuccess }: FarmEditModa
           location: formData.location,
           coordinates,
           totalArea: areaInStremmata,
+          treeCount: formData.treeCount ? parseInt(formData.treeCount) : null,
+          oliveVariety: formData.oliveVariety || null,
           description: formData.description,
         }),
       })
@@ -293,6 +297,58 @@ export default function FarmEditModal({ farm, onClose, onSuccess }: FarmEditModa
                   <div className="mt-3 p-3 bg-green-50 rounded-lg border border-green-200">
                     <p className="text-sm text-green-700">
                       <strong>Μετατροπή:</strong> {formData.totalArea} {formData.areaUnit} = {convertToStremmata(parseFloat(formData.totalArea), formData.areaUnit).toFixed(1)} στρέμματα
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Tree Count */}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-3">
+                  Αριθμός Δέντρων
+                </label>
+                <input
+                  type="number"
+                  value={formData.treeCount}
+                  onChange={(e) => handleInputChange('treeCount', e.target.value)}
+                  placeholder="π.χ. 100"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all duration-200 placeholder-gray-400"
+                />
+                {farm.trees?.length > 0 && (
+                  <p className="text-sm text-gray-500 mt-2">
+                    Τρέχων αριθμός: {farm.trees.length} δέντρα
+                  </p>
+                )}
+              </div>
+
+              {/* Olive Variety */}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-3">
+                  Ποικιλία Ελαιάς
+                </label>
+                <select
+                  value={formData.oliveVariety}
+                  onChange={(e) => handleInputChange('oliveVariety', e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all duration-200 bg-white"
+                >
+                  <option value="">Επιλέξτε ποικιλία</option>
+                  <option value="Κορωνέϊκη">Κορωνέϊκη (Καλαμάτας)</option>
+                  <option value="Καλαμών">Καλαμών (Επιτραπέζια)</option>
+                  <option value="Μανάκι">Μανάκι (Χίου)</option>
+                  <option value="Κολοβή">Κολοβή (Αίγινας)</option>
+                  <option value="Αμφίσσης">Αμφίσσης (Κονσερβολιά)</option>
+                  <option value="Χονδρολιά">Χονδρολιά (Χαλκιδικής)</option>
+                  <option value="Τσουνάτη">Τσουνάτη (Κέρκυρας)</option>
+                  <option value="Μαστοειδής">Μαστοειδής (Κω)</option>
+                  <option value="Λιανολιά">Λιανολιά (Σάμου)</option>
+                  <option value="Άλλη">Άλλη ποικιλία</option>
+                </select>
+                {farm.trees?.length > 0 && (
+                  <div className="mt-2 p-2 bg-blue-50 rounded-lg">
+                    <p className="text-sm text-blue-700">
+                      <strong>Τρέχουσες ποικιλίες:</strong> {
+                        [...new Set(farm.trees.map((tree: any) => tree.variety))].join(', ')
+                      }
                     </p>
                   </div>
                 )}

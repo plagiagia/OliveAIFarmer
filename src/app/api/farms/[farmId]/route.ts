@@ -62,7 +62,7 @@ export async function PUT(
 
     const { farmId } = await params
     const body = await request.json()
-    const { name, location, coordinates, totalArea, description } = body
+    const { name, location, coordinates, totalArea, treeCount, oliveVariety, description } = body
 
     // Validate required fields
     if (!name?.trim() || !location?.trim()) {
@@ -79,6 +79,9 @@ export async function PUT(
         user: {
           clerkId: userId
         }
+      },
+      include: {
+        trees: true
       }
     })
 
@@ -101,6 +104,63 @@ export async function PUT(
         updatedAt: new Date()
       }
     })
+
+    // Handle tree updates if treeCount is provided
+    if (treeCount !== null && treeCount !== undefined) {
+      const newTreeCount = parseInt(treeCount)
+      const currentTreeCount = existingFarm.trees.length
+
+      if (newTreeCount !== currentTreeCount) {
+        if (newTreeCount > currentTreeCount) {
+          // Add new trees
+          const treesToCreate = []
+          for (let i = currentTreeCount + 1; i <= newTreeCount; i++) {
+            treesToCreate.push({
+              farmId: farmId,
+              treeNumber: i.toString(),
+              variety: oliveVariety?.trim() || 'Άγνωστο',
+              plantingYear: null,
+              notes: null,
+            })
+          }
+
+          await prisma.oliveTree.createMany({
+            data: treesToCreate
+          })
+
+          console.log(`✅ Added ${newTreeCount - currentTreeCount} trees to farm: ${updatedFarm.name}`)
+        } else if (newTreeCount < currentTreeCount) {
+          // Remove excess trees (remove the highest numbered ones)
+          const treesToDelete = existingFarm.trees
+            .sort((a, b) => parseInt(b.treeNumber) - parseInt(a.treeNumber))
+            .slice(0, currentTreeCount - newTreeCount)
+
+          await prisma.oliveTree.deleteMany({
+            where: {
+              id: {
+                in: treesToDelete.map(tree => tree.id)
+              }
+            }
+          })
+
+          console.log(`✅ Removed ${currentTreeCount - newTreeCount} trees from farm: ${updatedFarm.name}`)
+        }
+
+        // Update variety for existing trees if provided
+        if (oliveVariety?.trim() && newTreeCount > 0) {
+          await prisma.oliveTree.updateMany({
+            where: {
+              farmId: farmId
+            },
+            data: {
+              variety: oliveVariety.trim()
+            }
+          })
+
+          console.log(`✅ Updated tree varieties to: ${oliveVariety} for farm: ${updatedFarm.name}`)
+        }
+      }
+    }
 
     console.log(`✅ Farm updated: ${updatedFarm.name} for user: ${userId}`)
 
