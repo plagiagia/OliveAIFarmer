@@ -55,14 +55,14 @@ export async function POST(request: NextRequest) {
       for (let i = 1; i <= treeCount; i++) {
         treesToCreate.push({
           farmId: farm.id,
-          treeNumber: i,
+          treeNumber: i.toString(),
           variety: oliveVariety?.trim() || 'Άγνωστο',
-          plantedDate: null, // Can be updated later
+          plantingYear: null, // Can be updated later
           notes: null,
         })
       }
 
-      await prisma.tree.createMany({
+      await prisma.oliveTree.createMany({
         data: treesToCreate
       })
 
