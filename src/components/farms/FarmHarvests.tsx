@@ -1,6 +1,7 @@
 'use client'
 
 import { BarChart3, Calendar, CheckCircle, ChevronDown, ChevronUp, Clock, Edit, Euro, MapPin, Plus, Trash2, TreePine, TrendingUp, Wheat } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import HarvestCreateModal from './HarvestCreateModal'
 
@@ -30,6 +31,7 @@ export default function FarmHarvests({ farm }: FarmHarvestsProps) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [editingHarvest, setEditingHarvest] = useState<any>(null)
   const [collapsedYears, setCollapsedYears] = useState<Set<number>>(new Set())
+  const router = useRouter()
 
   const toggleYearCollapse = (year: number) => {
     setCollapsedYears(prev => {
@@ -52,6 +54,7 @@ export default function FarmHarvests({ farm }: FarmHarvestsProps) {
     // or use a state management solution like Redux/Zustand
     // For now, we'll avoid the page reload that was causing navigation issues
     console.log('✅ Harvest operation completed successfully')
+    router.refresh()
   }
 
   const handleCompleteHarvest = async (year: number) => {
@@ -106,6 +109,7 @@ export default function FarmHarvests({ farm }: FarmHarvestsProps) {
         // Instead of page reload, just log success
         // The user will see the collapse animation and success message
         console.log('✅ Harvest completion successful - staying on harvest page')
+        router.refresh()
       } else {
         const failedResponses = responses.filter(r => !r.ok)
         alert(`Αποτυχία ολοκλήρωσης ${failedResponses.length} από ${responses.length} συλλογές`)
@@ -131,6 +135,7 @@ export default function FarmHarvests({ farm }: FarmHarvestsProps) {
         console.log('✅ Harvest deletion successful - staying on harvest page')
         // Note: Ideally you'd update the farm.harvests array here to remove the deleted item
         // For now, user can manually refresh if they want to see the updated list
+        router.refresh()
       } else {
         alert('Αποτυχία διαγραφής συλλογής')
       }
@@ -163,6 +168,7 @@ export default function FarmHarvests({ farm }: FarmHarvestsProps) {
         console.log('✅ Entire harvest deletion successful - staying on harvest page')
         // Note: Ideally you'd update the farm.harvests array here to remove deleted items
         // For now, user can manually refresh if they want to see the updated list
+        router.refresh()
       } else {
         alert('Αποτυχία διαγραφής κάποιων συλλογών')
       }
