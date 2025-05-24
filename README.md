@@ -35,13 +35,14 @@
 #### **🏗️ Farm Management**
 
 - **Farm Creation**: Beautiful, comprehensive form with interactive Mapbox integration
-- **Farm Detail Pages**: Complete tabbed interface with overview, sections, trees, activities
+- **Farm Detail Pages**: Complete tabbed interface with overview, trees, activities
 - **Farm Editing**: Full edit modal with location autocomplete and map selection
-- **Farm Deletion**: Safe deletion with confirmation dialogs and cascade cleanup
-- **Greek Agricultural Units**: Traditional Στρέμματα (stremmata) with unit conversions
-- **Location Support**: Intelligent autocomplete with Greek place names
-- **GPS Coordinates**: Automatic coordinate extraction from map clicks
-- **Data Validation**: Comprehensive client-side and server-side validation
+- **Farm Deletion**: Secure, with confirmation and redirect
+- **Olive Tree Management**: Add, edit, and remove individual trees
+- **Activity Tracking**: Log and view farm activities
+- **Harvest Records**: Track and analyze harvests
+- **Greek Units**: All area and yield in stremmata (στρέμματα)
+- **Mobile-First**: Optimized for use in the field
 
 #### **🗺️ Interactive Mapping System**
 
@@ -293,23 +294,11 @@ model Farm {
   description String?
   user        User        @relation(fields: [userId], references: [id])
   userId      String
-  sections    Section[]
   trees       OliveTree[]
   activities  Activity[]
   harvests    Harvest[]
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
-}
-
-model Section {
-  id        String      @id @default(cuid())
-  name      String
-  area      Float?      // Area in stremmata (στρέμματα)
-  farm      Farm        @relation(fields: [farmId], references: [id])
-  farmId    String
-  trees     OliveTree[]
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
 }
 
 model OliveTree {
@@ -321,8 +310,6 @@ model OliveTree {
   longitude  Float?
   farm       Farm       @relation(fields: [farmId], references: [id])
   farmId     String
-  section    Section?   @relation(fields: [sectionId], references: [id])
-  sectionId  String?
   activities Activity[]
   harvests   Harvest[]
   createdAt  DateTime   @default(now())
