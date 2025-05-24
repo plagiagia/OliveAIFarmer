@@ -25,26 +25,6 @@ async function main() {
     }
   }
 
-  // Convert section areas
-  const sections = await prisma.oliveSection.findMany({
-    where: {
-      area: {
-        not: null
-      }
-    }
-  })
-
-  for (const section of sections) {
-    if (section.area) {
-      const areaInStremmata = section.area * 10
-      await prisma.oliveSection.update({
-        where: { id: section.id },
-        data: { area: areaInStremmata }
-      })
-      console.log(`✅ Updated section "${section.name}": ${section.area} hectares → ${areaInStremmata} stremmata`)
-    }
-  }
-
   console.log('🎉 Area conversion completed successfully!')
 }
 
