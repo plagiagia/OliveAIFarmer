@@ -1,6 +1,6 @@
 'use client'
 
-import { BarChart3, Calculator, Calendar, CheckCircle, Euro, TreePine, Wheat, X } from 'lucide-react'
+import { BarChart3, Calculator, Calendar, CheckCircle, Edit, Euro, TreePine, Wheat, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 interface HarvestCreateModalProps {
@@ -13,6 +13,7 @@ interface HarvestCreateModalProps {
     name: string
   }
   onSuccess: () => void
+  editingHarvest?: any
 }
 
 export default function HarvestCreateModal({ 
@@ -20,7 +21,8 @@ export default function HarvestCreateModal({
   onClose, 
   farmId, 
   farmData,
-  onSuccess 
+  onSuccess,
+  editingHarvest 
 }: HarvestCreateModalProps) {
   const [formData, setFormData] = useState({
     year: new Date().getFullYear(),
@@ -54,9 +56,33 @@ export default function HarvestCreateModal({
   // Check for ongoing harvest when modal opens
   useEffect(() => {
     if (isOpen) {
-      checkForOngoingHarvest()
+      if (editingHarvest) {
+        // Pre-populate form with editing data
+        setFormData({
+          year: editingHarvest.year,
+          startDate: editingHarvest.startDate ? new Date(editingHarvest.startDate).toISOString().split('T')[0] : '',
+          endDate: editingHarvest.endDate ? new Date(editingHarvest.endDate).toISOString().split('T')[0] : '',
+          collectionDate: editingHarvest.collectionDate ? new Date(editingHarvest.collectionDate).toISOString().split('T')[0] : (editingHarvest.startDate ? new Date(editingHarvest.startDate).toISOString().split('T')[0] : ''),
+          totalYield: editingHarvest.totalYield?.toString() || '',
+          totalYieldUnit: 'kg', // Default to kg
+          pricePerKg: editingHarvest.pricePerKg?.toString() || '',
+          pricePerTon: editingHarvest.pricePerTon?.toString() || '',
+          priceUnit: editingHarvest.priceUnit || 'PER_KG',
+          oilExtracted: editingHarvest.oilExtracted?.toString() || '',
+          notes: editingHarvest.notes || ''
+        })
+        console.log('🔍 Editing harvest with prices:', { 
+          pricePerKg: editingHarvest.pricePerKg, 
+          pricePerTon: editingHarvest.pricePerTon, 
+          priceUnit: editingHarvest.priceUnit 
+        })
+        setHarvestMode('new') // Start in edit mode
+        setIsCheckingOngoing(false)
+      } else {
+        checkForOngoingHarvest()
+      }
     }
-  }, [isOpen, farmId])
+  }, [isOpen, farmId, editingHarvest])
 
   const checkForOngoingHarvest = async () => {
     try {
@@ -74,11 +100,13 @@ export default function HarvestCreateModal({
           setFormData(prev => ({
             ...prev,
             year: ongoing.year,
+            startDate: ongoing.startDate ? new Date(ongoing.startDate).toISOString().split('T')[0] : '',
             pricePerKg: ongoing.pricePerKg?.toString() || '',
             pricePerTon: ongoing.pricePerTon?.toString() || '',
             priceUnit: ongoing.priceUnit || 'PER_KG',
             collectionDate: new Date().toISOString().split('T')[0] // Default to today
           }))
+          console.log('🔍 Using prices from ongoing harvest:', { pricePerKg: ongoing.pricePerKg, pricePerTon: ongoing.pricePerTon, priceUnit: ongoing.priceUnit })
         } else {
           setOngoingHarvest(null)
           setHarvestMode('new')
@@ -170,13 +198,13 @@ export default function HarvestCreateModal({
     setIsSubmitting(true)
 
     try {
-      const submitData = {
+      const submitData: any = {
         ...formData,
         farmId,
         totalYield: parseFloat(formData.totalYield),
         totalYieldTons: calculations.totalYieldTons,
-        pricePerKg: formData.priceUnit === 'PER_KG' ? parseFloat(formData.pricePerKg) : calculations.pricePerKgConverted,
-        pricePerTon: formData.priceUnit === 'PER_TON' ? parseFloat(formData.pricePerTon) : calculations.pricePerTonConverted,
+        pricePerKg: formData.pricePerKg ? parseFloat(formData.pricePerKg) : (formData.priceUnit === 'PER_KG' ? parseFloat(formData.pricePerKg) : calculations.pricePerKgConverted),
+        pricePerTon: formData.pricePerTon ? parseFloat(formData.pricePerTon) : (formData.priceUnit === 'PER_TON' ? parseFloat(formData.pricePerTon) : calculations.pricePerTonConverted),
         totalValue: calculations.totalValue,
         yieldPerTree: calculations.yieldPerTree,
         yieldPerStremma: calculations.yieldPerStremma,
@@ -185,11 +213,32 @@ export default function HarvestCreateModal({
         collectionDate: formData.collectionDate,
         totalYieldUnit: formData.totalYieldUnit,
         // For daily collections, mark as not completed yet
-        completed: harvestMode === 'complete'
+        completed: harvestMode === 'complete',
+        // Send appropriate dates based on mode
+        ...(harvestMode === 'new' && { startDate: formData.startDate }),
+        ...(harvestMode === 'daily' && { startDate: formData.collectionDate }), // Use collectionDate as startDate for daily entries
+        ...(harvestMode === 'complete' && { endDate: formData.endDate })
       }
 
-      const response = await fetch('/api/harvests/create', {
-        method: 'POST',
+      const apiUrl = editingHarvest ? '/api/harvests/update' : '/api/harvests/create'
+      const method = editingHarvest ? 'PATCH' : 'POST'
+      
+      // Add harvestId for updates
+      if (editingHarvest) {
+        submitData.harvestId = editingHarvest.id
+        // For editing, always send the startDate (which could be the collection date)
+        submitData.startDate = formData.collectionDate || formData.startDate
+        console.log('🔍 Submitting update with data:', {
+          harvestId: editingHarvest.id,
+          startDate: submitData.startDate,
+          pricePerKg: submitData.pricePerKg,
+          pricePerTon: submitData.pricePerTon,
+          priceUnit: submitData.priceUnit
+        })
+      }
+
+      const response = await fetch(apiUrl, {
+        method,
         headers: {
           'Content-Type': 'application/json',
         },
@@ -197,6 +246,8 @@ export default function HarvestCreateModal({
       })
 
       if (response.ok) {
+        const responseData = await response.json()
+        console.log('✅ Success response:', responseData)
         onSuccess()
         onClose()
         // Reset form
@@ -260,15 +311,17 @@ export default function HarvestCreateModal({
             </div>
             <div>
               <h2 className="text-2xl font-bold text-gray-900">
-                {harvestMode === 'new' && 'Νέα Συγκομιδή'}
-                {harvestMode === 'daily' && `Συλλογή - Συγκομιδή ${formData.year}`}
-                {harvestMode === 'complete' && `Ολοκλήρωση Συγκομιδής ${formData.year}`}
+                {editingHarvest && 'Επεξεργασία Συγκομιδής'}
+                {!editingHarvest && harvestMode === 'new' && 'Νέα Συγκομιδή'}
+                {!editingHarvest && harvestMode === 'daily' && `Συλλογή - Συγκομιδή ${formData.year}`}
+                {!editingHarvest && harvestMode === 'complete' && `Ολοκλήρωση Συγκομιδής ${formData.year}`}
               </h2>
               <p className="text-gray-600">{farmData.name}</p>
               {ongoingHarvest && harvestMode === 'daily' && (
-                <p className="text-sm text-green-600">
-                  Συγκομιδή σε εξέλιξη από {new Date(ongoingHarvest.startDate).toLocaleDateString('el-GR')}
-                </p>
+                <div className="text-sm text-green-600">
+                  <p>Συγκομιδή σε εξέλιξη από {new Date(ongoingHarvest.startDate).toLocaleDateString('el-GR')}</p>
+                  <p className="text-xs text-gray-500">Έναρξη: {new Date(ongoingHarvest.startDate).toLocaleDateString('el-GR')}</p>
+                </div>
               )}
             </div>
           </div>
@@ -440,8 +493,8 @@ export default function HarvestCreateModal({
             </div>
           </div>
 
-          {/* Pricing Information - Show existing prices for daily collections */}
-          {(harvestMode === 'new' || (harvestMode === 'daily' && !ongoingHarvest?.pricePerKg && !ongoingHarvest?.pricePerTon)) && (
+          {/* Pricing Information - Always show for new harvests, daily collections without prices, or when editing */}
+          {(harvestMode === 'new' || editingHarvest || (harvestMode === 'daily' && (!formData.pricePerKg && !formData.pricePerTon))) && (
             <div className="space-y-6">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
                 <Euro className="w-5 h-5 text-blue-600" />
@@ -516,21 +569,21 @@ export default function HarvestCreateModal({
             </div>
           )}
 
-          {/* Show existing pricing for ongoing harvests */}
-          {harvestMode === 'daily' && ongoingHarvest && (ongoingHarvest.pricePerKg || ongoingHarvest.pricePerTon) && (
+          {/* Show existing pricing for daily collections and editing */}
+          {!editingHarvest && harvestMode === 'daily' && (formData.pricePerKg || formData.pricePerTon) && (
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
               <h4 className="font-medium text-blue-900 mb-2">Τιμές Συγκομιδής</h4>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                {ongoingHarvest.pricePerKg && (
+                              <div className="grid grid-cols-2 gap-4 text-sm">
+                {formData.pricePerKg && (
                   <div>
                     <span className="text-blue-700">Τιμή/kg:</span>
-                    <div className="font-semibold">€{ongoingHarvest.pricePerKg.toFixed(3)}</div>
+                    <div className="font-semibold">€{parseFloat(formData.pricePerKg).toFixed(3)}</div>
                   </div>
                 )}
-                {ongoingHarvest.pricePerTon && (
+                {formData.pricePerTon && (
                   <div>
                     <span className="text-blue-700">Τιμή/τόνο:</span>
-                    <div className="font-semibold">€{ongoingHarvest.pricePerTon.toFixed(2)}</div>
+                    <div className="font-semibold">€{parseFloat(formData.pricePerTon).toFixed(2)}</div>
                   </div>
                 )}
               </div>
@@ -662,6 +715,11 @@ export default function HarvestCreateModal({
                     <>
                       <Calendar className="w-5 h-5" />
                       <span>Καταγραφή Συλλογής</span>
+                    </>
+                  ) : editingHarvest ? (
+                    <>
+                      <Edit className="w-5 h-5" />
+                      <span>Ενημέρωση Συγκομιδής</span>
                     </>
                   ) : (
                     <>

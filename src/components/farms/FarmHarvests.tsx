@@ -1,6 +1,6 @@
 'use client'
 
-import { BarChart3, Calendar, CheckCircle, Clock, Edit, Euro, MapPin, Plus, TreePine, TrendingUp, Wheat } from 'lucide-react'
+import { BarChart3, Calendar, CheckCircle, Clock, Edit, Euro, MapPin, Plus, Trash2, TreePine, TrendingUp, Wheat } from 'lucide-react'
 import { useState } from 'react'
 import HarvestCreateModal from './HarvestCreateModal'
 
@@ -21,30 +21,107 @@ interface GroupedHarvest {
 export default function FarmHarvests({ farm }: FarmHarvestsProps) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
+  const [editingHarvest, setEditingHarvest] = useState<any>(null)
 
   const handleCreateSuccess = () => {
     setRefreshKey(prev => prev + 1)
-    // Optionally refresh the page to get updated data
-    window.location.reload()
+    setEditingHarvest(null) // Clear edit mode
+    // Force a more robust refresh with longer delay for database consistency
+    setTimeout(() => {
+      if (typeof window !== 'undefined' && window.location.pathname.includes('/farms/')) {
+        // Clear any potential caches and reload
+        if ('caches' in window) {
+          caches.keys().then(names => {
+            names.forEach(name => {
+              caches.delete(name)
+            })
+          })
+        }
+        window.location.reload()
+      }
+    }, 500) // Increased delay to allow for database consistency
   }
 
-  const handleCompleteHarvest = async (harvestId: string) => {
+  const handleDeleteHarvest = async (harvestId: string, harvestYear: number) => {
+    if (!confirm(`Είστε σίγουροι ότι θέλετε να διαγράψετε αυτή τη συλλογή από το ${harvestYear};`)) {
+      return
+    }
+
     try {
-      const response = await fetch('/api/harvests/complete', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          harvestId,
-          endDate: new Date().toISOString().split('T')[0]
-        }),
+      const response = await fetch(`/api/harvests/delete?harvestId=${harvestId}`, {
+        method: 'DELETE',
       })
 
       if (response.ok) {
         handleCreateSuccess() // Refresh the data
       } else {
-        console.error('Failed to complete harvest')
+        const errorData = await response.json()
+        alert(errorData.error || 'Αποτυχία διαγραφής συγκομιδής')
+      }
+    } catch (error) {
+      console.error('Error deleting harvest:', error)
+      alert('Σφάλμα κατά τη διαγραφή')
+    }
+  }
+
+  const handleDeleteEntireHarvest = async (year: number) => {
+    const harvestsToDelete = farm.harvests?.filter((h: any) => h.year === year) || []
+    
+    if (harvestsToDelete.length === 0) return
+    
+    if (!confirm(`Είστε σίγουροι ότι θέλετε να διαγράψετε ΟΛΗ τη συγκομιδή του ${year} (${harvestsToDelete.length} συλλογές);`)) {
+      return
+    }
+
+    try {
+      const promises = harvestsToDelete.map((harvest: any) =>
+        fetch(`/api/harvests/delete?harvestId=${harvest.id}`, {
+          method: 'DELETE',
+        })
+      )
+
+      const responses = await Promise.all(promises)
+      
+      if (responses.every(r => r.ok)) {
+        handleCreateSuccess() // Refresh the data
+      } else {
+        alert('Αποτυχία διαγραφής κάποιων συλλογών')
+      }
+    } catch (error) {
+      console.error('Error deleting entire harvest:', error)
+      alert('Σφάλμα κατά τη διαγραφή')
+    }
+  }
+
+  const handleCompleteHarvest = async (year: number) => {
+    try {
+      // Find all incomplete harvests for this year
+      const incompleteHarvests = farm.harvests?.filter((h: any) => 
+        h.year === year && !h.completed
+      ) || []
+
+      if (incompleteHarvests.length === 0) return
+
+      // Complete all harvests for this year
+      const promises = incompleteHarvests.map((harvest: any) =>
+        fetch('/api/harvests/complete', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            harvestId: harvest.id,
+            endDate: new Date().toISOString().split('T')[0]
+          }),
+        })
+      )
+
+      const responses = await Promise.all(promises)
+      
+      if (responses.every(r => r.ok)) {
+        handleCreateSuccess() // Refresh the data
+      } else {
+        console.error('Failed to complete some harvests')
       }
     } catch (error) {
       console.error('Error completing harvest:', error)
@@ -187,13 +264,7 @@ export default function FarmHarvests({ farm }: FarmHarvestsProps) {
                     
                     {!harvest.isCompleted && (
                       <button
-                        onClick={() => {
-                          // Find the first incomplete harvest to complete
-                          const incompleteHarvest = harvest.collections.find(c => !c.completed)
-                          if (incompleteHarvest) {
-                            handleCompleteHarvest(incompleteHarvest.id)
-                          }
-                        }}
+                        onClick={() => handleCompleteHarvest(harvest.year)}
                         className="flex items-center space-x-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                       >
                         <CheckCircle className="w-4 h-4" />
@@ -201,8 +272,25 @@ export default function FarmHarvests({ farm }: FarmHarvestsProps) {
                       </button>
                     )}
                     
-                    <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                    <button 
+                      onClick={() => {
+                        // Find the first harvest from this year to edit
+                        const harvestToEdit = harvest.collections[0]
+                        setEditingHarvest(harvestToEdit)
+                        setIsCreateModalOpen(true)
+                      }}
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                      title="Επεξεργασία πρώτης συλλογής"
+                    >
                       <Edit className="w-4 h-4 text-gray-600" />
+                    </button>
+                    
+                    <button 
+                      onClick={() => handleDeleteEntireHarvest(harvest.year)}
+                      className="p-2 hover:bg-red-100 rounded-lg transition-colors"
+                      title="Διαγραφή ολόκληρης συγκομιδής"
+                    >
+                      <Trash2 className="w-4 h-4 text-red-600" />
                     </button>
                   </div>
                 </div>
@@ -291,12 +379,33 @@ export default function FarmHarvests({ farm }: FarmHarvestsProps) {
                             </div>
                           )}
 
-                          <div className="flex items-center space-x-1">
-                            {collection.completed ? (
-                              <CheckCircle className="w-4 h-4 text-green-600" />
-                            ) : (
-                              <Clock className="w-4 h-4 text-yellow-600" />
-                            )}
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={() => {
+                                setEditingHarvest(collection)
+                                setIsCreateModalOpen(true)
+                              }}
+                              className="p-1 hover:bg-gray-200 rounded transition-colors"
+                              title="Επεξεργασία συλλογής"
+                            >
+                              <Edit className="w-3 h-3 text-gray-600" />
+                            </button>
+                            
+                            <button
+                              onClick={() => handleDeleteHarvest(collection.id, collection.year)}
+                              className="p-1 hover:bg-red-100 rounded transition-colors"
+                              title="Διαγραφή συλλογής"
+                            >
+                              <Trash2 className="w-3 h-3 text-red-600" />
+                            </button>
+                            
+                            <div className="flex items-center space-x-1">
+                              {collection.completed ? (
+                                <CheckCircle className="w-4 h-4 text-green-600" />
+                              ) : (
+                                <Clock className="w-4 h-4 text-yellow-600" />
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -327,10 +436,13 @@ export default function FarmHarvests({ farm }: FarmHarvestsProps) {
         </div>
       )}
 
-      {/* Create Harvest Modal */}
+      {/* Create/Edit Harvest Modal */}
       <HarvestCreateModal
         isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
+        onClose={() => {
+          setIsCreateModalOpen(false)
+          setEditingHarvest(null)
+        }}
         farmId={farm.id}
         farmData={{
           name: farm.name,
@@ -338,6 +450,7 @@ export default function FarmHarvests({ farm }: FarmHarvestsProps) {
           treesCount: farm.trees?.length || 0
         }}
         onSuccess={handleCreateSuccess}
+        editingHarvest={editingHarvest}
       />
     </div>
   )

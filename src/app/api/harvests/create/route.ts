@@ -30,12 +30,7 @@ export async function POST(request: NextRequest) {
       completed
     } = body
 
-    // Validate required fields
-    if (!farmId || !year || !startDate || !totalYield) {
-      return NextResponse.json({ 
-        error: 'Τα υποχρεωτικά πεδία (ελαιώνας, έτος, ημερομηνία έναρξης, συνολική παραγωγή) είναι απαραίτητα' 
-      }, { status: 400 })
-    }
+        // Validate required fields - different validation for new harvest vs daily collection    if (!farmId || !year || !totalYield) {      return NextResponse.json({         error: 'Τα υποχρεωτικά πεδία (ελαιώνας, έτος, συνολική παραγωγή) είναι απαραίτητα'       }, { status: 400 })    }    // For new harvests (when completed is false and no existing harvest), require startDate    // For daily collections, require collectionDate    if (!startDate && !collectionDate) {      return NextResponse.json({         error: 'Απαιτείται ημερομηνία έναρξης ή ημερομηνία συλλογής'       }, { status: 400 })    }
 
     // Verify user owns the farm
     const farm = await prisma.farm.findFirst({
@@ -64,9 +59,9 @@ export async function POST(request: NextRequest) {
       data: {
         farmId,
         year: parseInt(year),
-        startDate: new Date(startDate),
+        startDate: startDate ? new Date(startDate) : new Date(),
         endDate: endDate ? new Date(endDate) : null,
-        // collectionDate: collectionDate ? new Date(collectionDate) : null, // Temporarily commented out
+        // collectionDate: collectionDate ? new Date(collectionDate) : null, // Temporarily disabled due to Prisma type issues
         totalYield: totalYieldKg,
         totalYieldTons: totalYieldKg / 1000,
         pricePerKg: pricePerKg ? parseFloat(pricePerKg) : null,
