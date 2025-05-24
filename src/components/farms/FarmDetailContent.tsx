@@ -1,28 +1,19 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { 
-  MapPin, 
-  Calendar, 
-  TreePine, 
-  Activity, 
-  Wheat, 
-  Settings, 
-  Edit, 
-  Plus,
-  Users,
-  TrendingUp,
-  BarChart3,
-  Clock
+import {
+    Activity,
+    BarChart3,
+    TreePine,
+    Wheat
 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+import FarmActivities from './FarmActivities'
+import FarmEditModal from './FarmEditModal'
+import FarmHarvests from './FarmHarvests'
 import FarmHeader from './FarmHeader'
 import FarmStats from './FarmStats'
-import FarmSections from './FarmSections'
 import FarmTrees from './FarmTrees'
-import FarmActivities from './FarmActivities'
-import FarmHarvests from './FarmHarvests'
-import FarmEditModal from './FarmEditModal'
 
 interface FarmDetailContentProps {
   farm: any // We'll type this properly later
@@ -31,12 +22,11 @@ interface FarmDetailContentProps {
 
 export default function FarmDetailContent({ farm, user }: FarmDetailContentProps) {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<'overview' | 'sections' | 'trees' | 'activities' | 'harvests'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'trees' | 'activities' | 'harvests'>('overview')
   const [showEditModal, setShowEditModal] = useState(false)
 
   const tabs = [
     { id: 'overview', label: 'Επισκόπηση', icon: BarChart3 },
-    { id: 'sections', label: 'Τμήματα', icon: MapPin },
     { id: 'trees', label: 'Δέντρα', icon: TreePine },
     { id: 'activities', label: 'Δραστηριότητες', icon: Activity },
     { id: 'harvests', label: 'Συγκομιδές', icon: Wheat },
@@ -81,7 +71,6 @@ export default function FarmDetailContent({ farm, user }: FarmDetailContentProps
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {activeTab === 'overview' && <FarmStats farm={farm} />}
-          {activeTab === 'sections' && <FarmSections farm={farm} />}
           {activeTab === 'trees' && <FarmTrees farm={farm} />}
           {activeTab === 'activities' && <FarmActivities farm={farm} />}
           {activeTab === 'harvests' && <FarmHarvests farm={farm} />}

@@ -15,7 +15,6 @@ interface Farm {
   coordinates: string | null
   totalArea: number | null
   treesCount: number
-  sectionsCount: number
   lastActivityDate: Date | null
   activitiesCount: number
   harvestsCount: number
@@ -136,7 +135,7 @@ function OnboardingView({ user }: { user: User | null }) {
               <div className="w-8 h-8 bg-olive-100 rounded-full flex items-center justify-center">
                 <span className="text-olive-700 font-semibold">2</span>
               </div>
-              <span className="text-gray-700">Οργάνωση σε τμήματα και δέντρα</span>
+              <span className="text-gray-700">Προσθήκη δέντρων στον ελαιώνα</span>
             </div>
             
             <div className="flex items-center space-x-3">

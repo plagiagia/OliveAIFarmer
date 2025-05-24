@@ -84,7 +84,6 @@ export async function getUserByClerkId(clerkId: string) {
       include: {
         farms: {
           include: {
-            sections: true,
             trees: true,
             activities: {
               orderBy: { date: 'desc' },
@@ -117,32 +116,8 @@ export async function getFarmById(farmId: string) {
             email: true
           }
         },
-        sections: {
-          include: {
-            trees: {
-              include: {
-                treeActivities: {
-                  include: {
-                    activity: true
-                  },
-                  orderBy: { createdAt: 'desc' },
-                  take: 5
-                },
-                treeHarvests: {
-                  include: {
-                    harvest: true
-                  },
-                  orderBy: { harvestDate: 'desc' },
-                  take: 3
-                }
-              }
-            }
-          },
-          orderBy: { name: 'asc' }
-        },
         trees: {
           include: {
-            section: true,
             treeActivities: {
               include: {
                 activity: true

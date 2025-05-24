@@ -41,12 +41,7 @@ export async function POST(request: NextRequest) {
         description: description?.trim() || null,
         userId: user.id,
       },
-      include: {
-        sections: true,
-        trees: true,
-        activities: true,
-        harvests: true,
-      }
+                  include: {        trees: true,        activities: true,        harvests: true,      }
     })
 
     console.log('✅ New farm created:', farm.name, 'for user:', user.email)

@@ -36,37 +36,6 @@ async function main() {
 
   console.log('✅ Created test farm:', testFarm.name)
 
-  // Create farm sections
-  const northSection = await prisma.oliveSection.upsert({
-    where: { id: 'north-section-id' },
-    update: {},
-    create: {
-      id: 'north-section-id',
-      name: 'Βόρειο Τμήμα',
-      area: 25, // 2.5 hectares = 25 stremmata
-      soilType: 'Αργιλώδες',
-      elevation: 120,
-      description: 'Το βόρειο τμήμα του ελαιώνα με παλιότερα δέντρα',
-      farmId: testFarm.id,
-    },
-  })
-
-  const southSection = await prisma.oliveSection.upsert({
-    where: { id: 'south-section-id' },
-    update: {},
-    create: {
-      id: 'south-section-id',
-      name: 'Νότιο Τμήμα',
-      area: 27, // 2.7 hectares = 27 stremmata
-      soilType: 'Αμμώδες',
-      elevation: 100,
-      description: 'Το νότιο τμήμα με νεότερα δέντρα',
-      farmId: testFarm.id,
-    },
-  })
-
-  console.log('✅ Created farm sections')
-
   // Create sample olive trees
   const trees = [
     {
@@ -76,7 +45,6 @@ async function main() {
       plantingYear: 1995,
       age: 29,
       health: 'GOOD' as const,
-      sectionId: northSection.id,
     },
     {
       id: 'tree-002',
@@ -85,7 +53,6 @@ async function main() {
       plantingYear: 1995,
       age: 29,
       health: 'EXCELLENT' as const,
-      sectionId: northSection.id,
     },
     {
       id: 'tree-003',
@@ -94,7 +61,6 @@ async function main() {
       plantingYear: 2010,
       age: 14,
       health: 'HEALTHY' as const,
-      sectionId: southSection.id,
     },
   ]
 
@@ -116,8 +82,8 @@ async function main() {
     {
       id: 'activity-001',
       type: 'WATERING' as const,
-      title: 'Πότισμα Βόρειου Τμήματος',
-      description: 'Πότισμα των δέντρων στο βόρειο τμήμα',
+      title: 'Πότισμα Ελαιώνα',
+      description: 'Πότισμα των δέντρων του ελαιώνα',
       date: new Date('2024-06-15'),
       duration: 120,
       cost: 50.0,
@@ -171,9 +137,13 @@ async function main() {
       startDate: new Date('2023-11-01'),
       endDate: new Date('2023-11-15'),
       totalYield: 1250.5,
-      qualityGrade: 'Εξαιρετικό',
-      oilExtracted: 187.5,
-      oilYieldPercent: 15.0,
+      totalYieldTons: 1.2505,
+      pricePerKg: 4.5,
+      pricePerTon: 4500,
+      priceUnit: 'PER_KG',
+      totalValue: 5627.25,
+      yieldPerTree: 416.83,
+      yieldPerStremma: 24.05,
       notes: 'Εξαιρετική χρονιά με καλή ποιότητα ελαιολάδου',
       completed: true,
       farmId: testFarm.id,

@@ -48,7 +48,12 @@ export default function FarmHeader({ farm, user, onEdit, onBack }: FarmHeaderPro
                 <span>{farm.location}</span>
               </div>
               
-                            {farm.totalArea && (                <div className="flex items-center space-x-2">                  <Ruler className="w-4 h-4 text-green-600" />                  <span>{farm.totalArea} στρέμματα</span>                </div>              )}
+              {farm.totalArea && (
+                <div className="flex items-center space-x-2">
+                  <Ruler className="w-4 h-4 text-green-600" />
+                  <span>{farm.totalArea} στρέμματα</span>
+                </div>
+              )}
               
               <div className="flex items-center space-x-2">
                 <Calendar className="w-4 h-4 text-green-600" />
@@ -70,10 +75,6 @@ export default function FarmHeader({ farm, user, onEdit, onBack }: FarmHeaderPro
           <div className="bg-green-50 rounded-xl p-6">
             <h3 className="font-semibold text-green-900 mb-4">Γρήγορα Στατιστικά</h3>
             <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-green-700">Τμήματα:</span>
-                <span className="font-semibold text-green-900">{farm.sections?.length || 0}</span>
-              </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-green-700">Δέντρα:</span>
                 <span className="font-semibold text-green-900">{farm.trees?.length || 0}</span>

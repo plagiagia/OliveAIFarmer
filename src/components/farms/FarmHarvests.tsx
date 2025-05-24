@@ -94,9 +94,7 @@ export default function FarmHarvests({ farm }: FarmHarvestsProps) {
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900">Συγκομιδή {harvest.year}</h3>
-                    {harvest.qualityGrade && (
-                      <p className="text-sm text-gray-600">Ποιότητα: {harvest.qualityGrade}</p>
-                    )}
+                    
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -195,19 +193,9 @@ export default function FarmHarvests({ farm }: FarmHarvestsProps) {
                   </div>
                 )}
                 
-                {harvest.oilExtracted && (
-                  <div>
-                    <span className="font-medium">Λάδι:</span>
-                    <div>{harvest.oilExtracted} λίτρα</div>
-                  </div>
-                )}
                 
-                {harvest.oilYieldPercent && (
-                  <div>
-                    <span className="font-medium">Απόδοση λαδιού:</span>
-                    <div>{harvest.oilYieldPercent.toFixed(1)}%</div>
-                  </div>
-                )}
+                
+                
               </div>
 
               {harvest.notes && (

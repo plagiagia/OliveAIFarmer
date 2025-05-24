@@ -27,7 +27,6 @@ export default function HarvestCreateModal({
     startDate: '',
     endDate: '',
     totalYield: '', // kg
-    qualityGrade: '',
     pricePerKg: '',
     pricePerTon: '',
     priceUnit: 'PER_KG',
@@ -144,7 +143,6 @@ export default function HarvestCreateModal({
           startDate: '',
           endDate: '',
           totalYield: '',
-          qualityGrade: '',
           pricePerKg: '',
           pricePerTon: '',
           priceUnit: 'PER_KG',
@@ -245,54 +243,20 @@ export default function HarvestCreateModal({
               <span>Δεδομένα Παραγωγής</span>
             </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Συνολική Παραγωγή (κιλά) *
-                </label>
-                <input
-                  type="number"
-                  value={formData.totalYield}
-                  onChange={(e) => setFormData({ ...formData, totalYield: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                  placeholder="π.χ. 1250"
-                  step="0.01"
-                  min="0"
-                />
-                {errors.totalYield && <p className="text-red-500 text-sm mt-1">{errors.totalYield}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Ποιότητα
-                </label>
-                <select
-                  value={formData.qualityGrade}
-                  onChange={(e) => setFormData({ ...formData, qualityGrade: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                >
-                  <option value="">Επιλέξτε ποιότητα</option>
-                  <option value="Εξαιρετικό">Εξαιρετικό</option>
-                  <option value="Πολύ Καλό">Πολύ Καλό</option>
-                  <option value="Καλό">Καλό</option>
-                  <option value="Μέτριο">Μέτριο</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Λάδι που Εξήχθη (λίτρα)
-                </label>
-                <input
-                  type="number"
-                  value={formData.oilExtracted}
-                  onChange={(e) => setFormData({ ...formData, oilExtracted: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                  placeholder="π.χ. 187.5"
-                  step="0.1"
-                  min="0"
-                />
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Συνολική Παραγωγή (κιλά) *
+              </label>
+              <input
+                type="number"
+                value={formData.totalYield}
+                onChange={(e) => setFormData({ ...formData, totalYield: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                placeholder="π.χ. 1250"
+                step="0.01"
+                min="0"
+              />
+              {errors.totalYield && <p className="text-red-500 text-sm mt-1">{errors.totalYield}</p>}
             </div>
           </div>
 

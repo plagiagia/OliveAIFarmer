@@ -25,9 +25,7 @@ export default async function DashboardPage() {
       location: farm.location,
       coordinates: farm.coordinates,
       totalArea: farm.totalArea,
-      treesCount: farm.trees?.length || 0,
-      sectionsCount: farm.sections?.length || 0,
-      lastActivityDate: farm.activities?.[0]?.date || null,
+                  treesCount: farm.trees?.length || 0,      lastActivityDate: farm.activities?.[0]?.date || null,
       activitiesCount: farm.activities?.length || 0,
       harvestsCount: farm.harvests?.length || 0,
     })) || []

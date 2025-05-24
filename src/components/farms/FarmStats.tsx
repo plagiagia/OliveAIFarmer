@@ -3,13 +3,12 @@
 import { format } from 'date-fns'
 import { el } from 'date-fns/locale'
 import {
-    Activity,
-    Calendar,
-    CheckCircle,
-    Clock,
-    MapPin,
-    TreePine,
-    Wheat
+  Activity,
+  Calendar,
+  CheckCircle,
+  Clock,
+  TreePine,
+  Wheat
 } from 'lucide-react'
 
 interface FarmStatsProps {
@@ -19,7 +18,6 @@ interface FarmStatsProps {
 export default function FarmStats({ farm }: FarmStatsProps) {
   // Calculate statistics
   const totalTrees = farm.trees?.length || 0
-  const totalSections = farm.sections?.length || 0
   const totalActivities = farm.activities?.length || 0
   const totalHarvests = farm.harvests?.length || 0
   
@@ -50,13 +48,6 @@ export default function FarmStats({ farm }: FarmStatsProps) {
       description: 'Ελιές στον ελαιώνα'
     },
     {
-      title: 'Τμήματα Ελαιώνα',
-      value: totalSections,
-      icon: MapPin,
-      color: 'bg-blue-500',
-      description: 'Οργανωμένα τμήματα'
-    },
-    {
       title: 'Δραστηριότητες',
       value: totalActivities,
       icon: Activity,
@@ -75,7 +66,7 @@ export default function FarmStats({ farm }: FarmStatsProps) {
   return (
     <div className="space-y-8">
       {/* Main Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {statCards.map((stat, index) => {
           const Icon = stat.icon
           return (
@@ -239,43 +230,6 @@ export default function FarmStats({ farm }: FarmStatsProps) {
           )}
         </div>
       </div>
-
-      {/* Farm Area Breakdown by Sections */}
-      {farm.sections && farm.sections.length > 0 && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-            <MapPin className="w-5 h-5 text-green-600 mr-2" />
-            Κατανομή Έκτασης ανά Τμήμα
-          </h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {farm.sections.map((section: any) => (
-              <div key={section.id} className="p-4 border border-gray-200 rounded-lg">
-                <h4 className="font-semibold text-gray-900 mb-2">{section.name}</h4>
-                <div className="space-y-2 text-sm text-gray-600">
-                                    {section.area && (                    <div className="flex justify-between">                      <span>Έκταση:</span>                      <span className="font-medium">{section.area} στρέμματα</span>                    </div>                  )}
-                  <div className="flex justify-between">
-                    <span>Δέντρα:</span>
-                    <span className="font-medium">{section.trees?.length || 0}</span>
-                  </div>
-                  {section.soilType && (
-                    <div className="flex justify-between">
-                      <span>Έδαφος:</span>
-                      <span className="font-medium">{section.soilType}</span>
-                    </div>
-                  )}
-                  {section.elevation && (
-                    <div className="flex justify-between">
-                      <span>Υψόμετρο:</span>
-                      <span className="font-medium">{section.elevation}μ</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   )
 } 

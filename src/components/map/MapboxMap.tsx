@@ -101,10 +101,13 @@ export default function MapboxMap({
     
     // Restrict map to Greece region
     if (mapRef.current) {
-      mapRef.current.setMaxBounds([
-        [GREECE_BOUNDS.west, GREECE_BOUNDS.south], // Southwest corner
-        [GREECE_BOUNDS.east, GREECE_BOUNDS.north]  // Northeast corner
-      ])
+      const map = mapRef.current.getMap()
+      if (map && map.setMaxBounds) {
+        map.setMaxBounds([
+          [GREECE_BOUNDS.west, GREECE_BOUNDS.south], // Southwest corner
+          [GREECE_BOUNDS.east, GREECE_BOUNDS.north]  // Northeast corner
+        ])
+      }
     }
   }
 

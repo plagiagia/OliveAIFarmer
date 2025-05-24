@@ -44,8 +44,7 @@ model Farm {
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Farm sections and trees
-  sections OliveSection[]
+  // Farm trees
   trees    OliveTree[]
   
   // Activities and harvests
@@ -55,26 +54,6 @@ model Farm {
   @@map("farms")
 }
 
-// Sections within a farm for better organization
-model OliveSection {
-  id          String   @id @default(cuid())
-  name        String   // e.g., "Βόρειο Τμήμα", "Νότιο Τμήμα"
-  area        Float?   // Area in stremmata (στρέμματα)
-  soilType    String?  // e.g., "Αργιλώδες", "Αμμώδες"
-  elevation   Int?     // Elevation in meters
-  description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Parent farm
-  farmId String
-  farm   Farm   @relation(fields: [farmId], references: [id], onDelete: Cascade)
-
-  // Trees in this section
-  trees OliveTree[]
-
-  @@map("olive_sections")
-}
 
 // Individual olive trees
 model OliveTree {
@@ -90,11 +69,9 @@ model OliveTree {
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
 
-  // Parent farm and section
+  // Parent farm
   farmId    String
   farm      Farm          @relation(fields: [farmId], references: [id], onDelete: Cascade)
-  sectionId String?
-  section   OliveSection? @relation(fields: [sectionId], references: [id], onDelete: SetNull)
 
   // Tree activities and harvests
   treeActivities TreeActivity[]
@@ -155,9 +132,6 @@ model Harvest {
   endDate          DateTime?
   totalYield       Float?        // Total yield in kg
   totalYieldTons   Float?        // Total yield in tons (calculated from totalYield)
-  qualityGrade     String?       // e.g., "Εξαιρετικό", "Καλό"
-  oilExtracted     Float?        // Liters of oil extracted
-  oilYieldPercent  Float?        // Oil yield percentage
   
   // Enhanced pricing information
   pricePerKg       Float?        // Price per kilogram
