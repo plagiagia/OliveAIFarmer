@@ -1,228 +1,19 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+# 🌱 Olive Variety Knowledge Base - Planning Document
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+## 🎯 **Project Overview**
 
-generator client {
-  provider = "prisma-client-js"
-}
+Create an intelligent knowledge base for Greek olive varieties that provides personalized recommendations, seasonal calendars, and smart notifications based on:
 
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
+- Variety-specific needs and characteristics
+- Weather conditions
+- Seasonal timing
+- Farm-specific context
 
-// User management
-model User {
-  id        String   @id @default(cuid())
-  clerkId   String   @unique // Clerk user ID
-  email     String   @unique
-  firstName String
-  lastName  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+## 📊 **Database Schema Design**
 
-  // User's farms
-  farms Farm[]
+### **New Models to Add**
 
-  @@map("users")
-}
-
-// Farm/Olive Grove
-model Farm {
-  id          String   @id @default(cuid())
-  name        String   // e.g., "Ελαιώνας Μεσσηνίας"
-  location    String   // e.g., "Καλαμάτα, Μεσσηνία"
-  coordinates String?  // GPS coordinates (optional)
-  totalArea   Float?   // Total farm area in stremmata (στρέμματα)
-  description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Owner
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // Farm trees
-  trees    OliveTree[]
-  
-  // Activities and harvests
-  activities Activity[]
-  harvests   Harvest[]
-  
-  // Smart recommendations
-  recommendations SmartRecommendation[]
-
-  @@map("farms")
-}
-
-
-// Individual olive trees
-model OliveTree {
-  id           String         @id @default(cuid())
-  treeNumber   String         // Unique identifier within farm
-  variety      String         // e.g., "Κορωνέικη", "Καλαμών" (for backward compatibility)
-  plantingYear Int?           // Year planted
-  age          Int?           // Tree age in years
-  health       TreeHealth     @default(HEALTHY)
-  status       TreeStatus     @default(ACTIVE)
-  coordinates  String?        // GPS coordinates
-  notes        String?
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-
-  // Enhanced variety reference (new knowledge base)
-  varietyId    String?
-  varietyInfo  OliveVariety? @relation(fields: [varietyId], references: [id])
-
-  // Parent farm
-  farmId    String
-  farm      Farm          @relation(fields: [farmId], references: [id], onDelete: Cascade)
-
-  // Tree activities and harvests
-  treeActivities TreeActivity[]
-  treeHarvests   TreeHarvest[]
-
-  @@unique([farmId, treeNumber])
-  @@map("olive_trees")
-}
-
-// Farm activities (watering, pruning, fertilizing, etc.)
-model Activity {
-  id           String       @id @default(cuid())
-  type         ActivityType
-  title        String       // e.g., "Πότισμα Βόρειου Τμήματος"
-  description  String?
-  date         DateTime
-  duration     Int?         // Duration in minutes
-  cost         Float?       // Cost in euros
-  weather      String?      // Weather conditions
-  notes        String?
-  completed    Boolean      @default(false)
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-
-  // Parent farm
-  farmId String
-  farm   Farm   @relation(fields: [farmId], references: [id], onDelete: Cascade)
-
-  // Individual tree activities
-  treeActivities TreeActivity[]
-
-  @@map("activities")
-}
-
-// Individual tree activities (for specific trees)
-model TreeActivity {
-  id String @id @default(cuid())
-
-  // Parent activity and tree
-  activityId String
-  activity   Activity  @relation(fields: [activityId], references: [id], onDelete: Cascade)
-  treeId     String
-  tree       OliveTree @relation(fields: [treeId], references: [id], onDelete: Cascade)
-
-  // Tree-specific notes
-  notes     String?
-  createdAt DateTime @default(now())
-
-  @@unique([activityId, treeId])
-  @@map("tree_activities")
-}
-
-// Harvest records
-model Harvest {
-  id               String        @id @default(cuid())
-  year             Int           // Harvest year
-  startDate        DateTime
-  endDate          DateTime?
-  collectionDate   DateTime?     // Date of this specific collection event
-  totalYield       Float?        // Total yield in kg
-  totalYieldTons   Float?        // Total yield in tons (calculated from totalYield)
-  
-  // Enhanced pricing information
-  pricePerKg       Float?        // Price per kilogram
-  pricePerTon      Float?        // Price per ton
-  priceUnit        PriceUnit     @default(PER_KG)
-  totalValue       Float?        // Total harvest value (calculated)
-  currency         String        @default("EUR")
-  
-  // Enhanced production metrics
-  yieldPerTree     Float?        // Average yield per tree (calculated)
-  yieldPerStremma  Float?        // Yield per stremma (calculated)
-  
-  notes            String?
-  completed        Boolean       @default(false)
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
-
-  // Parent farm
-  farmId String
-  farm   Farm   @relation(fields: [farmId], references: [id], onDelete: Cascade)
-
-  // Individual tree harvests
-  treeHarvests TreeHarvest[]
-
-  @@map("harvests")
-}
-
-// Individual tree harvest data
-model TreeHarvest {
-  id           String    @id @default(cuid())
-  yield        Float     // Yield in kg for this tree
-  quality      String?   // Quality assessment
-  harvestDate  DateTime
-  notes        String?
-  createdAt    DateTime  @default(now())
-
-  // Parent harvest and tree
-  harvestId String
-  harvest   Harvest   @relation(fields: [harvestId], references: [id], onDelete: Cascade)
-  treeId    String
-  tree      OliveTree @relation(fields: [treeId], references: [id], onDelete: Cascade)
-
-  @@unique([harvestId, treeId])
-  @@map("tree_harvests")
-}
-
-// Enums
-enum TreeHealth {
-  EXCELLENT // Εξαιρετική
-  GOOD      // Καλή
-  HEALTHY   // Υγιής
-  FAIR      // Μέτρια
-  POOR      // Κακή
-  DISEASED  // Άρρωστο
-}
-
-enum TreeStatus {
-  ACTIVE    // Ενεργό
-  INACTIVE  // Ανενεργό
-  REMOVED   // Αφαιρέθηκε
-  REPLANTED // Επανακαλλιέργεια
-}
-
-enum ActivityType {
-  WATERING      // Πότισμα
-  PRUNING       // Κλάδεμα
-  FERTILIZING   // Λίπανση
-  PEST_CONTROL  // Έλεγχος Παρασίτων
-  SOIL_WORK     // Εργασίες Εδάφους
-  HARVESTING    // Συγκομιδή
-  MAINTENANCE   // Συντήρηση
-  INSPECTION    // Επιθεώρηση
-  OTHER         // Άλλο
-}
-
-enum PriceUnit {
-  PER_KG        // Ανά κιλό
-  PER_TON       // Ανά τόνο
-  PER_LITER     // Ανά λίτρο (για λάδι)
-}
-
-// ===== OLIVE VARIETY KNOWLEDGE BASE MODELS =====
-
+```prisma
 // Olive variety master data
 model OliveVariety {
   id                String   @id @default(cuid())
@@ -230,40 +21,40 @@ model OliveVariety {
   scientificName    String?  // e.g., "Olea europaea var. Koroneiki"
   alternativeNames  String[] // Alternative regional names
   primaryRegions    String[] // Main growing regions in Greece
-  
+
   // Characteristics
   treeSize          TreeSizeCategory
   fruitType         FruitType        // OIL, TABLE, DUAL
   oilContent        Float?           // Oil percentage (for oil varieties)
   maturityPeriod    String           // e.g., "Οκτώβριος-Νοέμβριος"
-  
+
   // Yield & Production
   avgYieldPerTree   Float?           // kg per tree
   avgYieldPerStremma Float?          // kg per stremma
   productionStart   Int?             // Years until first production
   peakProduction    Int?             // Years to reach peak
-  
+
   // Quality characteristics
   oilQuality        String?          // Quality description
   flavor            String?          // Flavor profile
   storageLife       String?          // Storage characteristics
-  
+
   // Climate & Environment
   climateNeeds      Json             // Climate requirements
   soilNeeds         Json             // Soil requirements
   waterNeeds        WaterNeedsLevel
   sunlightNeeds     SunlightLevel
   windTolerance     ToleranceLevel
-  
+
   // Disease & Pest resistance
   diseaseResistance Json             // Disease resistance levels
   pestResistance    Json             // Pest resistance levels
-  
+
   // Care requirements
   pruningNeeds      PruningLevel
   fertilizingNeeds  FertilizingLevel
   irrigationNeeds   IrrigationLevel
-  
+
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -272,7 +63,6 @@ model OliveVariety {
   riskFactors       RiskFactor[]
   careGuidelines    CareGuideline[]
   trees             OliveTree[]
-  recommendations   SmartRecommendation[]
 
   @@map("olive_varieties")
 }
@@ -289,14 +79,14 @@ model MonthlyTask {
   duration    String?     // Expected duration
   tools       String[]    // Required tools
   notes       String?     // Additional notes
-  
+
   // Weather dependencies
   weatherConditions Json? // Ideal weather for this task
   temperatureRange  String? // e.g., "5-15°C"
-  
+
   varietyId   String
   variety     OliveVariety @relation(fields: [varietyId], references: [id], onDelete: Cascade)
-  
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -312,15 +102,15 @@ model RiskFactor {
   description   String
   severity      SeverityLevel
   seasonality   String[]      // Months when risk is high
-  
+
   // Conditions that trigger this risk
   triggers      Json          // Weather/environmental triggers
   prevention    String        // Prevention measures
   treatment     String?       // Treatment if occurs
-  
+
   varietyId     String
   variety       OliveVariety @relation(fields: [varietyId], references: [id], onDelete: Cascade)
-  
+
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -335,16 +125,16 @@ model CareGuideline {
   content     String          // Detailed guidance
   importance  Priority
   seasonality String[]        // When applicable
-  
+
   // Interactive elements
   hasImages   Boolean @default(false)
   hasVideo    Boolean @default(false)
   hasSteps    Boolean @default(false)
   steps       Json?           // Step-by-step instructions
-  
+
   varietyId   String
   variety     OliveVariety @relation(fields: [varietyId], references: [id], onDelete: Cascade)
-  
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -359,24 +149,24 @@ model SmartRecommendation {
   message         String
   actionRequired  Boolean @default(false)
   urgency         Priority
-  
+
   // Trigger conditions
   triggerConditions Json             // Complex conditions
   validFrom       DateTime
   validUntil      DateTime?
-  
+
   // Context
   farmId          String?
   varietyId       String?
   weatherBased    Boolean @default(false)
   seasonBased     Boolean @default(false)
-  
+
   // Tracking
   isRead          Boolean @default(false)
   isActioned      Boolean @default(false)
   readAt          DateTime?
   actionedAt      DateTime?
-  
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -387,11 +177,10 @@ model SmartRecommendation {
   @@map("smart_recommendations")
 }
 
-// ===== NEW ENUMS FOR KNOWLEDGE BASE =====
-
+// New enums
 enum TreeSizeCategory {
   SMALL    // Μικρό
-  MEDIUM   // Μεσαίο  
+  MEDIUM   // Μεσαίο
   LARGE    // Μεγάλο
 }
 
@@ -489,3 +278,253 @@ enum RecommendationType {
   RISK_WARNING     // Προειδοποίηση κινδύνου
   OPTIMIZATION     // Βελτίωση
 }
+```
+
+### **Update Existing Models**
+
+```prisma
+// Add to existing Farm model
+model Farm {
+  // ... existing fields ...
+
+  // Add recommendations relation
+  recommendations SmartRecommendation[]
+}
+
+// Update OliveTree model to reference variety
+model OliveTree {
+  // ... existing fields ...
+
+  // Enhanced variety reference
+  varietyId String?
+  varietyInfo OliveVariety? @relation(fields: [varietyId], references: [id])
+
+  // Keep the string variety for backward compatibility
+  variety String // Will be migrated to varietyId
+}
+```
+
+## 📚 **Content Strategy**
+
+### **Phase 1: Core Varieties (Priority)**
+
+**Primary Greek Olive Varieties to Document:**
+
+1. **Κορωνέικη (Koroneiki)** - Most important Greek oil variety
+2. **Καλαμών (Kalamata)** - World-famous table olive
+3. **Χονδρολιά Χαλκιδικής** - Large table olive
+4. **Αμφίσσης (Amfissis)** - Dual-purpose variety
+5. **Κολοβή Αίγινας** - Local specialty
+6. **Μανάκι Χίου** - Unique to Chios
+7. **Τσουνάτη Κέρκυρας** - Corfu specialty
+8. **Μαστοειδής** - Oil variety from Dodecanese
+
+### **Data Collection Sources**
+
+**Scientific & Agricultural Sources:**
+
+- Greek Ministry of Agriculture
+- Agricultural University of Athens research
+- Hellenic Agricultural Organization (ELGO-DIMITRA)
+- International Olive Council data
+- Regional agricultural cooperatives
+
+**Expert Consultation:**
+
+- Local agricultural engineers
+- Experienced olive farmers
+- Agricultural cooperatives
+- Olive oil producers
+
+### **Content Structure for Each Variety**
+
+**Basic Information:**
+
+- Scientific classification
+- Regional names and variations
+- Geographic distribution
+- Historical significance
+
+**Cultivation Requirements:**
+
+- Climate preferences (temperature, humidity, rainfall)
+- Soil requirements (pH, drainage, composition)
+- Water needs (drought tolerance, irrigation requirements)
+- Sunlight requirements
+- Spacing recommendations
+
+**Growth Characteristics:**
+
+- Tree size and shape
+- Growth rate
+- Production timeline (first fruit, peak production)
+- Lifespan and longevity factors
+
+**Production Data:**
+
+- Average yield per tree/stremma
+- Oil content (for oil varieties)
+- Fruit characteristics (size, shape, color)
+- Harvest timing
+- Processing recommendations
+
+**Care Calendar:**
+
+- Month-by-month care requirements
+- Pruning schedules
+- Fertilization timing
+- Pest/disease monitoring periods
+- Irrigation schedules
+
+**Risk Management:**
+
+- Common diseases and prevention
+- Pest vulnerabilities
+- Weather risks (frost, drought, wind)
+- Environmental stressors
+
+**Quality & Uses:**
+
+- Oil quality characteristics
+- Table olive preparation
+- Storage requirements
+- Market considerations
+
+## 🚀 **Implementation Roadmap**
+
+### **Phase 1: Foundation (Weeks 1-2)**
+
+**Database Schema:**
+
+1. Create new Prisma models
+2. Run migration
+3. Seed with basic variety data
+
+**Basic UI Components:**
+
+1. Variety selector component
+2. Variety information display
+3. Basic recommendation system
+
+### **Phase 2: Content Population (Weeks 3-4)**
+
+**Data Entry:**
+
+1. Research and document 8 core varieties
+2. Create monthly task calendars
+3. Define risk factors
+4. Write care guidelines
+
+**Validation:**
+
+1. Expert review of content
+2. Accuracy verification
+3. Greek language proofreading
+
+### **Phase 3: Smart Features (Weeks 5-6)**
+
+**Recommendation Engine:**
+
+1. Context-aware suggestions
+2. Weather integration triggers
+3. Seasonal calendar automation
+4. Notification system
+
+**User Experience:**
+
+1. Variety comparison tools
+2. Personalized dashboards
+3. Interactive care calendars
+4. Progress tracking
+
+### **Phase 4: Advanced Features (Weeks 7-8)**
+
+**Intelligence Layer:**
+
+1. Machine learning for yield prediction
+2. Weather pattern analysis
+3. Regional adaptation recommendations
+4. Community knowledge sharing
+
+**Integration:**
+
+1. Weather API integration
+2. Agricultural calendar sync
+3. Market price integration
+4. Expert consultation platform
+
+## 🎯 **User Experience Flow**
+
+### **For New Farmers:**
+
+```
+Farm Creation → Variety Selection →
+Personalized Welcome → Care Calendar Setup →
+First Recommendations
+```
+
+### **For Existing Farmers:**
+
+```
+Variety Profile → Current Recommendations →
+Seasonal Calendar → Weather Alerts →
+Care Suggestions
+```
+
+### **Daily Farmer Experience:**
+
+```
+Morning: Check weather + recommendations
+Afternoon: Log activities + receive tips
+Evening: Plan tomorrow's tasks
+```
+
+## 📊 **Success Metrics**
+
+**Engagement:**
+
+- Daily active users
+- Recommendation click-through rates
+- Calendar usage
+- Task completion rates
+
+**Agricultural Impact:**
+
+- Yield improvements reported
+- Problem prevention instances
+- Cost savings documented
+- Quality improvements
+
+**Content Quality:**
+
+- Expert validation scores
+- User feedback ratings
+- Accuracy reports
+- Update frequency
+
+## 🔮 **Future Enhancements**
+
+**AI-Powered Features:**
+
+- Computer vision for disease detection
+- Predictive analytics for optimal timing
+- Personalized yield forecasting
+- Climate change adaptation advice
+
+**Community Features:**
+
+- Farmer knowledge sharing
+- Regional best practices
+- Expert Q&A platform
+- Cooperative coordination tools
+
+**Advanced Integrations:**
+
+- IoT sensor data
+- Satellite imagery analysis
+- Market price forecasting
+- Supply chain optimization
+
+---
+
+_This knowledge base will transform OliveLog from a simple farm management tool into an intelligent agricultural advisor specifically tailored for Greek olive farming._
