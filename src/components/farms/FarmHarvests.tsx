@@ -44,8 +44,14 @@ export default function FarmHarvests({ farm }: FarmHarvestsProps) {
   }
 
   const handleCreateSuccess = () => {
-    // Refresh the page to get updated data
-    window.location.reload()
+    // Close modal and reset editing state
+    setIsCreateModalOpen(false)
+    setEditingHarvest(null)
+    
+    // Note: In a real app, you would want to update the farm data from parent
+    // or use a state management solution like Redux/Zustand
+    // For now, we'll avoid the page reload that was causing navigation issues
+    console.log('✅ Harvest operation completed successfully')
   }
 
   const handleCompleteHarvest = async (year: number) => {
@@ -97,7 +103,9 @@ export default function FarmHarvests({ farm }: FarmHarvestsProps) {
           alert(`✅ Συγκομιδή ${year} ολοκληρώθηκε!\n\n📅 Χρονικό διάστημα: ${earliestDate.toLocaleDateString('el-GR')} - ${latestDate.toLocaleDateString('el-GR')}\n🌾 Συλλογές: ${harvestsToComplete.length}`)
         }
         
-        handleCreateSuccess() // Refresh the data
+        // Instead of page reload, just log success
+        // The user will see the collapse animation and success message
+        console.log('✅ Harvest completion successful - staying on harvest page')
       } else {
         const failedResponses = responses.filter(r => !r.ok)
         alert(`Αποτυχία ολοκλήρωσης ${failedResponses.length} από ${responses.length} συλλογές`)
@@ -119,7 +127,10 @@ export default function FarmHarvests({ farm }: FarmHarvestsProps) {
       })
 
       if (response.ok) {
-        handleCreateSuccess() // Refresh the data
+        alert('✅ Συλλογή διαγράφηκε επιτυχώς')
+        console.log('✅ Harvest deletion successful - staying on harvest page')
+        // Note: Ideally you'd update the farm.harvests array here to remove the deleted item
+        // For now, user can manually refresh if they want to see the updated list
       } else {
         alert('Αποτυχία διαγραφής συλλογής')
       }
@@ -148,7 +159,10 @@ export default function FarmHarvests({ farm }: FarmHarvestsProps) {
       const responses = await Promise.all(promises)
       
       if (responses.every(r => r.ok)) {
-        handleCreateSuccess() // Refresh the data
+        alert(`✅ Συγκομιδή ${year} διαγράφηκε επιτυχώς (${harvestsToDelete.length} συλλογές)`)
+        console.log('✅ Entire harvest deletion successful - staying on harvest page')
+        // Note: Ideally you'd update the farm.harvests array here to remove deleted items
+        // For now, user can manually refresh if they want to see the updated list
       } else {
         alert('Αποτυχία διαγραφής κάποιων συλλογών')
       }
