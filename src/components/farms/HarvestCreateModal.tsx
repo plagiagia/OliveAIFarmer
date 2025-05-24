@@ -26,7 +26,9 @@ export default function HarvestCreateModal({
     year: new Date().getFullYear(),
     startDate: '',
     endDate: '',
-    totalYield: '', // kg
+    collectionDate: '',
+    totalYield: '', // user input
+    totalYieldUnit: 'kg', // 'kg' or 'ton'
     pricePerKg: '',
     pricePerTon: '',
     priceUnit: 'PER_KG',
@@ -48,14 +50,17 @@ export default function HarvestCreateModal({
 
   // Calculate metrics whenever relevant fields change
   useEffect(() => {
-    const totalYield = parseFloat(formData.totalYield) || 0
+    const rawYield = parseFloat(formData.totalYield) || 0
     const pricePerKg = parseFloat(formData.pricePerKg) || 0
     const pricePerTon = parseFloat(formData.pricePerTon) || 0
     
+    // Convert totalYield to kg based on selected unit
+    const totalYieldKg = formData.totalYieldUnit === 'ton' ? rawYield * 1000 : rawYield
+    
     const newCalculations = {
-      totalYieldTons: totalYield / 1000,
-      yieldPerTree: farmData.treesCount > 0 ? totalYield / farmData.treesCount : 0,
-      yieldPerStremma: farmData.totalArea ? totalYield / farmData.totalArea : 0,
+      totalYieldTons: totalYieldKg / 1000,
+      yieldPerTree: farmData.treesCount > 0 ? totalYieldKg / farmData.treesCount : 0,
+      yieldPerStremma: farmData.totalArea ? totalYieldKg / farmData.totalArea : 0,
       totalValue: 0,
       pricePerKgConverted: formData.priceUnit === 'PER_TON' ? pricePerTon / 1000 : pricePerKg,
       pricePerTonConverted: formData.priceUnit === 'PER_KG' ? pricePerKg * 1000 : pricePerTon
@@ -63,13 +68,13 @@ export default function HarvestCreateModal({
 
     // Calculate total value based on price unit
     if (formData.priceUnit === 'PER_KG' && pricePerKg > 0) {
-      newCalculations.totalValue = totalYield * pricePerKg
+      newCalculations.totalValue = totalYieldKg * pricePerKg
     } else if (formData.priceUnit === 'PER_TON' && pricePerTon > 0) {
       newCalculations.totalValue = newCalculations.totalYieldTons * pricePerTon
     }
 
     setCalculations(newCalculations)
-  }, [formData.totalYield, formData.pricePerKg, formData.pricePerTon, formData.priceUnit, farmData])
+  }, [formData.totalYield, formData.totalYieldUnit, formData.pricePerKg, formData.pricePerTon, formData.priceUnit, farmData])
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
@@ -123,7 +128,9 @@ export default function HarvestCreateModal({
         yieldPerTree: calculations.yieldPerTree,
         yieldPerStremma: calculations.yieldPerStremma,
         oilExtracted: formData.oilExtracted ? parseFloat(formData.oilExtracted) : null,
-        year: parseInt(formData.year.toString())
+        year: parseInt(formData.year.toString()),
+        collectionDate: formData.collectionDate,
+        totalYieldUnit: formData.totalYieldUnit
       }
 
       const response = await fetch('/api/harvests/create', {
@@ -142,7 +149,9 @@ export default function HarvestCreateModal({
           year: new Date().getFullYear(),
           startDate: '',
           endDate: '',
+          collectionDate: '',
           totalYield: '',
+          totalYieldUnit: 'kg',
           pricePerKg: '',
           pricePerTon: '',
           priceUnit: 'PER_KG',
@@ -243,20 +252,43 @@ export default function HarvestCreateModal({
               <span>Δεδομένα Παραγωγής</span>
             </h3>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Συνολική Παραγωγή (κιλά) *
-              </label>
-              <input
-                type="number"
-                value={formData.totalYield}
-                onChange={(e) => setFormData({ ...formData, totalYield: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                placeholder="π.χ. 1250"
-                step="0.01"
-                min="0"
-              />
-              {errors.totalYield && <p className="text-red-500 text-sm mt-1">{errors.totalYield}</p>}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Συνολική Παραγωγή *
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    value={formData.totalYield}
+                    onChange={(e) => setFormData({ ...formData, totalYield: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    placeholder="π.χ. 1250"
+                    step="0.01"
+                    min="0"
+                  />
+                  <select
+                    value={formData.totalYieldUnit}
+                    onChange={e => setFormData({ ...formData, totalYieldUnit: e.target.value })}
+                    className="px-2 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  >
+                    <option value="kg">κιλά</option>
+                    <option value="ton">τόνοι</option>
+                  </select>
+                </div>
+                {errors.totalYield && <p className="text-red-500 text-sm mt-1">{errors.totalYield}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Ημερομηνία Συλλογής
+                </label>
+                <input
+                  type="date"
+                  value={formData.collectionDate}
+                  onChange={e => setFormData({ ...formData, collectionDate: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                />
+              </div>
             </div>
           </div>
 
@@ -323,8 +355,8 @@ export default function HarvestCreateModal({
                       value={formData.pricePerTon}
                       onChange={(e) => setFormData({ ...formData, pricePerTon: e.target.value })}
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="π.χ. 4500"
-                      step="1"
+                      placeholder="π.χ. 4500.50"
+                      step="0.01"
                       min="0"
                     />
                     {errors.pricePerTon && <p className="text-red-500 text-sm mt-1">{errors.pricePerTon}</p>}

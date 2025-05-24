@@ -130,6 +130,7 @@ model Harvest {
   year             Int           // Harvest year
   startDate        DateTime
   endDate          DateTime?
+  collectionDate   DateTime?     // Date of this specific collection event
   totalYield       Float?        // Total yield in kg
   totalYieldTons   Float?        // Total yield in tons (calculated from totalYield)
   
@@ -156,7 +157,6 @@ model Harvest {
   // Individual tree harvests
   treeHarvests TreeHarvest[]
 
-  @@unique([farmId, year])
   @@map("harvests")
 }
 

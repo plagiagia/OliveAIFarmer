@@ -16,16 +16,16 @@ export async function POST(request: NextRequest) {
       year,
       startDate,
       endDate,
+      collectionDate,
       totalYield,
+      totalYieldUnit, // 'kg' or 'ton'
       totalYieldTons,
-      qualityGrade,
       pricePerKg,
       pricePerTon,
       priceUnit,
       totalValue,
       yieldPerTree,
       yieldPerStremma,
-      oilExtracted,
       notes
     } = body
 
@@ -52,28 +52,10 @@ export async function POST(request: NextRequest) {
       }, { status: 404 })
     }
 
-    // Check if harvest for this year already exists
-    const existingHarvest = await prisma.harvest.findUnique({
-      where: {
-        farmId_year: {
-          farmId: farmId,
-          year: parseInt(year)
-        }
-      }
-    })
-
-    if (existingHarvest) {
-      return NextResponse.json({ 
-        error: `Υπάρχει ήδη συγκομιδή για το έτος ${year} σε αυτόν τον ελαιώνα` 
-      }, { status: 400 })
-    }
-
-    // Calculate oil yield percentage if oil extracted is provided
-    let oilYieldPercent = null
-    if (oilExtracted && totalYield) {
-      // Approximate conversion: 1 liter olive oil ≈ 0.92 kg
-      const oilWeightKg = oilExtracted * 0.92
-      oilYieldPercent = (oilWeightKg / totalYield) * 100
+    // Convert totalYield to kg if needed
+    let totalYieldKg = parseFloat(totalYield)
+    if (totalYieldUnit === 'ton') {
+      totalYieldKg = totalYieldKg * 1000
     }
 
     // Create the harvest
@@ -83,17 +65,15 @@ export async function POST(request: NextRequest) {
         year: parseInt(year),
         startDate: new Date(startDate),
         endDate: endDate ? new Date(endDate) : null,
-        totalYield: parseFloat(totalYield),
-        totalYieldTons: parseFloat(totalYieldTons),
-        qualityGrade: qualityGrade || null,
+        collectionDate: collectionDate ? new Date(collectionDate) : null,
+        totalYield: totalYieldKg,
+        totalYieldTons: totalYieldKg / 1000,
         pricePerKg: pricePerKg ? parseFloat(pricePerKg) : null,
         pricePerTon: pricePerTon ? parseFloat(pricePerTon) : null,
         priceUnit: priceUnit || 'PER_KG',
         totalValue: totalValue ? parseFloat(totalValue) : null,
         yieldPerTree: yieldPerTree ? parseFloat(yieldPerTree) : null,
         yieldPerStremma: yieldPerStremma ? parseFloat(yieldPerStremma) : null,
-        oilExtracted: oilExtracted ? parseFloat(oilExtracted) : null,
-        oilYieldPercent: oilYieldPercent,
         notes: notes || null,
         completed: false, // Can be updated later
       }
@@ -111,9 +91,9 @@ export async function POST(request: NextRequest) {
         totalValue: harvest.totalValue,
         yieldPerTree: harvest.yieldPerTree,
         yieldPerStremma: harvest.yieldPerStremma,
-        qualityGrade: harvest.qualityGrade,
         priceUnit: harvest.priceUnit,
-        completed: harvest.completed
+        completed: harvest.completed,
+        collectionDate: harvest.collectionDate
       }
     })
   } catch (error) {
