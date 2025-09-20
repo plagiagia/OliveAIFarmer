@@ -157,10 +157,33 @@ export async function getFarmById(farmId: string) {
         }
       }
     })
-    
+
     return farm
   } catch (error) {
     console.error('❌ Error getting farm:', error)
     throw error
   }
-} 
+}
+
+// Get all olive varieties with knowledge base details
+export async function getAllOliveVarieties() {
+  try {
+    return await prisma.oliveVariety.findMany({
+      orderBy: { name: 'asc' },
+      include: {
+        monthlyTasks: {
+          orderBy: [{ month: 'asc' }, { priority: 'desc' }]
+        },
+        riskFactors: {
+          orderBy: { severity: 'desc' }
+        },
+        careGuidelines: {
+          orderBy: { importance: 'desc' }
+        }
+      }
+    })
+  } catch (error) {
+    console.error('❌ Error fetching olive varieties:', error)
+    throw error
+  }
+}

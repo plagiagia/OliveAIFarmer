@@ -5,7 +5,7 @@ import MapPreview from '@/components/map/MapPreview'
 import { parseCoordinates } from '@/lib/mapbox-utils'
 import { format } from 'date-fns'
 import { el } from 'date-fns/locale'
-import { Activity, MapPin, Plus } from 'lucide-react'
+import { Activity, BookOpen, MapPin, Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 interface Farm {
@@ -252,6 +252,30 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
               {user.farms.reduce((sum, farm) => sum + farm.harvestsCount, 0)}
             </div>
             <div className="text-sm text-gray-600">Συγκομιδές</div>
+          </div>
+        </div>
+
+        {/* Knowledge Base Callout */}
+        <div className="mb-8">
+          <div className="bg-gradient-to-r from-olive-700 via-emerald-600 to-green-600 rounded-3xl p-6 sm:p-8 text-white shadow-lg flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            <div className="flex items-start space-x-4">
+              <div className="bg-white/15 rounded-2xl p-4">
+                <BookOpen className="w-8 h-8" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-semibold mb-2">Σύγχρονος οδηγός ποικιλιών</h2>
+                <p className="text-sm sm:text-base text-emerald-50 max-w-2xl">
+                  Μελετήστε αναλυτικά τις ελληνικές ποικιλίες, τα μηνιαία πλάνα εργασιών και τα κρίσιμα σημεία προσοχής για κάθε τύπο ελαιόδεντρου.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => { window.location.href = '/dashboard/knowledge-base' }}
+              className="self-start lg:self-auto inline-flex items-center gap-2 bg-white text-olive-700 font-semibold px-5 py-3 rounded-2xl shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all"
+            >
+              <BookOpen className="w-4 h-4" />
+              Εξερεύνηση γνώσης
+            </button>
           </div>
         </div>
 
