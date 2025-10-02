@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, TaskType, Priority } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
@@ -185,42 +185,52 @@ async function seedOliveVarieties() {
 }
 
 async function createMonthlyTasks(varietyId: string, varietyName: string) {
-  const tasks = [
+  const tasks: Array<{
+    month: number
+    taskType: TaskType
+    title: string
+    description: string
+    priority: Priority
+    timing: string
+    duration: string
+    tools: string[]
+    temperatureRange?: string
+  }> = [
     // JANUARY
-    { month: 1, taskType: 'PRUNING', title: 'Κλάδεμα διαμόρφωσης', description: 'Κλάδεμα για διαμόρφωση κόμης και αφαίρεση βλαστών', priority: 'HIGH', timing: 'Μέσα μήνα', duration: '2-3 ώρες ανά δέντρο', tools: ['Κλαδευτήρι', 'Πριόνι', 'Στεγνωτικό'], temperatureRange: '5-15°C' },
-    
-    // FEBRUARY  
-    { month: 2, taskType: 'FERTILIZING', title: 'Χειμερινή λίπανση', description: 'Εφαρμογή οργανικού λιπάσματος και φωσφόρου', priority: 'HIGH', timing: 'Αρχές μήνα', duration: '1 ώρα ανά δέντρο', tools: ['Σκαπάνη', 'Λίπασμα'], temperatureRange: '8-18°C' },
-    
+    { month: 1, taskType: TaskType.PRUNING, title: 'Κλάδεμα διαμόρφωσης', description: 'Κλάδεμα για διαμόρφωση κόμης και αφαίρεση βλαστών', priority: Priority.HIGH, timing: 'Μέσα μήνα', duration: '2-3 ώρες ανά δέντρο', tools: ['Κλαδευτήρι', 'Πριόνι', 'Στεγνωτικό'], temperatureRange: '5-15°C' },
+
+    // FEBRUARY
+    { month: 2, taskType: TaskType.FERTILIZING, title: 'Χειμερινή λίπανση', description: 'Εφαρμογή οργανικού λιπάσματος και φωσφόρου', priority: Priority.HIGH, timing: 'Αρχές μήνα', duration: '1 ώρα ανά δέντρο', tools: ['Σκαπάνη', 'Λίπασμα'], temperatureRange: '8-18°C' },
+
     // MARCH
-    { month: 3, taskType: 'SOIL_PREPARATION', title: 'Προετοιμασία εδάφους', description: 'Όργωμα και βελτίωση εδάφους γύρω από τα δέντρα', priority: 'MEDIUM', timing: 'Τέλος μήνα', duration: '30 λεπτά ανά δέντρο', tools: ['Τσάπα', 'Κομπόστ'] },
-    
+    { month: 3, taskType: TaskType.SOIL_PREPARATION, title: 'Προετοιμασία εδάφους', description: 'Όργωμα και βελτίωση εδάφους γύρω από τα δέντρα', priority: Priority.MEDIUM, timing: 'Τέλος μήνα', duration: '30 λεπτά ανά δέντρο', tools: ['Τσάπα', 'Κομπόστ'] },
+
     // APRIL
-    { month: 4, taskType: 'WATERING', title: 'Έναρξη ποτίσματος', description: 'Έναρξη τακτικού ποτίσματος μετά τον χειμώνα', priority: 'HIGH', timing: 'Αρχές μήνα', duration: '15 λεπτά ανά δέντρο', tools: ['Λάστιχο', 'Ποτιστήρια'] },
-    
+    { month: 4, taskType: TaskType.WATERING, title: 'Έναρξη ποτίσματος', description: 'Έναρξη τακτικού ποτίσματος μετά τον χειμώνα', priority: Priority.HIGH, timing: 'Αρχές μήνα', duration: '15 λεπτά ανά δέντρο', tools: ['Λάστιχο', 'Ποτιστήρια'] },
+
     // MAY
-    { month: 5, taskType: 'PEST_CONTROL', title: 'Έλεγχος παρασίτων', description: 'Παρακολούθηση για δάκο και άλλα παράσιτα', priority: 'HIGH', timing: 'Όλο τον μήνα', duration: '20 λεπτά επιθεώρησης', tools: ['Μεγεθυντικός φακός', 'Παγίδες'] },
-    
+    { month: 5, taskType: TaskType.PEST_CONTROL, title: 'Έλεγχος παρασίτων', description: 'Παρακολούθηση για δάκο και άλλα παράσιτα', priority: Priority.HIGH, timing: 'Όλο τον μήνα', duration: '20 λεπτά επιθεώρησης', tools: ['Μεγεθυντικός φακός', 'Παγίδες'] },
+
     // JUNE
-    { month: 6, taskType: 'WATERING', title: 'Εντατικό πότισμα', description: 'Αύξηση συχνότητας ποτίσματος λόγω ζέστης', priority: 'CRITICAL', timing: 'Κάθε 2-3 μέρες', duration: '20 λεπτά ανά δέντρο', tools: ['Σύστημα άρδευσης'] },
-    
+    { month: 6, taskType: TaskType.WATERING, title: 'Εντατικό πότισμα', description: 'Αύξηση συχνότητας ποτίσματος λόγω ζέστης', priority: Priority.CRITICAL, timing: 'Κάθε 2-3 μέρες', duration: '20 λεπτά ανά δέντρο', tools: ['Σύστημα άρδευσης'] },
+
     // JULY
-    { month: 7, taskType: 'MONITORING', title: 'Παρακολούθηση καρπών', description: 'Έλεγχος ανάπτυξης καρπών και προσαρμογή φροντίδας', priority: 'MEDIUM', timing: 'Εβδομαδιαία', duration: '15 λεπτά ανά δέντρο', tools: ['Σημειωματάριο'] },
-    
+    { month: 7, taskType: TaskType.MONITORING, title: 'Παρακολούθηση καρπών', description: 'Έλεγχος ανάπτυξης καρπών και προσαρμογή φροντίδας', priority: Priority.MEDIUM, timing: 'Εβδομαδιαία', duration: '15 λεπτά ανά δέντρο', tools: ['Σημειωματάριο'] },
+
     // AUGUST
-    { month: 8, taskType: 'WATERING', title: 'Συνεχές πότισμα', description: 'Διατήρηση υγρασίας κατά τη ζεστή περίοδο', priority: 'CRITICAL', timing: 'Καθημερινά', duration: '25 λεπτά ανά δέντρο', tools: ['Αυτόματο πότισμα'] },
-    
+    { month: 8, taskType: TaskType.WATERING, title: 'Συνεχές πότισμα', description: 'Διατήρηση υγρασίας κατά τη ζεστή περίοδο', priority: Priority.CRITICAL, timing: 'Καθημερινά', duration: '25 λεπτά ανά δέντρο', tools: ['Αυτόματο πότισμα'] },
+
     // SEPTEMBER
-    { month: 9, taskType: 'HARVESTING', title: 'Προετοιμασία συγκομιδής', description: 'Ελαφρό κλάδεμα και προετοιμασία εργαλείων συγκομιδής', priority: 'HIGH', timing: 'Αρχές μήνα', duration: '1 ώρα ανά δέντρο', tools: ['Δίχτυα', 'Κλαδευτήρια'] },
-    
-    // OCTOBER  
-    { month: 10, taskType: 'HARVESTING', title: 'Συγκομιδή ελιών', description: 'Συλλογή ώριμων ελιών για λάδι ή επιτραπέζια χρήση', priority: 'CRITICAL', timing: 'Όλο τον μήνα', duration: '3-4 ώρες ανά δέντρο', tools: ['Δίχτυα', 'Χτένες', 'Κάδοι'] },
-    
+    { month: 9, taskType: TaskType.HARVESTING, title: 'Προετοιμασία συγκομιδής', description: 'Ελαφρό κλάδεμα και προετοιμασία εργαλείων συγκομιδής', priority: Priority.HIGH, timing: 'Αρχές μήνα', duration: '1 ώρα ανά δέντρο', tools: ['Δίχτυα', 'Κλαδευτήρια'] },
+
+    // OCTOBER
+    { month: 10, taskType: TaskType.HARVESTING, title: 'Συγκομιδή ελιών', description: 'Συλλογή ώριμων ελιών για λάδι ή επιτραπέζια χρήση', priority: Priority.CRITICAL, timing: 'Όλο τον μήνα', duration: '3-4 ώρες ανά δέντρο', tools: ['Δίχτυα', 'Χτένες', 'Κάδοι'] },
+
     // NOVEMBER
-    { month: 11, taskType: 'HARVESTING', title: 'Τέλος συγκομιδής', description: 'Ολοκλήρωση συγκομιδής και καθαρισμός ελαιώνα', priority: 'HIGH', timing: 'Αρχές μήνα', duration: '2 ώρες ανά δέντρο', tools: ['Σάρωθρα', 'Δίχτυα'] },
-    
+    { month: 11, taskType: TaskType.HARVESTING, title: 'Τέλος συγκομιδής', description: 'Ολοκλήρωση συγκομιδής και καθαρισμός ελαιώνα', priority: Priority.HIGH, timing: 'Αρχές μήνα', duration: '2 ώρες ανά δέντρο', tools: ['Σάρωθρα', 'Δίχτυα'] },
+
     // DECEMBER
-    { month: 12, taskType: 'GENERAL_CARE', title: 'Χειμερινή προστασία', description: 'Προετοιμασία δέντρων για χειμώνα και προστασία από παγετό', priority: 'MEDIUM', timing: 'Μέσα μήνα', duration: '30 λεπτά ανά δέντρο', tools: ['Κάλυμμα', 'Αντιπαγετικά'] }
+    { month: 12, taskType: TaskType.GENERAL_CARE, title: 'Χειμερινή προστασία', description: 'Προετοιμασία δέντρων για χειμώνα και προστασία από παγετό', priority: Priority.MEDIUM, timing: 'Μέσα μήνα', duration: '30 λεπτά ανά δέντρο', tools: ['Κάλυμμα', 'Αντιπαγετικά'] }
   ]
 
   for (const task of tasks) {
@@ -229,14 +239,21 @@ async function createMonthlyTasks(varietyId: string, varietyName: string) {
         varietyId_month_taskType: {
           varietyId,
           month: task.month,
-          taskType: task.taskType as any
+          taskType: task.taskType
         }
       },
       update: {},
       create: {
-        ...task,
         varietyId,
-        weatherConditions: task.temperatureRange ? { idealTemperature: task.temperatureRange } : {},
+        month: task.month,
+        taskType: task.taskType,
+        title: task.title,
+        description: task.description,
+        priority: task.priority,
+        timing: task.timing,
+        duration: task.duration,
+        tools: task.tools,
+        weatherConditions: {},
       }
     })
   }

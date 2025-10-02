@@ -56,7 +56,7 @@ export async function PATCH(request: NextRequest) {
 
     // Convert totalYield to kg if needed
     let totalYieldKg = totalYield ? parseFloat(totalYield) : existingHarvest.totalYield
-    if (totalYield && totalYieldUnit === 'ton') {
+    if (totalYield && totalYieldUnit === 'ton' && totalYieldKg !== null) {
       totalYieldKg = totalYieldKg * 1000
     }
 
@@ -71,7 +71,7 @@ export async function PATCH(request: NextRequest) {
         ...(startDate && { startDate: new Date(startDate) }),
         ...(endDate && { endDate: new Date(endDate) }),
         ...(collectionDate && { collectionDate: new Date(collectionDate) }),
-        ...(totalYield && { 
+        ...(totalYield && totalYieldKg !== null && {
           totalYield: totalYieldKg,
           totalYieldTons: totalYieldKg / 1000
         }),

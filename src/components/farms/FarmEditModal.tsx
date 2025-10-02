@@ -347,7 +347,7 @@ export default function FarmEditModal({ farm, onClose, onSuccess }: FarmEditModa
                   <div className="mt-2 p-2 bg-blue-50 rounded-lg">
                     <p className="text-sm text-blue-700">
                       <strong>Τρέχουσες ποικιλίες:</strong> {
-                        [...new Set(farm.trees.map((tree: any) => tree.variety))].join(', ')
+                        Array.from(new Set(farm.trees.map((tree: any) => tree.variety))).join(', ')
                       }
                     </p>
                   </div>

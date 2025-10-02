@@ -59,10 +59,12 @@ export async function GET(request: NextRequest) {
           fertilizingNeeds: true,
           irrigationNeeds: true,
           _count: {
-            monthlyTasks: true,
-            riskFactors: true,
-            careGuidelines: true,
-            trees: true
+            select: {
+              monthlyTasks: true,
+              riskFactors: true,
+              careGuidelines: true,
+              trees: true
+            }
           }
         },
         orderBy: { name: 'asc' }

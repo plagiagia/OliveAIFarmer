@@ -15,9 +15,38 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!name || !location) {
-      return NextResponse.json({ 
-        error: 'Το όνομα και η τοποθεσία είναι υποχρεωτικά' 
+      return NextResponse.json({
+        error: 'Το όνομα και η τοποθεσία είναι υποχρεωτικά'
       }, { status: 400 })
+    }
+
+    // Validate numeric fields
+    if (totalArea !== null && totalArea !== undefined) {
+      const areaValue = parseFloat(totalArea)
+      if (isNaN(areaValue) || areaValue < 0) {
+        return NextResponse.json({
+          error: 'Η έκταση πρέπει να είναι θετικός αριθμός'
+        }, { status: 400 })
+      }
+      if (areaValue > 100000) {
+        return NextResponse.json({
+          error: 'Η έκταση είναι πολύ μεγάλη. Παρακαλώ επαληθεύστε.'
+        }, { status: 400 })
+      }
+    }
+
+    if (treeCount !== null && treeCount !== undefined) {
+      const treeCountValue = parseInt(treeCount)
+      if (isNaN(treeCountValue) || treeCountValue < 0) {
+        return NextResponse.json({
+          error: 'Ο αριθμός δέντρων πρέπει να είναι θετικός αριθμός'
+        }, { status: 400 })
+      }
+      if (treeCountValue > 50000) {
+        return NextResponse.json({
+          error: 'Ο αριθμός δέντρων είναι πολύ μεγάλος. Επικοινωνήστε με την υποστήριξη για μεγάλους ελαιώνες.'
+        }, { status: 400 })
+      }
     }
 
     // Get user from database to ensure they exist

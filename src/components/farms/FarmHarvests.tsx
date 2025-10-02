@@ -515,7 +515,7 @@ export default function FarmHarvests({ farm }: FarmHarvestsProps) {
         farmId={farm.id}
         farmData={{
           name: farm.name,
-          totalArea: farm.totalArea,
+          totalArea: farm.totalArea ?? undefined,
           treesCount: farm.trees?.length || 0
         }}
         onSuccess={handleCreateSuccess}
