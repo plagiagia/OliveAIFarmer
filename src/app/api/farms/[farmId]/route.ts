@@ -145,21 +145,21 @@ export async function PUT(
 
           console.log(`✅ Removed ${currentTreeCount - newTreeCount} trees from farm: ${updatedFarm.name}`)
         }
-
-        // Update variety for existing trees if provided
-        if (oliveVariety?.trim() && newTreeCount > 0) {
-          await prisma.oliveTree.updateMany({
-            where: {
-              farmId: farmId
-            },
-            data: {
-              variety: oliveVariety.trim()
-            }
-          })
-
-          console.log(`✅ Updated tree varieties to: ${oliveVariety} for farm: ${updatedFarm.name}`)
-        }
       }
+    }
+
+    // Update variety for existing trees if provided (independent of tree count changes)
+    if (oliveVariety?.trim() && existingFarm.trees.length > 0) {
+      await prisma.oliveTree.updateMany({
+        where: {
+          farmId: farmId
+        },
+        data: {
+          variety: oliveVariety.trim()
+        }
+      })
+
+      console.log(`✅ Updated tree varieties to: ${oliveVariety} for farm: ${updatedFarm.name}`)
     }
 
     console.log(`✅ Farm updated: ${updatedFarm.name} for user: ${userId}`)
