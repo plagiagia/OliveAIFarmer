@@ -5,7 +5,8 @@ import MapPreview from '@/components/map/MapPreview'
 import { parseCoordinates } from '@/lib/mapbox-utils'
 import { format } from 'date-fns'
 import { el } from 'date-fns/locale'
-import { Activity, MapPin, Plus } from 'lucide-react'
+import { Activity, MapPin, Plus, BarChart3 } from 'lucide-react'
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
 
 interface Farm {
@@ -210,15 +211,24 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
               Διαχειριστείτε {user.farms.length === 1 ? 'τον ελαιώνα σας' : `τους ${user.farms.length} ελαιώνες σας`}
             </p>
           </div>
-          <button 
-            onClick={() => {
-              window.location.href = '/dashboard/farms/new'
-            }}
-            className="bg-gradient-to-r from-olive-700 to-olive-600 hover:from-olive-800 hover:to-olive-700 text-white py-2 px-4 rounded-xl font-semibold transition-all duration-200 hover:shadow-lg flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            Νέος Ελαιώνας
-          </button>
+          <div className="flex gap-3">
+            <Link
+              href="/dashboard/analytics"
+              className="bg-white border border-gray-200 hover:border-olive-300 text-gray-700 hover:text-olive-700 py-2 px-4 rounded-xl font-medium transition-all duration-200 hover:shadow-md flex items-center gap-2"
+            >
+              <BarChart3 className="w-4 h-4" />
+              Αναλύσεις
+            </Link>
+            <button
+              onClick={() => {
+                window.location.href = '/dashboard/farms/new'
+              }}
+              className="bg-gradient-to-r from-olive-700 to-olive-600 hover:from-olive-800 hover:to-olive-700 text-white py-2 px-4 rounded-xl font-semibold transition-all duration-200 hover:shadow-lg flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Νέος Ελαιώνας
+            </button>
+          </div>
         </div>
 
         {/* Stats Overview */}

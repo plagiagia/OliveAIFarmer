@@ -2,6 +2,7 @@ import { ClerkProvider, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import { OfflineIndicator } from '@/components/ui/OfflineIndicator'
 
 const inter = Inter({ 
   subsets: ['latin', 'latin-ext'],
@@ -84,7 +85,7 @@ export default function RootLayout({
                     <span className="text-2xl">🫒</span>
                     <h1 className="text-xl font-bold text-olive-800">ΕλαιοLog</h1>
                   </div>
-                  <UserButton 
+                  <UserButton
                     appearance={{
                       elements: {
                         avatarBox: "w-10 h-10",
@@ -98,6 +99,7 @@ export default function RootLayout({
               </div>
             </header>
             {children}
+            <OfflineIndicator />
           </SignedIn>
         </body>
       </html>
