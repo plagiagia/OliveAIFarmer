@@ -1,6 +1,6 @@
 'use client'
 
-import { ACTIVITY_TYPE_COLORS, ACTIVITY_TYPE_ICONS, ACTIVITY_TYPE_LABELS, ActivityWithTrees } from '@/lib/types/activity'
+import { ACTIVITY_TYPE_COLORS, ACTIVITY_TYPE_ICONS, ACTIVITY_TYPE_LABELS, ActivityWithTrees } from '@/types/activity'
 import {
     Calendar,
     CheckCircle2,
