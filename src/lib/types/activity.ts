@@ -50,7 +50,6 @@ export interface ActivityFormData {
   weather?: string
   notes?: string
   completed: boolean
-  selectedTrees: string[]
 }
 
 export interface ActivityWithTrees extends Activity {
