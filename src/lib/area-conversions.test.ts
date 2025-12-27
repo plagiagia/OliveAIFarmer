@@ -4,8 +4,7 @@ import {
   convertFromStremmata,
   getUnitAbbreviation,
   formatArea,
-  getConversionInfo,
-  type AreaUnit
+  getConversionInfo
 } from './area-conversions'
 
 describe('convertToStremmata', () => {

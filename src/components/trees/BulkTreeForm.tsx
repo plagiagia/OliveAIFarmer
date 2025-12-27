@@ -87,7 +87,7 @@ export function BulkTreeForm({
       .filter(n => /^\d+$/.test(n))
       .map(n => parseInt(n))
 
-    let startNumber = existingNumbers.length > 0
+    const startNumber = existingNumbers.length > 0
       ? Math.max(...existingNumbers) + 1
       : 1
 

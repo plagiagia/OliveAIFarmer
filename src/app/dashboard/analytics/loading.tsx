@@ -1,4 +1,4 @@
-import { SkeletonStats, SkeletonChart } from '@/components/ui/Skeleton'
+import { SkeletonChart } from '@/components/ui/Skeleton'
 
 export default function AnalyticsLoading() {
   return (

@@ -1,4 +1,4 @@
-import { Skeleton, SkeletonStats, SkeletonActivityCard, SkeletonHarvestCard } from '@/components/ui/Skeleton'
+import { Skeleton, SkeletonStats, SkeletonActivityCard } from '@/components/ui/Skeleton'
 
 export default function FarmDetailLoading() {
   return (
