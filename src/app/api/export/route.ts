@@ -24,7 +24,7 @@ interface ActivityData {
 }
 
 interface TreeData {
-  treeNumber: number
+  treeNumber: string
   variety: string
   plantingYear: number | null
   health: string | null

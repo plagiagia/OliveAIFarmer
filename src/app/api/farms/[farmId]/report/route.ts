@@ -19,7 +19,7 @@ interface Activity {
 }
 
 interface OliveTree {
-  treeNumber: number
+  treeNumber: string
   variety: string
   health: string | null
   status: string
