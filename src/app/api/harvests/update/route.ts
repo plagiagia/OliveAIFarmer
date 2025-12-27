@@ -71,7 +71,7 @@ export async function PATCH(request: NextRequest) {
         ...(startDate && { startDate: new Date(startDate) }),
         ...(endDate && { endDate: new Date(endDate) }),
         ...(collectionDate && { collectionDate: new Date(collectionDate) }),
-        ...(totalYield && { 
+        ...(totalYield && totalYieldKg !== null && {
           totalYield: totalYieldKg,
           totalYieldTons: totalYieldKg / 1000
         }),
