@@ -87,7 +87,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
     }
 
     // Update the activity
-    const updatedActivity = await prisma.activity.update({
+    await prisma.activity.update({
       where: { id: params.activityId },
       data: {
         type,

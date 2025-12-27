@@ -145,7 +145,7 @@ function getMonthName(month: number): string {
   return months[month - 1] || 'Άγνωστος'
 }
 
-function generateSmartRecommendations(variety: any, month: number, farmLocation?: string) {
+function generateSmartRecommendations(variety: any, month: number, _farmLocation?: string) {
   const recommendations = []
   
   // Water-based recommendations

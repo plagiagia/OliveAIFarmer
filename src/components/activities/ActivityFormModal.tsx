@@ -22,7 +22,7 @@ export default function ActivityFormModal({
   isOpen,
   onClose,
   onSubmit,
-  farmId,
+  farmId: _farmId,
   trees,
   activity,
   isLoading = false

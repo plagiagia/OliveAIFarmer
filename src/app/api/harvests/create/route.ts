@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       collectionDate,
       totalYield,
       totalYieldUnit, // 'kg' or 'ton'
-      totalYieldTons,
+      totalYieldTons: _totalYieldTons,
       pricePerKg,
       pricePerTon,
       priceUnit,

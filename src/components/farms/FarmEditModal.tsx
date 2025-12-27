@@ -180,7 +180,7 @@ export default function FarmEditModal({ farm, onClose, onSuccess }: FarmEditModa
                   Επιβεβαίωση Διαγραφής
                 </h4>
                 <p className="text-red-800 mb-4">
-                  Είστε σίγουροι ότι θέλετε να διαγράψετε τον ελαιώνα <strong>"{farm.name}"</strong>;
+                  Είστε σίγουροι ότι θέλετε να διαγράψετε τον ελαιώνα <strong>&quot;{farm.name}&quot;</strong>;
                 </p>
                 <p className="text-sm text-red-700 mb-4">
                   ⚠️ Αυτή η ενέργεια θα διαγράψει επίσης όλα τα δέντρα, τμήματα, δραστηριότητες και συγκομιδές που σχετίζονται με αυτόν τον ελαιώνα. Αυτή η ενέργεια δεν μπορεί να αναιρεθεί.
