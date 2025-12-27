@@ -99,7 +99,7 @@ export default function FarmCreationForm({ userId: _userId }: FarmCreationFormPr
       longitude: lng,
       latitude: lat,
     }))
-    setShowMap(true) // Show map when location is selected
+    _setShowMap(true) // Show map when location is selected
   }
 
   // Handle location selection from map
