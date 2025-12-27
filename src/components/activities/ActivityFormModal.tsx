@@ -9,11 +9,6 @@ interface ActivityFormModalProps {
   onClose: () => void
   onSubmit: (data: ActivityFormData) => Promise<void>
   farmId: string
-  trees: Array<{
-    id: string
-    treeNumber: string
-    variety: string
-  }>
   activity?: ActivityWithTrees | null
   isLoading?: boolean
 }
@@ -23,7 +18,6 @@ export default function ActivityFormModal({
   onClose,
   onSubmit,
   farmId: _farmId,
-  trees,
   activity,
   isLoading = false
 }: ActivityFormModalProps) {
@@ -36,8 +30,7 @@ export default function ActivityFormModal({
     cost: '',
     weather: '',
     notes: '',
-    completed: false,
-    selectedTrees: []
+    completed: false
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -54,8 +47,7 @@ export default function ActivityFormModal({
         cost: activity.cost?.toString() || '',
         weather: activity.weather || '',
         notes: activity.notes || '',
-        completed: activity.completed,
-        selectedTrees: activity.treeActivities?.map(ta => ta.treeId) || []
+        completed: activity.completed
       })
     } else {
       // Reset form for new activity
@@ -68,8 +60,7 @@ export default function ActivityFormModal({
         cost: '',
         weather: '',
         notes: '',
-        completed: false,
-        selectedTrees: []
+        completed: false
       })
     }
     setErrors({})
@@ -106,15 +97,6 @@ export default function ActivityFormModal({
     }
 
     await onSubmit(formData)
-  }
-
-  const handleTreeSelection = (treeId: string) => {
-    setFormData(prev => ({
-      ...prev,
-      selectedTrees: prev.selectedTrees.includes(treeId)
-        ? prev.selectedTrees.filter(id => id !== treeId)
-        : [...prev.selectedTrees, treeId]
-    }))
   }
 
   if (!isOpen) return null
@@ -266,42 +248,6 @@ export default function ActivityFormModal({
               />
             </div>
           </div>
-
-          {/* Tree Selection */}
-          {trees.length > 0 && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Επιλογή Δέντρων
-              </label>
-              <p className="text-sm text-gray-500 mb-3">
-                Επιλέξτε τα δέντρα στα οποία εφαρμόστηκε η δραστηριότητα (προαιρετικό)
-              </p>
-              <div className="max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-3">
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                  {trees.map(tree => (
-                    <label
-                      key={tree.id}
-                      className="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={formData.selectedTrees.includes(tree.id)}
-                        onChange={() => handleTreeSelection(tree.id)}
-                        className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
-                        disabled={isLoading}
-                      />
-                      <span className="text-sm text-gray-700">
-                        #{tree.treeNumber} - {tree.variety}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-              <p className="text-xs text-gray-500 mt-2">
-                Επιλεγμένα: {formData.selectedTrees.length} από {trees.length} δέντρα
-              </p>
-            </div>
-          )}
 
           {/* Notes */}
           <div>

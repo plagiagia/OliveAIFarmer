@@ -22,13 +22,6 @@ export async function GET(request: Request, { params }: RouteParams) {
         farm: {
           user: { clerkId: userId }
         }
-      },
-      include: {
-        treeActivities: {
-          include: {
-            tree: true
-          }
-        }
       }
     })
 
@@ -75,8 +68,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
       cost,
       weather,
       notes,
-      completed,
-      selectedTrees
+      completed
     } = body
 
     // Validate required fields
@@ -87,7 +79,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
     }
 
     // Update the activity
-    await prisma.activity.update({
+    const activity = await prisma.activity.update({
       where: { id: params.activityId },
       data: {
         type,
@@ -99,37 +91,6 @@ export async function PUT(request: Request, { params }: RouteParams) {
         weather,
         notes,
         completed: completed || false
-      }
-    })
-
-    // Update tree activities
-    if (selectedTrees !== undefined) {
-      // Delete existing tree activities
-      await prisma.treeActivity.deleteMany({
-        where: { activityId: params.activityId }
-      })
-
-      // Create new tree activities if any are selected
-      if (selectedTrees.length > 0) {
-        await prisma.treeActivity.createMany({
-          data: selectedTrees.map((treeId: string) => ({
-            activityId: params.activityId,
-            treeId,
-            notes: null
-          }))
-        })
-      }
-    }
-
-    // Fetch the updated activity with relations
-    const activity = await prisma.activity.findUnique({
-      where: { id: params.activityId },
-      include: {
-        treeActivities: {
-          include: {
-            tree: true
-          }
-        }
       }
     })
 

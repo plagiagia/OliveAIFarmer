@@ -11,8 +11,7 @@ import {
     Euro,
     FileText,
     MoreVertical,
-    Trash2,
-    TreePine
+    Trash2
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -209,33 +208,6 @@ export default function ActivityCard({
             </div>
           )}
         </div>
-
-        {/* Trees Section */}
-        {activity.treeActivities && activity.treeActivities.length > 0 && (
-          <div className="mb-4">
-            <div className="flex items-center space-x-2 mb-2">
-              <TreePine className="w-4 h-4 text-green-600" />
-              <span className="text-sm font-medium text-gray-900">
-                Δέντρα που επηρεάστηκαν ({activity.treeActivities.length})
-              </span>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {activity.treeActivities.slice(0, 6).map(treeActivity => (
-                <span
-                  key={treeActivity.id}
-                  className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full"
-                >
-                  #{treeActivity.tree.treeNumber} - {treeActivity.tree.variety}
-                </span>
-              ))}
-              {activity.treeActivities.length > 6 && (
-                <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                  +{activity.treeActivities.length - 6} ακόμα
-                </span>
-              )}
-            </div>
-          </div>
-        )}
 
         {/* Notes */}
         {activity.notes && (

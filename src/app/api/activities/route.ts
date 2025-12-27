@@ -32,13 +32,6 @@ export async function GET(request: Request) {
     // Get activities for the farm
     const activities = await prisma.activity.findMany({
       where: { farmId },
-      include: {
-        treeActivities: {
-          include: {
-            tree: true
-          }
-        }
-      },
       orderBy: { date: 'desc' }
     })
 
@@ -68,8 +61,7 @@ export async function POST(request: Request) {
       cost,
       weather,
       notes,
-      completed,
-      selectedTrees
+      completed
     } = body
 
     // Validate required fields
@@ -107,30 +99,7 @@ export async function POST(request: Request) {
       }
     })
 
-    // If specific trees are selected, create tree activities
-    if (selectedTrees && selectedTrees.length > 0) {
-      await prisma.treeActivity.createMany({
-        data: selectedTrees.map((treeId: string) => ({
-          activityId: activity.id,
-          treeId,
-          notes: null
-        }))
-      })
-    }
-
-    // Fetch the created activity with relations
-    const createdActivity = await prisma.activity.findUnique({
-      where: { id: activity.id },
-      include: {
-        treeActivities: {
-          include: {
-            tree: true
-          }
-        }
-      }
-    })
-
-    return NextResponse.json(createdActivity, { status: 201 })
+    return NextResponse.json(activity, { status: 201 })
   } catch (error) {
     console.error('Error creating activity:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

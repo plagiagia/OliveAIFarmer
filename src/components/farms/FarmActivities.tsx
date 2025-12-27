@@ -163,8 +163,7 @@ export default function FarmActivities({ farm }: FarmActivitiesProps) {
           completed,
           date: new Date(activity.date).toISOString().split('T')[0],
           duration: activity.duration?.toString() || '',
-          cost: activity.cost?.toString() || '',
-          selectedTrees: activity.treeActivities?.map(ta => ta.treeId) || []
+          cost: activity.cost?.toString() || ''
         })
       })
 
@@ -373,7 +372,6 @@ export default function FarmActivities({ farm }: FarmActivitiesProps) {
         }}
         onSubmit={handleSubmit}
         farmId={farm.id}
-        trees={farm.trees || []}
         activity={editingActivity}
         isLoading={isSubmitting}
       />
