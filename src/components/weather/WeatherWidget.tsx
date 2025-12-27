@@ -3,9 +3,7 @@
 import { useState, useEffect } from 'react'
 import {
   Cloud,
-  CloudRain,
   Droplets,
-  Sun,
   Thermometer,
   Wind,
   AlertTriangle,
