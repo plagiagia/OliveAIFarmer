@@ -29,7 +29,11 @@ export async function fetchWeatherData(lat: number, lon: number): Promise<Weathe
   ])
 
   if (!currentRes.ok || !forecastRes.ok) {
-    throw new Error('Failed to fetch weather data')
+    // Try to get error message from OpenWeatherMap
+    const errorData = await currentRes.json().catch(() => ({}))
+    const errorMessage = errorData.message || 'Failed to fetch weather data'
+    console.error('OpenWeatherMap API error:', errorMessage, 'Status:', currentRes.status)
+    throw new Error(`Weather API: ${errorMessage}`)
   }
 
   const currentData = await currentRes.json()
