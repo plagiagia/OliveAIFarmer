@@ -81,7 +81,10 @@ export default function RootLayout({
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-16">
                   <div className="flex items-center space-x-3">
-                    <span className="text-2xl">🫒</span>
+                    <svg className="w-8 h-8 text-olive-600" viewBox="0 0 24 24" fill="currentColor">
+                      <ellipse cx="12" cy="12" rx="5" ry="8" transform="rotate(-30 12 12)" />
+                      <path d="M12 4 Q14 2 16 3" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+                    </svg>
                     <h1 className="text-xl font-bold text-olive-800">ΕλαιοLog</h1>
                   </div>
                   <UserButton 
