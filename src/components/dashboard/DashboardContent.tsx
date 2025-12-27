@@ -33,9 +33,9 @@ interface DashboardContentProps {
   clerkUserId: string
 }
 
-export default function DashboardContent({ user, clerkUserId }: DashboardContentProps) {
+export default function DashboardContent({ user, clerkUserId: _clerkUserId }: DashboardContentProps) {
   const [isLoading, setIsLoading] = useState(!user)
-  const [userData, setUserData] = useState(user)
+  const [userData, _setUserData] = useState(user)
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
   const [showDeleteMessage, setShowDeleteMessage] = useState(false)
 
@@ -167,7 +167,8 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
   showDeleteMessage: boolean; 
 }) {
   const [editingFarm, setEditingFarm] = useState<Farm | null>(null)
-  const [farms, setFarms] = useState(user.farms)
+  // Note: farms state is intentionally unused - using user.farms directly, reload for updates
+  const [_farms, _setFarms] = useState(user.farms)
 
   const handleEditSuccess = () => {
     setEditingFarm(null)
@@ -275,7 +276,7 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
   )
 }
 
-function FarmCard({ farm, onEdit }: { farm: Farm; onEdit: (farm: Farm | null) => void }) {
+function FarmCard({ farm, onEdit: _onEdit }: { farm: Farm; onEdit: (farm: Farm | null) => void }) {
   const handleFarmClick = () => {
     window.location.href = `/dashboard/farms/${farm.id}`
   }

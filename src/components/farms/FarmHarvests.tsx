@@ -120,7 +120,7 @@ export default function FarmHarvests({ farm }: FarmHarvestsProps) {
     }
   }
 
-  const handleDeleteHarvest = async (harvestId: string, year: number) => {
+  const handleDeleteHarvest = async (harvestId: string, _year: number) => {
     if (!confirm('Είστε σίγουροι ότι θέλετε να διαγράψετε αυτή τη συλλογή;')) {
       return
     }
@@ -515,7 +515,7 @@ export default function FarmHarvests({ farm }: FarmHarvestsProps) {
         farmId={farm.id}
         farmData={{
           name: farm.name,
-          totalArea: farm.totalArea,
+          totalArea: farm.totalArea ?? undefined,
           treesCount: farm.trees?.length || 0
         }}
         onSuccess={handleCreateSuccess}

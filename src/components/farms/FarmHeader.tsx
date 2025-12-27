@@ -11,7 +11,7 @@ interface FarmHeaderProps {
   onBack: () => void
 }
 
-export default function FarmHeader({ farm, user, onEdit, onBack }: FarmHeaderProps) {
+export default function FarmHeader({ farm, user: _user, onEdit, onBack }: FarmHeaderProps) {
   return (
     <div className="bg-white shadow-sm border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -79,7 +79,7 @@ export default function FarmHeader({ farm, user, onEdit, onBack }: FarmHeaderPro
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-green-700">Ποικιλία:</span>
                   <span className="font-semibold text-green-900">
-                    {[...new Set(farm.trees.map((tree: any) => tree.variety))].join(', ')}
+                    {Array.from(new Set(farm.trees.map((tree: { variety: string }) => tree.variety))).join(', ')}
                   </span>
                 </div>
               )}

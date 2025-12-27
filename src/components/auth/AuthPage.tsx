@@ -10,7 +10,7 @@ import GoogleSignInButton from './GoogleSignInButton'
 import InfoPanel from './InfoPanel'
 
 export default function AuthPage() {
-  const { isLoaded, isSignedIn, user } = useUser()
+  const { isLoaded, isSignedIn, user: _user } = useUser()
   const router = useRouter()
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login')
   const [notification, setNotification] = useState<{

@@ -1,4 +1,14 @@
-import { ActivityType } from '@prisma/client'
+// Define ActivityType locally to avoid Prisma client generation issues
+export type ActivityType =
+  | 'WATERING'
+  | 'PRUNING'
+  | 'FERTILIZING'
+  | 'PEST_CONTROL'
+  | 'SOIL_WORK'
+  | 'HARVESTING'
+  | 'MAINTENANCE'
+  | 'INSPECTION'
+  | 'OTHER'
 
 export interface Activity {
   id: string

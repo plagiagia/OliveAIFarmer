@@ -18,9 +18,9 @@ interface LocationSuggestion {
   center: [number, number] // [longitude, latitude]
 }
 
-export default function FarmCreationForm({ userId }: FarmCreationFormProps) {
+export default function FarmCreationForm({ userId: _userId }: FarmCreationFormProps) {
   const router = useRouter()
-  
+
   const [formData, setFormData] = useState({
     name: '',
     location: '',
@@ -32,10 +32,10 @@ export default function FarmCreationForm({ userId }: FarmCreationFormProps) {
     oliveVariety: '',
     description: '',
   })
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
-  const [showMap, setShowMap] = useState(false)
+  const [_showMap, _setShowMap] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -99,7 +99,7 @@ export default function FarmCreationForm({ userId }: FarmCreationFormProps) {
       longitude: lng,
       latitude: lat,
     }))
-    setShowMap(true) // Show map when location is selected
+    _setShowMap(true) // Show map when location is selected
   }
 
   // Handle location selection from map

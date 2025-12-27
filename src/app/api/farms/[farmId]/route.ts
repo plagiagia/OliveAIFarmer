@@ -132,13 +132,13 @@ export async function PUT(
         } else if (newTreeCount < currentTreeCount) {
           // Remove excess trees (remove the highest numbered ones)
           const treesToDelete = existingFarm.trees
-            .sort((a, b) => parseInt(b.treeNumber) - parseInt(a.treeNumber))
+            .sort((a: { treeNumber: string }, b: { treeNumber: string }) => parseInt(b.treeNumber) - parseInt(a.treeNumber))
             .slice(0, currentTreeCount - newTreeCount)
 
           await prisma.oliveTree.deleteMany({
             where: {
               id: {
-                in: treesToDelete.map(tree => tree.id)
+                in: treesToDelete.map((tree: { id: string }) => tree.id)
               }
             }
           })

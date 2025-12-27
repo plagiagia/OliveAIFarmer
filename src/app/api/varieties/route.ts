@@ -59,10 +59,12 @@ export async function GET(request: NextRequest) {
           fertilizingNeeds: true,
           irrigationNeeds: true,
           _count: {
-            monthlyTasks: true,
-            riskFactors: true,
-            careGuidelines: true,
-            trees: true
+            select: {
+              monthlyTasks: true,
+              riskFactors: true,
+              careGuidelines: true,
+              trees: true
+            }
           }
         },
         orderBy: { name: 'asc' }
@@ -145,7 +147,7 @@ function getMonthName(month: number): string {
   return months[month - 1] || 'Άγνωστος'
 }
 
-function generateSmartRecommendations(variety: any, month: number, farmLocation?: string) {
+function generateSmartRecommendations(variety: any, month: number, _farmLocation?: string) {
   const recommendations = []
   
   // Water-based recommendations

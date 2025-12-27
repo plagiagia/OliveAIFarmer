@@ -235,6 +235,8 @@ async function createMonthlyTasks(varietyId: string, varietyName: string) {
       update: {},
       create: {
         ...task,
+        taskType: task.taskType as 'PRUNING' | 'WATERING' | 'FERTILIZING' | 'PEST_CONTROL' | 'DISEASE_PREVENTION' | 'SOIL_PREPARATION' | 'HARVESTING' | 'MONITORING' | 'GENERAL_CARE',
+        priority: task.priority as 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL',
         varietyId,
         weatherConditions: task.temperatureRange ? { idealTemperature: task.temperatureRange } : {},
       }

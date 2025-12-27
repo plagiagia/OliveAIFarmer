@@ -16,7 +16,7 @@ export async function testDatabaseConnection() {
     console.log('✅ Database connected successfully!')
     
     // Test a simple query
-    const result = await prisma.$queryRaw`SELECT version()`
+    await prisma.$queryRaw`SELECT version()`
     console.log('✅ Database query test successful!')
     
     return { success: true, message: 'Database connection successful!' }
