@@ -1,1 +1,1 @@
-export { default as PhotoUpload } from './PhotoUpload'
+export { PhotoUpload, SinglePhotoUpload } from './PhotoUpload'

@@ -1,1 +1,1 @@
-export { default as BulkTreeForm } from './BulkTreeForm'
+export { BulkTreeForm } from './BulkTreeForm'

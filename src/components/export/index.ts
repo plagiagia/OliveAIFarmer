@@ -1,3 +1,3 @@
-export { default as ExportButton } from './ExportButton'
-export { default as FarmPDFReport } from './FarmPDFReport'
-export { default as PDFExportButton } from './PDFExportButton'
+export { ExportButton, ExportDropdown } from './ExportButton'
+export { FarmPDFReport } from './FarmPDFReport'
+export { PDFExportButton } from './PDFExportButton'
