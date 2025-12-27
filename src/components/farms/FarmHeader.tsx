@@ -79,7 +79,7 @@ export default function FarmHeader({ farm, user, onEdit, onBack }: FarmHeaderPro
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-green-700">Ποικιλία:</span>
                   <span className="font-semibold text-green-900">
-                    {[...new Set(farm.trees.map((tree: any) => tree.variety))].join(', ')}
+                    {Array.from(new Set(farm.trees.map((tree: { variety: string }) => tree.variety))).join(', ')}
                   </span>
                 </div>
               )}

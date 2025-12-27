@@ -1,7 +1,6 @@
 'use client'
 
-import { ACTIVITY_TYPE_LABELS, ActivityFormData, ActivityWithTrees } from '@/lib/types/activity'
-import { ActivityType } from '@prisma/client'
+import { ACTIVITY_TYPE_LABELS, ActivityFormData, ActivityWithTrees, ActivityType } from '@/lib/types/activity'
 import { Activity, CheckCircle2, Clock, Filter, Plus, Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import ActivityCard from '../activities/ActivityCard'

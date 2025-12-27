@@ -1,7 +1,6 @@
 'use client'
 
-import { ACTIVITY_TYPE_ICONS, ACTIVITY_TYPE_LABELS, ActivityFormData, ActivityWithTrees } from '@/lib/types/activity'
-import { ActivityType } from '@prisma/client'
+import { ACTIVITY_TYPE_ICONS, ACTIVITY_TYPE_LABELS, ActivityFormData, ActivityWithTrees, ActivityType } from '@/lib/types/activity'
 import { Calendar, CheckCircle2, Clock, CloudSun, Euro, FileText, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
@@ -29,7 +28,7 @@ export default function ActivityFormModal({
   isLoading = false
 }: ActivityFormModalProps) {
   const [formData, setFormData] = useState<ActivityFormData>({
-    type: ActivityType.WATERING,
+    type: 'WATERING',
     title: '',
     description: '',
     date: new Date().toISOString().split('T')[0],
@@ -61,7 +60,7 @@ export default function ActivityFormModal({
     } else {
       // Reset form for new activity
       setFormData({
-        type: ActivityType.WATERING,
+        type: 'WATERING',
         title: '',
         description: '',
         date: new Date().toISOString().split('T')[0],

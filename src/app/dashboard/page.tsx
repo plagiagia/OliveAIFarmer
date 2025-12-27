@@ -17,10 +17,10 @@ export default async function DashboardPage() {
     email: user.email,
     firstName: user.firstName,
     lastName: user.lastName,
-    farms: user.farms?.map(farm => {
+    farms: user.farms?.map((farm: { id: string; name: string; location: string; coordinates: string | null; totalArea: number | null; trees?: { id: string }[]; activities?: { date: Date }[]; harvests?: { id: string }[] }) => {
       // Calculate the most recent activity date properly
-      const mostRecentActivityDate = farm.activities && farm.activities.length > 0 
-        ? new Date(Math.max(...farm.activities.map(activity => new Date(activity.date).getTime())))
+      const mostRecentActivityDate = farm.activities && farm.activities.length > 0
+        ? new Date(Math.max(...farm.activities.map((activity: { date: Date }) => new Date(activity.date).getTime())))
         : null
 
       return {

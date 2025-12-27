@@ -53,13 +53,13 @@ async function completeHarvest(request: NextRequest) {
     })
 
     // Calculate the actual start and end dates based on all collections
-    const allDates = yearHarvests.map(h => {
+    const allDates = yearHarvests.map((h: { collectionDate: Date | null; startDate: Date }) => {
       const collectionDate = h.collectionDate || h.startDate
       return collectionDate ? new Date(collectionDate) : null
-    }).filter(date => date !== null) as Date[]
+    }).filter((date: Date | null): date is Date => date !== null)
 
-    const actualStartDate = allDates.length > 0 ? new Date(Math.min(...allDates.map(d => d.getTime()))) : existingHarvest.startDate
-    const actualEndDate = allDates.length > 0 ? new Date(Math.max(...allDates.map(d => d.getTime()))) : new Date()
+    const actualStartDate = allDates.length > 0 ? new Date(Math.min(...allDates.map((d: Date) => d.getTime()))) : existingHarvest.startDate
+    const actualEndDate = allDates.length > 0 ? new Date(Math.max(...allDates.map((d: Date) => d.getTime()))) : new Date()
 
     // Update the specific harvest to mark as completed
     const updatedHarvest = await prisma.harvest.update({
