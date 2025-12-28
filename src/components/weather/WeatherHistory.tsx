@@ -1,7 +1,18 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { History, TrendingUp, TrendingDown, Droplets, Thermometer } from 'lucide-react'
+import {
+  History,
+  TrendingUp,
+  TrendingDown,
+  Droplets,
+  Thermometer,
+  Wind,
+  Compass,
+  Gauge,
+  Cloud,
+  Sun
+} from 'lucide-react'
 
 interface WeatherRecord {
   id: string
@@ -11,6 +22,12 @@ interface WeatherRecord {
   tempAvg: number
   humidity: number
   rainfall: number
+  windSpeed: number
+  windGust: number | null
+  windDirection: number | null
+  pressure: number | null
+  clouds: number | null
+  uvIndex: number | null
   condition: string
 }
 
@@ -26,6 +43,25 @@ interface WeatherStats {
 interface WeatherHistoryProps {
   farmId: string
   days?: number
+}
+
+// Convert wind direction degrees to compass direction
+function getWindDirection(degrees: number | null): string {
+  if (degrees === null) return '-'
+  const directions = ['Β', 'ΒΑ', 'Α', 'ΝΑ', 'Ν', 'ΝΔ', 'Δ', 'ΒΔ']
+  const index = Math.round(degrees / 45) % 8
+  return directions[index]
+}
+
+// Get wind direction full name in Greek
+function getWindDirectionFull(degrees: number | null): string {
+  if (degrees === null) return 'Άγνωστη'
+  const directions = [
+    'Βόρειος', 'Βορειοανατολικός', 'Ανατολικός', 'Νοτιοανατολικός',
+    'Νότιος', 'Νοτιοδυτικός', 'Δυτικός', 'Βορειοδυτικός'
+  ]
+  const index = Math.round(degrees / 45) % 8
+  return directions[index]
 }
 
 export default function WeatherHistory({ farmId, days = 7 }: WeatherHistoryProps) {
@@ -148,28 +184,68 @@ export default function WeatherHistory({ farmId, days = 7 }: WeatherHistoryProps
         </div>
       )}
 
-      {/* History List */}
-      <div className="divide-y divide-gray-100 max-h-64 overflow-y-auto">
+      {/* History List - Enhanced with more data */}
+      <div className="divide-y divide-gray-100 max-h-96 overflow-y-auto">
         {history.map((record) => (
-          <div key={record.id} className="px-6 py-3 flex items-center justify-between hover:bg-gray-50">
-            <div>
-              <p className="text-sm font-medium text-gray-800">
-                {new Date(record.date).toLocaleDateString('el-GR', {
-                  weekday: 'short',
-                  day: 'numeric',
-                  month: 'short'
-                })}
-              </p>
-              <p className="text-xs text-gray-500">{record.condition}</p>
-            </div>
-            <div className="flex items-center gap-4 text-sm">
-              <div className="text-right">
-                <span className="text-red-500 font-medium">{Math.round(record.tempHigh)}°</span>
-                <span className="text-gray-400 mx-1">/</span>
-                <span className="text-blue-500 font-medium">{Math.round(record.tempLow)}°</span>
+          <div key={record.id} className="px-6 py-4 hover:bg-gray-50">
+            {/* Date and condition row */}
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <p className="text-sm font-medium text-gray-800">
+                  {new Date(record.date).toLocaleDateString('el-GR', {
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long'
+                  })}
+                </p>
+                <p className="text-xs text-gray-500">{record.condition}</p>
               </div>
-              <div className="text-gray-500 text-xs w-12 text-right">
-                {record.humidity}%
+              <div className="text-right">
+                <span className="text-red-500 font-bold text-lg">{Math.round(record.tempHigh)}°</span>
+                <span className="text-gray-400 mx-1">/</span>
+                <span className="text-blue-500 font-bold text-lg">{Math.round(record.tempLow)}°</span>
+              </div>
+            </div>
+
+            {/* Weather details grid */}
+            <div className="grid grid-cols-3 md:grid-cols-6 gap-3 text-xs">
+              {/* Humidity */}
+              <div className="flex items-center gap-1 text-gray-600">
+                <Droplets className="w-3.5 h-3.5 text-blue-400" />
+                <span>{record.humidity}%</span>
+              </div>
+
+              {/* Wind Speed */}
+              <div className="flex items-center gap-1 text-gray-600">
+                <Wind className="w-3.5 h-3.5 text-teal-500" />
+                <span>{record.windSpeed.toFixed(1)} m/s</span>
+              </div>
+
+              {/* Wind Direction */}
+              <div className="flex items-center gap-1 text-gray-600" title={getWindDirectionFull(record.windDirection)}>
+                <Compass className="w-3.5 h-3.5 text-indigo-500" />
+                <span>{getWindDirection(record.windDirection)}</span>
+                {record.windDirection !== null && (
+                  <span className="text-gray-400">({record.windDirection}°)</span>
+                )}
+              </div>
+
+              {/* Pressure */}
+              <div className="flex items-center gap-1 text-gray-600">
+                <Gauge className="w-3.5 h-3.5 text-purple-500" />
+                <span>{record.pressure ?? '-'} hPa</span>
+              </div>
+
+              {/* Clouds */}
+              <div className="flex items-center gap-1 text-gray-600">
+                <Cloud className="w-3.5 h-3.5 text-gray-400" />
+                <span>{record.clouds ?? '-'}%</span>
+              </div>
+
+              {/* UV Index */}
+              <div className="flex items-center gap-1 text-gray-600">
+                <Sun className="w-3.5 h-3.5 text-yellow-500" />
+                <span>UV: {record.uvIndex?.toFixed(1) ?? '-'}</span>
               </div>
             </div>
           </div>
@@ -178,7 +254,8 @@ export default function WeatherHistory({ farmId, days = 7 }: WeatherHistoryProps
 
       {/* Footer */}
       <div className="px-6 py-3 bg-gray-50 text-xs text-gray-500 text-center">
-        {stats?.recordCount || history.length} εγγραφές
+        {stats?.recordCount || history.length} εγγραφές •
+        Άνεμος: Β=Βόρειος, Α=Ανατολικός, Ν=Νότιος, Δ=Δυτικός
       </div>
     </div>
   )
