@@ -315,71 +315,67 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           {/* Calendar */}
           <div className="lg:col-span-2">
-            <div className="relative">
-              {/* Filter Dropdown */}
-              <div className="absolute top-4 right-4 z-10">
-                <div className="relative">
-                  <button
-                    onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-                    className={`p-2 rounded-lg transition-colors ${
-                      activityTypeFilter !== 'ALL'
-                        ? 'bg-olive-100 text-olive-700'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                    title="Φίλτρο δραστηριοτήτων"
-                  >
-                    <Filter className="w-4 h-4" />
-                  </button>
+            {isLoadingActivities ? (
+              <div className="bg-white rounded-2xl shadow-sm p-8 text-center">
+                <div className="animate-spin w-8 h-8 border-4 border-olive-200 border-t-olive-600 rounded-full mx-auto mb-4"></div>
+                <p className="text-gray-600">Φόρτωση ημερολογίου...</p>
+              </div>
+            ) : (
+              <FarmCalendar
+                activities={filteredActivities}
+                onDateSelect={handleDateSelect}
+                onActivityClick={handleActivityClick}
+                filterElement={
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                      className={`p-2 rounded-lg transition-colors ${
+                        activityTypeFilter !== 'ALL'
+                          ? 'bg-olive-100 text-olive-700'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                      title="Φίλτρο δραστηριοτήτων"
+                    >
+                      <Filter className="w-4 h-4" />
+                    </button>
 
-                  {showFilterDropdown && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-20">
-                      <button
-                        onClick={() => { setActivityTypeFilter('ALL'); setShowFilterDropdown(false) }}
-                        className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 ${
-                          activityTypeFilter === 'ALL' ? 'text-olive-700 font-medium' : 'text-gray-700'
-                        }`}
-                      >
-                        Όλα
-                      </button>
-                      {Object.entries(ACTIVITY_TYPE_ICONS).map(([type, icon]) => (
+                    {showFilterDropdown && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-20">
                         <button
-                          key={type}
-                          onClick={() => { setActivityTypeFilter(type as ActivityType); setShowFilterDropdown(false) }}
-                          className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 ${
-                            activityTypeFilter === type ? 'text-olive-700 font-medium' : 'text-gray-700'
+                          onClick={() => { setActivityTypeFilter('ALL'); setShowFilterDropdown(false) }}
+                          className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 ${
+                            activityTypeFilter === 'ALL' ? 'text-olive-700 font-medium' : 'text-gray-700'
                           }`}
                         >
-                          <span>{icon}</span>
-                          <span className={`px-2 py-0.5 rounded text-xs ${ACTIVITY_TYPE_COLORS[type as ActivityType]}`}>
-                            {type === 'WATERING' ? 'Πότισμα' :
-                             type === 'PRUNING' ? 'Κλάδεμα' :
-                             type === 'FERTILIZING' ? 'Λίπανση' :
-                             type === 'PEST_CONTROL' ? 'Ψεκασμός' :
-                             type === 'SOIL_WORK' ? 'Εδαφοκαλλιέργεια' :
-                             type === 'HARVESTING' ? 'Συγκομιδή' :
-                             type === 'MAINTENANCE' ? 'Συντήρηση' :
-                             type === 'INSPECTION' ? 'Επιθεώρηση' : 'Άλλο'}
-                          </span>
+                          Όλα
                         </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {isLoadingActivities ? (
-                <div className="bg-white rounded-2xl shadow-sm p-8 text-center">
-                  <div className="animate-spin w-8 h-8 border-4 border-olive-200 border-t-olive-600 rounded-full mx-auto mb-4"></div>
-                  <p className="text-gray-600">Φόρτωση ημερολογίου...</p>
-                </div>
-              ) : (
-                <FarmCalendar
-                  activities={filteredActivities}
-                  onDateSelect={handleDateSelect}
-                  onActivityClick={handleActivityClick}
-                />
-              )}
-            </div>
+                        {Object.entries(ACTIVITY_TYPE_ICONS).map(([type, icon]) => (
+                          <button
+                            key={type}
+                            onClick={() => { setActivityTypeFilter(type as ActivityType); setShowFilterDropdown(false) }}
+                            className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 ${
+                              activityTypeFilter === type ? 'text-olive-700 font-medium' : 'text-gray-700'
+                            }`}
+                          >
+                            <span>{icon}</span>
+                            <span className={`px-2 py-0.5 rounded text-xs ${ACTIVITY_TYPE_COLORS[type as ActivityType]}`}>
+                              {type === 'WATERING' ? 'Πότισμα' :
+                               type === 'PRUNING' ? 'Κλάδεμα' :
+                               type === 'FERTILIZING' ? 'Λίπανση' :
+                               type === 'PEST_CONTROL' ? 'Ψεκασμός' :
+                               type === 'SOIL_WORK' ? 'Εδαφοκαλλιέργεια' :
+                               type === 'HARVESTING' ? 'Συγκομιδή' :
+                               type === 'MAINTENANCE' ? 'Συντήρηση' :
+                               type === 'INSPECTION' ? 'Επιθεώρηση' : 'Άλλο'}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                }
+              />
+            )}
 
             {/* Last activity info */}
             {calendarActivities.length > 0 && (
