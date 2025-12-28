@@ -251,12 +251,6 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
     ? calendarActivities
     : calendarActivities.filter(a => a.type === activityTypeFilter)
 
-  // Calculate activity stats for summary
-  const activityStats = calendarActivities.reduce((acc, activity) => {
-    acc[activity.type] = (acc[activity.type] || 0) + 1
-    return acc
-  }, {} as Record<string, number>)
-
   return (
     <>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
