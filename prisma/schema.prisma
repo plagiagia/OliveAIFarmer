@@ -54,6 +54,9 @@ model Farm {
   // Smart recommendations
   recommendations SmartRecommendation[]
 
+  // Weather history
+  weatherRecords WeatherRecord[]
+
   @@map("farms")
 }
 
@@ -488,4 +491,64 @@ enum RecommendationType {
   CARE_SUGGESTION  // Πρόταση φροντίδας
   RISK_WARNING     // Προειδοποίηση κινδύνου
   OPTIMIZATION     // Βελτίωση
+}
+
+// ===== WEATHER HISTORY STORAGE =====
+
+// Daily weather records for each farm
+model WeatherRecord {
+  id          String   @id @default(cuid())
+
+  // Parent farm
+  farmId      String
+  farm        Farm     @relation(fields: [farmId], references: [id], onDelete: Cascade)
+
+  // Timestamp - the specific date this record is for
+  date        DateTime // Normalized to midnight UTC for the day
+  recordedAt  DateTime @default(now()) // When this record was created/updated
+
+  // Temperature (Celsius)
+  tempHigh    Float    // Highest temperature of the day
+  tempLow     Float    // Lowest temperature of the day
+  tempAvg     Float    // Average temperature
+
+  // Humidity (percentage)
+  humidity    Int      // Average humidity
+
+  // Precipitation (mm)
+  rainfall    Float    @default(0) // Total rainfall in mm
+
+  // Wind (m/s)
+  windSpeed   Float    // Average wind speed
+  windGust    Float?   // Max wind gust (if available)
+  windDirection Int?   // Wind direction in degrees (0-360, where 0=North)
+
+  // Atmospheric conditions
+  pressure    Int?     // Atmospheric pressure in hPa
+  clouds      Int?     // Cloud coverage percentage (0-100)
+  uvIndex     Float?   // UV index (requires One Call API, may not always be available)
+
+  // Weather condition
+  condition   String   // Main condition (sunny, cloudy, rainy, etc.)
+  icon        String?  // Weather icon code from API
+
+  // Data source tracking
+  source      WeatherDataSource @default(API_CURRENT)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // One record per farm per day
+  @@unique([farmId, date])
+  @@index([farmId])
+  @@index([date])
+  @@index([farmId, date])
+  @@map("weather_records")
+}
+
+enum WeatherDataSource {
+  API_CURRENT   // From current weather API call
+  API_FORECAST  // From forecast API
+  CRON_DAILY    // From daily cron job
+  MANUAL        // Manually entered
 }
