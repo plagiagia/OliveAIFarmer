@@ -146,7 +146,7 @@ export default function WeatherWidget({ latitude, longitude }: WeatherWidgetProp
           {weather.forecast.slice(0, 5).map((day, i) => (
             <div key={i} className="text-center bg-white/10 rounded-lg py-2">
               <div className="text-xs text-blue-100">
-                {day.date.toLocaleDateString('el-GR', { weekday: 'short' })}
+                {new Date(day.date).toLocaleDateString('el-GR', { weekday: 'short' })}
               </div>
               <div className="text-lg my-1">{WEATHER_ICONS[day.icon] || '🌤️'}</div>
               <div className="text-xs">
