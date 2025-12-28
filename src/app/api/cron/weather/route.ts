@@ -38,8 +38,8 @@ export async function GET(request: NextRequest) {
     }
 
     const results = {
-      success: 0,
-      failed: 0,
+      successCount: 0,
+      failedCount: 0,
       errors: [] as string[]
     }
 
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
         const coords = parseCoordinates(farm.coordinates)
         if (!coords) {
           results.errors.push(`${farm.name}: Invalid coordinates`)
-          results.failed++
+          results.failedCount++
           continue
         }
 
@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
 
         if (!weatherRes.ok) {
           results.errors.push(`${farm.name}: Weather API error ${weatherRes.status}`)
-          results.failed++
+          results.failedCount++
           continue
         }
 
@@ -110,19 +110,19 @@ export async function GET(request: NextRequest) {
           source: 'CRON_DAILY'
         })
 
-        results.success++
+        results.successCount++
 
         // Small delay to avoid rate limiting (OpenWeatherMap free tier: 60 calls/min)
         await new Promise(resolve => setTimeout(resolve, 100))
       } catch (error) {
         results.errors.push(`${farm.name}: ${error instanceof Error ? error.message : 'Unknown error'}`)
-        results.failed++
+        results.failedCount++
       }
     }
 
     return NextResponse.json({
       success: true,
-      message: `Processed ${results.success} farms, ${results.failed} failed`,
+      message: `Processed ${results.successCount} farms, ${results.failedCount} failed`,
       ...results,
       totalFarms: farms.length
     })
