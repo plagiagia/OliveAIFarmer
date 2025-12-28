@@ -1,7 +1,7 @@
 'use client'
 
 import { ACTIVITY_TYPE_ICONS, ACTIVITY_TYPE_LABELS, ActivityFormData, ActivityWithTrees, ActivityType } from '@/types/activity'
-import { Calendar, CheckCircle2, Clock, CloudSun, Euro, FileText, X } from 'lucide-react'
+import { Calendar, CheckCircle2, Clock, CloudSun, Euro, FileText, Loader2, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 interface ActivityFormModalProps {
@@ -9,6 +9,7 @@ interface ActivityFormModalProps {
   onClose: () => void
   onSubmit: (data: ActivityFormData) => Promise<void>
   farmId: string
+  farmCoordinates?: string | null // Farm coordinates for weather fetching
   activity?: ActivityWithTrees | null
   isLoading?: boolean
 }
@@ -18,6 +19,7 @@ export default function ActivityFormModal({
   onClose,
   onSubmit,
   farmId: _farmId,
+  farmCoordinates,
   activity,
   isLoading = false
 }: ActivityFormModalProps) {
@@ -34,8 +36,48 @@ export default function ActivityFormModal({
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [weatherLoading, setWeatherLoading] = useState(false)
 
-  // Populate form when editing
+  // Parse coordinates helper
+  const parseCoordinates = (coordString: string): { lat: number; lng: number } | null => {
+    try {
+      const [lat, lng] = coordString.split(',').map(s => parseFloat(s.trim()))
+      if (!isNaN(lat) && !isNaN(lng)) {
+        return { lat, lng }
+      }
+    } catch {
+      // Ignore parse errors
+    }
+    return null
+  }
+
+  // Fetch current weather for auto-population
+  const fetchCurrentWeather = async () => {
+    if (!farmCoordinates) return
+
+    const coords = parseCoordinates(farmCoordinates)
+    if (!coords) return
+
+    setWeatherLoading(true)
+    try {
+      const response = await fetch(`/api/weather?lat=${coords.lat}&lon=${coords.lng}`)
+      if (response.ok) {
+        const data = await response.json()
+        if (data.weather?.current) {
+          const current = data.weather.current
+          // Format weather string with relevant info
+          const weatherString = `${current.description}, ${current.temperature}°C, Υγρασία ${current.humidity}%, Άνεμος ${current.windSpeed.toFixed(1)} m/s`
+          setFormData(prev => ({ ...prev, weather: weatherString }))
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch weather:', error)
+    } finally {
+      setWeatherLoading(false)
+    }
+  }
+
+  // Populate form when editing or reset for new
   useEffect(() => {
     if (activity) {
       setFormData({
@@ -49,7 +91,7 @@ export default function ActivityFormModal({
         notes: activity.notes || '',
         completed: activity.completed
       })
-    } else {
+    } else if (isOpen) {
       // Reset form for new activity
       setFormData({
         type: 'WATERING',
@@ -62,9 +104,11 @@ export default function ActivityFormModal({
         notes: '',
         completed: false
       })
+      // Auto-fetch weather for new activities
+      fetchCurrentWeather()
     }
     setErrors({})
-  }, [activity, isOpen])
+  }, [activity, isOpen, farmCoordinates])
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {}
@@ -91,7 +135,7 @@ export default function ActivityFormModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!validateForm()) {
       return
     }
@@ -237,15 +281,27 @@ export default function ActivityFormModal({
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 <CloudSun className="w-4 h-4 inline mr-1" />
                 Καιρικές Συνθήκες
+                {weatherLoading && (
+                  <Loader2 className="w-3 h-3 inline ml-2 animate-spin text-blue-500" />
+                )}
               </label>
-              <input
-                type="text"
-                value={formData.weather}
-                onChange={(e) => setFormData(prev => ({ ...prev, weather: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                placeholder="π.χ. Ηλιόλουστο, 25°C"
-                disabled={isLoading}
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  value={formData.weather}
+                  readOnly
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-blue-50 text-gray-700 cursor-default"
+                  placeholder={weatherLoading ? 'Φόρτωση καιρού...' : farmCoordinates ? 'Αυτόματη καταγραφή' : 'Δεν υπάρχουν συντεταγμένες'}
+                />
+                {formData.weather && !weatherLoading && (
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">
+                    Αυτόματο
+                  </span>
+                )}
+              </div>
+              <p className="mt-1 text-xs text-gray-500">
+                Ο καιρός καταγράφεται αυτόματα από το API
+              </p>
             </div>
           </div>
 
@@ -309,4 +365,4 @@ export default function ActivityFormModal({
       </div>
     </div>
   )
-} 
+}

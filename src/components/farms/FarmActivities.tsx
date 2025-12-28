@@ -372,6 +372,7 @@ export default function FarmActivities({ farm }: FarmActivitiesProps) {
         }}
         onSubmit={handleSubmit}
         farmId={farm.id}
+        farmCoordinates={farm.coordinates}
         activity={editingActivity}
         isLoading={isSubmitting}
       />
