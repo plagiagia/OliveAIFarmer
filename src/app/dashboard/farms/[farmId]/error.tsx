@@ -32,7 +32,7 @@ export default function FarmDetailError({ error, reset }: ErrorProps) {
             Το αγρόκτημα ενδέχεται να μην υπάρχει ή να μην έχετε πρόσβαση.
           </p>
 
-          {/* Error details (development only) */}
+          {/* Error details - only show in development */}
           {process.env.NODE_ENV === 'development' && (
             <div className="mb-6 p-4 bg-gray-50 rounded-xl text-left">
               <p className="text-xs font-mono text-gray-500 break-all">

@@ -18,13 +18,14 @@ export default async function FarmDetailPage({ params }: FarmDetailPageProps) {
 
   // Get user data
   const user = await getUserByClerkId(userId)
+
   if (!user) {
     redirect('/dashboard')
   }
 
   // Get farm data with all relationships
   const farm = await getFarmById(params.farmId)
-  
+
   if (!farm) {
     redirect('/dashboard')
   }
@@ -36,10 +37,10 @@ export default async function FarmDetailPage({ params }: FarmDetailPageProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <FarmDetailContent 
+      <FarmDetailContent
         farm={farm}
         user={user}
       />
     </div>
   )
-} 
+}
