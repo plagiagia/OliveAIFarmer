@@ -146,7 +146,7 @@ export default function AIGeoponosTab({ farmId }: AIGeoponosTabProps) {
   // Mark insight as read
   const markAsRead = async (insightId: string) => {
     try {
-      await fetch(`/api/insights/${insightId}`, {
+      await fetch(`/api/insights/item/${insightId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isRead: true })
@@ -163,7 +163,7 @@ export default function AIGeoponosTab({ farmId }: AIGeoponosTabProps) {
   // Mark insight as actioned (done)
   const markAsActioned = async (insightId: string) => {
     try {
-      await fetch(`/api/insights/${insightId}`, {
+      await fetch(`/api/insights/item/${insightId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isActioned: true })
@@ -180,7 +180,7 @@ export default function AIGeoponosTab({ farmId }: AIGeoponosTabProps) {
   // Delete insight
   const deleteInsight = async (insightId: string) => {
     try {
-      await fetch(`/api/insights/${insightId}`, {
+      await fetch(`/api/insights/item/${insightId}`, {
         method: 'DELETE'
       })
 
