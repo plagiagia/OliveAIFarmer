@@ -244,6 +244,34 @@ export async function saveWeatherRecord(data: WeatherRecordInput) {
   }
 }
 
+// Get weather for a specific date
+export async function getWeatherForDate(farmId: string, date: Date) {
+  try {
+    // Normalize to start of day in UTC
+    const startOfDay = new Date(date)
+    startOfDay.setUTCHours(0, 0, 0, 0)
+
+    const endOfDay = new Date(date)
+    endOfDay.setUTCHours(23, 59, 59, 999)
+
+    const record = await prisma.weatherRecord.findFirst({
+      where: {
+        farmId,
+        date: {
+          gte: startOfDay,
+          lte: endOfDay
+        }
+      },
+      orderBy: { recordedAt: 'desc' } // Get most recent record for that day
+    })
+
+    return record
+  } catch (error) {
+    console.error('❌ Error getting weather for date:', error)
+    return null
+  }
+}
+
 // Get weather history for a farm
 export async function getWeatherHistory(farmId: string, options?: {
   startDate?: Date

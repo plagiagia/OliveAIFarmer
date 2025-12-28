@@ -18,7 +18,7 @@ export default function ActivityFormModal({
   isOpen,
   onClose,
   onSubmit,
-  farmId: _farmId,
+  farmId,
   farmCoordinates,
   activity,
   isLoading = false
@@ -51,8 +51,18 @@ export default function ActivityFormModal({
     return null
   }
 
-  // Fetch current weather for auto-population
-  const fetchCurrentWeather = async () => {
+  // Check date relationship to today
+  const getDateRelation = (dateString: string): 'past' | 'today' | 'future' => {
+    const today = new Date().toISOString().split('T')[0]
+    if (dateString === today) return 'today'
+    return dateString < today ? 'past' : 'future'
+  }
+
+  // Helper to check if date is today
+  const isToday = (dateString: string) => getDateRelation(dateString) === 'today'
+
+  // Fetch current weather from API for today/future
+  const fetchWeatherFromAPI = async (dateString: string) => {
     if (!farmCoordinates) return
 
     const coords = parseCoordinates(farmCoordinates)
@@ -63,17 +73,73 @@ export default function ActivityFormModal({
       const response = await fetch(`/api/weather?lat=${coords.lat}&lon=${coords.lng}`)
       if (response.ok) {
         const data = await response.json()
-        if (data.weather?.current) {
+        const relation = getDateRelation(dateString)
+
+        if (relation === 'today' && data.weather?.current) {
+          // Today - use current weather
           const current = data.weather.current
-          // Format weather string with relevant info
           const weatherString = `${current.description}, ${current.temperature}°C, Υγρασία ${current.humidity}%, Άνεμος ${current.windSpeed.toFixed(1)} m/s`
           setFormData(prev => ({ ...prev, weather: weatherString }))
+        } else if (relation === 'future' && data.weather?.forecast) {
+          // Future date - try to find in forecast
+          const forecastDay = data.weather.forecast.find((day: { date: string }) => {
+            const forecastDate = new Date(day.date).toISOString().split('T')[0]
+            return forecastDate === dateString
+          })
+
+          if (forecastDay) {
+            const weatherString = `${forecastDay.description}, ${forecastDay.tempMax}°C/${forecastDay.tempMin}°C, Υγρασία ${forecastDay.humidity}%, Άνεμος ${forecastDay.windSpeed.toFixed(1)} m/s`
+            setFormData(prev => ({ ...prev, weather: weatherString }))
+          } else {
+            // Future date not in forecast range (beyond ~5 days), leave blank
+            setFormData(prev => ({ ...prev, weather: '' }))
+          }
         }
       }
     } catch (error) {
       console.error('Failed to fetch weather:', error)
+      setFormData(prev => ({ ...prev, weather: '' }))
     } finally {
       setWeatherLoading(false)
+    }
+  }
+
+  // Fetch historical weather for a past date
+  const fetchHistoricalWeather = async (dateString: string) => {
+    if (!farmId) return
+
+    setWeatherLoading(true)
+    try {
+      const response = await fetch(`/api/weather/history?farmId=${farmId}&date=${dateString}`)
+      if (response.ok) {
+        const data = await response.json()
+        if (data.record) {
+          const record = data.record
+          // Format weather string from historical data
+          const weatherString = `${record.condition}, ${Math.round(record.tempAvg)}°C, Υγρασία ${record.humidity}%, Άνεμος ${record.windSpeed.toFixed(1)} m/s`
+          setFormData(prev => ({ ...prev, weather: weatherString }))
+        } else {
+          // No historical data found, leave blank
+          setFormData(prev => ({ ...prev, weather: '' }))
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch historical weather:', error)
+      setFormData(prev => ({ ...prev, weather: '' }))
+    } finally {
+      setWeatherLoading(false)
+    }
+  }
+
+  // Fetch weather based on selected date
+  const fetchWeatherForDate = async (dateString: string) => {
+    const relation = getDateRelation(dateString)
+    if (relation === 'past') {
+      // Past date - try to get from historical data
+      await fetchHistoricalWeather(dateString)
+    } else {
+      // Today or future - get from weather API
+      await fetchWeatherFromAPI(dateString)
     }
   }
 
@@ -93,22 +159,32 @@ export default function ActivityFormModal({
       })
     } else if (isOpen) {
       // Reset form for new activity
+      const todayDate = new Date().toISOString().split('T')[0]
       setFormData({
         type: 'WATERING',
         title: '',
         description: '',
-        date: new Date().toISOString().split('T')[0],
+        date: todayDate,
         duration: '',
         cost: '',
         weather: '',
         notes: '',
         completed: false
       })
-      // Auto-fetch weather for new activities
-      fetchCurrentWeather()
+      // Auto-fetch weather for today
+      fetchWeatherForDate(todayDate)
     }
     setErrors({})
-  }, [activity, isOpen, farmCoordinates])
+  }, [activity, isOpen, farmCoordinates, farmId])
+
+  // Watch for date changes and fetch weather accordingly (only for new activities)
+  const handleDateChange = async (newDate: string) => {
+    setFormData(prev => ({ ...prev, date: newDate }))
+    // Only auto-fetch weather for new activities, not when editing
+    if (!activity) {
+      await fetchWeatherForDate(newDate)
+    }
+  }
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {}
@@ -226,7 +302,7 @@ export default function ActivityFormModal({
               <input
                 type="date"
                 value={formData.date}
-                onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+                onChange={(e) => handleDateChange(e.target.value)}
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${
                   errors.date ? 'border-red-500' : 'border-gray-300'
                 }`}
@@ -300,7 +376,13 @@ export default function ActivityFormModal({
                 )}
               </div>
               <p className="mt-1 text-xs text-gray-500">
-                Ο καιρός καταγράφεται αυτόματα από το API
+                {!formData.weather && !weatherLoading
+                  ? getDateRelation(formData.date) === 'past'
+                    ? 'Δεν υπάρχουν ιστορικά δεδομένα για αυτή την ημερομηνία'
+                    : getDateRelation(formData.date) === 'future'
+                      ? 'Η ημερομηνία είναι εκτός του εύρους πρόβλεψης (5 ημέρες)'
+                      : 'Αναμονή για δεδομένα καιρού...'
+                  : 'Ο καιρός καταγράφεται αυτόματα (τρέχων, πρόβλεψη ή ιστορικός)'}
               </p>
             </div>
           </div>

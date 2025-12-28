@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getWeatherHistory, getWeatherStats } from '@/lib/db'
+import { getWeatherHistory, getWeatherStats, getWeatherForDate } from '@/lib/db'
 import { auth } from '@clerk/nextjs/server'
 
 export async function GET(request: NextRequest) {
@@ -14,6 +14,7 @@ export async function GET(request: NextRequest) {
     const farmId = searchParams.get('farmId')
     const days = parseInt(searchParams.get('days') || '30')
     const includeStats = searchParams.get('stats') === 'true'
+    const specificDate = searchParams.get('date') // YYYY-MM-DD format
 
     if (!farmId) {
       return NextResponse.json(
@@ -22,7 +23,24 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Calculate date range
+    // If specific date is requested, return single record
+    if (specificDate) {
+      const date = new Date(specificDate)
+      if (isNaN(date.getTime())) {
+        return NextResponse.json(
+          { error: 'Invalid date format. Use YYYY-MM-DD' },
+          { status: 400 }
+        )
+      }
+
+      const record = await getWeatherForDate(farmId, date)
+      return NextResponse.json({
+        record,
+        date: specificDate
+      })
+    }
+
+    // Calculate date range for history
     const endDate = new Date()
     const startDate = new Date()
     startDate.setDate(startDate.getDate() - days)
