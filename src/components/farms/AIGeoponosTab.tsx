@@ -364,7 +364,7 @@ export default function AIGeoponosTab({ farmId }: AIGeoponosTabProps) {
           </div>
           <h3 className="font-semibold text-gray-900 mb-2">Δεν υπάρχουν προτάσεις</h3>
           <p className="text-gray-600 mb-4">
-            Πατήστε "Νέες Προτάσεις" για να λάβετε εξατομικευμένες συμβουλές από τον AI Γεωπόνο
+            Πατήστε &quot;Νέες Προτάσεις&quot; για να λάβετε εξατομικευμένες συμβουλές από τον AI Γεωπόνο
           </p>
           <button
             onClick={handleGenerate}
