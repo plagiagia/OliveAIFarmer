@@ -79,14 +79,14 @@ export default function FarmStats({ farm }: FarmStatsProps) {
         })}
       </div>
 
-      {/* Weather Intelligence Section */}
-      {coordinates && (
+      {/* Weather Intelligence Section - temporarily disabled for debugging */}
+      {/* {coordinates && (
         <WeatherWidget
           farmId={farm.id}
           latitude={coordinates.lat}
           longitude={coordinates.lng}
         />
-      )}
+      )} */}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Recent Activities */}
