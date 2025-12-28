@@ -62,7 +62,7 @@ export async function PUT(
 
     const { farmId } = await params
     const body = await request.json()
-    const { name, location, coordinates, totalArea, treeCount, oliveVariety, description } = body
+    const { name, location, coordinates, totalArea, treeCount, treeAge, oliveVariety, description } = body
 
     // Validate required fields
     if (!name?.trim() || !location?.trim()) {
@@ -100,6 +100,7 @@ export async function PUT(
         location: location.trim(),
         coordinates: coordinates || null,
         totalArea: totalArea ? parseFloat(totalArea) : null,
+        treeAge: treeAge !== null && treeAge !== undefined ? parseInt(treeAge) : null,
         description: description?.trim() || null,
         updatedAt: new Date()
       }
