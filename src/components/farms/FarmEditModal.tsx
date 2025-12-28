@@ -28,6 +28,7 @@ export default function FarmEditModal({ farm, onClose, onSuccess }: FarmEditModa
     totalArea: farm.totalArea ? convertFromStremmata(farm.totalArea, 'στρέμματα').toString() : '',
     areaUnit: 'στρέμματα' as AreaUnit,
     treeCount: farm.trees?.length.toString() || '',
+    treeAge: farm.treeAge?.toString() || '',
     oliveVariety: farm.trees?.length > 0 ? farm.trees[0].variety : '',
     description: farm.description || '',
   })
@@ -64,6 +65,7 @@ export default function FarmEditModal({ farm, onClose, onSuccess }: FarmEditModa
           coordinates,
           totalArea: areaInStremmata,
           treeCount: formData.treeCount ? parseInt(formData.treeCount) : null,
+          treeAge: formData.treeAge ? parseInt(formData.treeAge) : null,
           oliveVariety: formData.oliveVariety || null,
           description: formData.description,
         }),
@@ -319,6 +321,25 @@ export default function FarmEditModal({ farm, onClose, onSuccess }: FarmEditModa
                     Τρέχων αριθμός: {farm.trees.length} δέντρα
                   </p>
                 )}
+              </div>
+
+              {/* Tree Age */}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-3">
+                  Ηλικία Δέντρων (έτη)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="1000"
+                  value={formData.treeAge}
+                  onChange={(e) => handleInputChange('treeAge', e.target.value)}
+                  placeholder="π.χ. 25"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all duration-200 placeholder-gray-400"
+                />
+                <p className="text-sm text-gray-500 mt-2">
+                  Προαιρετικό - μέση ηλικία δέντρων στον ελαιώνα
+                </p>
               </div>
 
               {/* Olive Variety */}

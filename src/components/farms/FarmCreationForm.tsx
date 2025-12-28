@@ -29,6 +29,7 @@ export default function FarmCreationForm({ userId: _userId }: FarmCreationFormPr
     totalArea: '',
     areaUnit: 'στρέμματα' as AreaUnit,
     treeCount: '',
+    treeAge: '',
     oliveVariety: '',
     description: '',
   })
@@ -64,6 +65,7 @@ export default function FarmCreationForm({ userId: _userId }: FarmCreationFormPr
           coordinates,
           totalArea: areaInStremmata,
           treeCount: formData.treeCount ? parseInt(formData.treeCount) : null,
+          treeAge: formData.treeAge ? parseInt(formData.treeAge) : null,
           oliveVariety: formData.oliveVariety || null,
           description: formData.description,
         }),
@@ -254,6 +256,25 @@ export default function FarmCreationForm({ userId: _userId }: FarmCreationFormPr
                     placeholder="π.χ. 100"
                     className="w-full px-4 py-4 text-lg border-2 border-gray-300 rounded-xl focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all duration-200 placeholder-gray-400"
                   />
+                </div>
+
+                {/* Tree Age */}
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-3">
+                    Ηλικία Δέντρων (έτη)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="1000"
+                    value={formData.treeAge}
+                    onChange={(e) => handleInputChange('treeAge', e.target.value)}
+                    placeholder="π.χ. 25"
+                    className="w-full px-4 py-4 text-lg border-2 border-gray-300 rounded-xl focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all duration-200 placeholder-gray-400"
+                  />
+                  <p className="text-sm text-gray-500 mt-2">
+                    Προαιρετικό - μέση ηλικία δέντρων στον ελαιώνα
+                  </p>
                 </div>
 
                 {/* Olive Variety */}

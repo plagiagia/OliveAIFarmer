@@ -2,7 +2,7 @@
 
 import { format } from 'date-fns'
 import { el } from 'date-fns/locale'
-import { ArrowLeft, Calendar, Edit, FileText, MapPin, Ruler } from 'lucide-react'
+import { ArrowLeft, Calendar, Edit, FileText, MapPin, Ruler, TreeDeciduous } from 'lucide-react'
 
 interface FarmHeaderProps {
   farm: any
@@ -54,7 +54,14 @@ export default function FarmHeader({ farm, user: _user, onEdit, onBack }: FarmHe
                   <span>{farm.totalArea} στρέμματα</span>
                 </div>
               )}
-              
+
+              {farm.treeAge && (
+                <div className="flex items-center space-x-2">
+                  <TreeDeciduous className="w-4 h-4 text-green-600" />
+                  <span>{farm.treeAge} ετών</span>
+                </div>
+              )}
+
               <div className="flex items-center space-x-2">
                 <Calendar className="w-4 h-4 text-green-600" />
                 <span>
@@ -87,6 +94,12 @@ export default function FarmHeader({ farm, user: _user, onEdit, onBack }: FarmHe
                 <span className="text-sm text-green-700">Δέντρα:</span>
                 <span className="font-semibold text-green-900">{farm.trees?.length || 0}</span>
               </div>
+              {farm.treeAge && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-green-700">Ηλικία δέντρων:</span>
+                  <span className="font-semibold text-green-900">{farm.treeAge} έτη</span>
+                </div>
+              )}
               <div className="flex justify-between items-center">
                 <span className="text-sm text-green-700">Δραστηριότητες:</span>
                 <span className="font-semibold text-green-900">{farm.activities?.length || 0}</span>

@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, location, coordinates, totalArea, treeCount, oliveVariety, description } = body
+    const { name, location, coordinates, totalArea, treeCount, treeAge, oliveVariety, description } = body
 
     // Validate required fields
     if (!name || !location) {
@@ -38,6 +38,7 @@ export async function POST(request: NextRequest) {
         location: location.trim(),
         coordinates: coordinates?.trim() || null,
         totalArea: totalArea ? parseFloat(totalArea) : null,
+        treeAge: treeAge ? parseInt(treeAge) : null,
         description: description?.trim() || null,
         userId: user.id,
       },

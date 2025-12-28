@@ -36,6 +36,7 @@ model Farm {
   location    String   // e.g., "Καλαμάτα, Μεσσηνία"
   coordinates String?  // GPS coordinates (optional)
   totalArea   Float?   // Total farm area in stremmata (στρέμματα)
+  treeAge     Int?     // Average age of trees in years (optional)
   description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
