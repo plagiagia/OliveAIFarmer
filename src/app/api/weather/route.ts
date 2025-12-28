@@ -1,21 +1,14 @@
-import { auth } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { getWeatherIntelligence } from '@/lib/weather'
-import { prisma } from '@/lib/db'
 
+// Weather data is public - no auth required
+// The widget only shows on authenticated farm pages anyway
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = await auth()
-
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     // Get coordinates from query params
     const searchParams = request.nextUrl.searchParams
     const lat = searchParams.get('lat')
     const lon = searchParams.get('lon')
-    const farmId = searchParams.get('farmId')
 
     if (!lat || !lon) {
       return NextResponse.json(
@@ -42,35 +35,10 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Optionally get last watering date from farm activities
-    let lastWateringDate: Date | undefined
-
-    if (farmId) {
-      // Verify user owns this farm
-      const farm = await prisma.farm.findFirst({
-        where: {
-          id: farmId,
-          user: { clerkId: userId }
-        },
-        include: {
-          activities: {
-            where: { type: 'WATERING' },
-            orderBy: { date: 'desc' },
-            take: 1
-          }
-        }
-      })
-
-      if (farm?.activities[0]) {
-        lastWateringDate = farm.activities[0].date
-      }
-    }
-
     // Get weather intelligence
     const weatherIntelligence = await getWeatherIntelligence(
       latitude,
-      longitude,
-      lastWateringDate
+      longitude
     )
 
     return NextResponse.json(weatherIntelligence)

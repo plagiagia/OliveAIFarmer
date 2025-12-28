@@ -21,12 +21,11 @@ import {
 } from '@/types/weather'
 
 interface WeatherWidgetProps {
-  farmId: string
   latitude: number
   longitude: number
 }
 
-export default function WeatherWidget({ farmId, latitude, longitude }: WeatherWidgetProps) {
+export default function WeatherWidget({ latitude, longitude }: WeatherWidgetProps) {
   const [data, setData] = useState<WeatherIntelligence | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -38,7 +37,7 @@ export default function WeatherWidget({ farmId, latitude, longitude }: WeatherWi
 
     try {
       const response = await fetch(
-        `/api/weather?lat=${latitude}&lon=${longitude}&farmId=${farmId}`
+        `/api/weather?lat=${latitude}&lon=${longitude}`
       )
 
       if (!response.ok) {
@@ -60,7 +59,7 @@ export default function WeatherWidget({ farmId, latitude, longitude }: WeatherWi
     // Refresh every 30 minutes
     const interval = setInterval(fetchWeather, 30 * 60 * 1000)
     return () => clearInterval(interval)
-  }, [latitude, longitude, farmId])
+  }, [latitude, longitude])
 
   if (loading) {
     return <WeatherSkeleton />
