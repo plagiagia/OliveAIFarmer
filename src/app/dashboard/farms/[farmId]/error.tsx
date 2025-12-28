@@ -32,17 +32,19 @@ export default function FarmDetailError({ error, reset }: ErrorProps) {
             Το αγρόκτημα ενδέχεται να μην υπάρχει ή να μην έχετε πρόσβαση.
           </p>
 
-          {/* Error details - always show for debugging */}
-          <div className="mb-6 p-4 bg-gray-50 rounded-xl text-left">
-            <p className="text-xs font-mono text-gray-500 break-all">
-              {error.message}
-            </p>
-            {error.digest && (
-              <p className="text-xs font-mono text-gray-400 mt-2">
-                Digest: {error.digest}
+          {/* Error details - only show in development */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mb-6 p-4 bg-gray-50 rounded-xl text-left">
+              <p className="text-xs font-mono text-gray-500 break-all">
+                {error.message}
               </p>
-            )}
-          </div>
+              {error.digest && (
+                <p className="text-xs font-mono text-gray-400 mt-2">
+                  Digest: {error.digest}
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Action buttons */}
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
