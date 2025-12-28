@@ -10,8 +10,8 @@ import {
     TreePine,
     Wheat
 } from 'lucide-react'
-import { parseCoordinates } from '@/lib/mapbox-utils'
-import { WeatherWidget } from '@/components/weather'
+// import { parseCoordinates } from '@/lib/mapbox-utils'
+// import { WeatherWidget } from '@/components/weather'
 
 interface FarmStatsProps {
   farm: any
@@ -23,8 +23,8 @@ export default function FarmStats({ farm }: FarmStatsProps) {
   const totalActivities = farm.activities?.length || 0
   const totalHarvests = farm.harvests?.length || 0
 
-  // Parse farm coordinates for weather
-  const coordinates = farm.coordinates ? parseCoordinates(farm.coordinates) : null
+  // Parse farm coordinates for weather (disabled for debugging)
+  // const coordinates = farm.coordinates ? parseCoordinates(farm.coordinates) : null
 
   // Recent activity
   const recentActivities = farm.activities?.slice(0, 5) || []
