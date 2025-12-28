@@ -10,8 +10,35 @@ import {
     TreePine,
     Wheat
 } from 'lucide-react'
+import dynamic from 'next/dynamic'
 import { parseCoordinates } from '@/lib/mapbox-utils'
-import { WeatherWidget } from '@/components/weather'
+
+// Dynamic import to ensure weather widget only loads client-side
+const WeatherWidget = dynamic(
+  () => import('@/components/weather/WeatherWidget'),
+  { ssr: false, loading: () => <WeatherWidgetSkeleton /> }
+)
+
+function WeatherWidgetSkeleton() {
+  return (
+    <div className="bg-white rounded-2xl shadow-sm overflow-hidden animate-pulse">
+      <div className="bg-gradient-to-r from-blue-400 to-blue-500 p-6">
+        <div className="h-6 w-48 bg-white/30 rounded mb-4" />
+        <div className="flex items-center gap-4">
+          <div className="w-16 h-16 bg-white/30 rounded-full" />
+          <div>
+            <div className="h-10 w-20 bg-white/30 rounded mb-2" />
+            <div className="h-4 w-24 bg-white/30 rounded" />
+          </div>
+        </div>
+      </div>
+      <div className="p-6 space-y-4">
+        <div className="h-12 bg-gray-100 rounded-xl" />
+        <div className="h-12 bg-gray-100 rounded-xl" />
+      </div>
+    </div>
+  )
+}
 
 interface FarmStatsProps {
   farm: any
