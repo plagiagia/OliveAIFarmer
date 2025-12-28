@@ -363,24 +363,28 @@ model SmartRecommendation {
   message         String
   actionRequired  Boolean @default(false)
   urgency         Priority
-  
+
+  // Source of the recommendation
+  source          InsightSource @default(RULE_BASED)
+  reasoning       String?       // AI reasoning for the recommendation
+
   // Trigger conditions
-  triggerConditions Json             // Complex conditions
-  validFrom       DateTime
+  triggerConditions Json?            // Complex conditions (optional for AI insights)
+  validFrom       DateTime @default(now())
   validUntil      DateTime?
-  
+
   // Context
   farmId          String?
   varietyId       String?
   weatherBased    Boolean @default(false)
   seasonBased     Boolean @default(false)
-  
+
   // Tracking
   isRead          Boolean @default(false)
   isActioned      Boolean @default(false)
   readAt          DateTime?
   actionedAt      DateTime?
-  
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -492,6 +496,13 @@ enum RecommendationType {
   CARE_SUGGESTION  // Πρόταση φροντίδας
   RISK_WARNING     // Προειδοποίηση κινδύνου
   OPTIMIZATION     // Βελτίωση
+}
+
+enum InsightSource {
+  RULE_BASED       // Από κανόνες συστήματος
+  AI_GENERATED     // Από AI Γεωπόνο
+  WEATHER_ALERT    // Από καιρικές συνθήκες
+  USER_CREATED     // Από τον χρήστη
 }
 
 // ===== WEATHER HISTORY STORAGE =====
