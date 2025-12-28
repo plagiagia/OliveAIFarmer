@@ -58,9 +58,6 @@ export default function ActivityFormModal({
     return dateString < today ? 'past' : 'future'
   }
 
-  // Helper to check if date is today
-  const isToday = (dateString: string) => getDateRelation(dateString) === 'today'
-
   // Fetch current weather from API for today/future
   const fetchWeatherFromAPI = async (dateString: string) => {
     if (!farmCoordinates) {
