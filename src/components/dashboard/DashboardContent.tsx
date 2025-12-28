@@ -311,162 +311,142 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
           </div>
         </div>
 
-        {/* Main Content Grid - Calendar + Summary + Farms */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* Calendar */}
-          <div className="lg:col-span-2">
-            {isLoadingActivities ? (
-              <div className="bg-white rounded-2xl shadow-sm p-8 text-center">
-                <div className="animate-spin w-8 h-8 border-4 border-olive-200 border-t-olive-600 rounded-full mx-auto mb-4"></div>
-                <p className="text-gray-600">Φόρτωση ημερολογίου...</p>
+        {/* Stats Overview - Horizontal Row */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="bg-white rounded-2xl p-5 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-olive-100 rounded-xl flex items-center justify-center text-xl">
+                🫒
               </div>
-            ) : (
-              <FarmCalendar
-                activities={filteredActivities}
-                onDateSelect={handleDateSelect}
-                onActivityClick={handleActivityClick}
-                filterElement={
-                  <div className="relative">
-                    <button
-                      onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-                      className={`p-2 rounded-lg transition-colors ${
-                        activityTypeFilter !== 'ALL'
-                          ? 'bg-olive-100 text-olive-700'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      }`}
-                      title="Φίλτρο δραστηριοτήτων"
-                    >
-                      <Filter className="w-4 h-4" />
-                    </button>
-
-                    {showFilterDropdown && (
-                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-20">
-                        <button
-                          onClick={() => { setActivityTypeFilter('ALL'); setShowFilterDropdown(false) }}
-                          className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 ${
-                            activityTypeFilter === 'ALL' ? 'text-olive-700 font-medium' : 'text-gray-700'
-                          }`}
-                        >
-                          Όλα
-                        </button>
-                        {Object.entries(ACTIVITY_TYPE_ICONS).map(([type, icon]) => (
-                          <button
-                            key={type}
-                            onClick={() => { setActivityTypeFilter(type as ActivityType); setShowFilterDropdown(false) }}
-                            className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 ${
-                              activityTypeFilter === type ? 'text-olive-700 font-medium' : 'text-gray-700'
-                            }`}
-                          >
-                            <span>{icon}</span>
-                            <span className={`px-2 py-0.5 rounded text-xs ${ACTIVITY_TYPE_COLORS[type as ActivityType]}`}>
-                              {type === 'WATERING' ? 'Πότισμα' :
-                               type === 'PRUNING' ? 'Κλάδεμα' :
-                               type === 'FERTILIZING' ? 'Λίπανση' :
-                               type === 'PEST_CONTROL' ? 'Ψεκασμός' :
-                               type === 'SOIL_WORK' ? 'Εδαφοκαλλιέργεια' :
-                               type === 'HARVESTING' ? 'Συγκομιδή' :
-                               type === 'MAINTENANCE' ? 'Συντήρηση' :
-                               type === 'INSPECTION' ? 'Επιθεώρηση' : 'Άλλο'}
-                            </span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                }
-              />
-            )}
-
-            {/* Last activity info */}
-            {calendarActivities.length > 0 && (
-              <div className="mt-4 text-sm text-gray-500 flex items-center gap-2">
-                <Activity className="w-4 h-4" />
-                <span>
-                  Τελευταία δραστηριότητα: {format(
-                    new Date(Math.max(...calendarActivities.map(a => new Date(a.date).getTime()))),
-                    'dd/MM/yyyy',
-                    { locale: el }
-                  )} (πριν {Math.floor((Date.now() - Math.max(...calendarActivities.map(a => new Date(a.date).getTime()))) / (1000 * 60 * 60 * 24))} μέρες)
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* Right Column - Summary Stats */}
-          <div className="space-y-6">
-            {/* Activity Summary Card */}
-            <div className="bg-white rounded-2xl shadow-sm p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-olive-100 rounded-xl flex items-center justify-center">
-                  <Activity className="w-5 h-5 text-olive-700" />
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-gray-900">
-                    {user.farms.reduce((sum, farm) => sum + farm.activitiesCount, 0)}
-                  </div>
-                  <div className="text-sm text-gray-500">Δραστηριότητες</div>
-                </div>
-              </div>
-
-              {/* Activity Types Breakdown */}
-              <div className="space-y-2">
-                {Object.entries(activityStats)
-                  .sort((a, b) => b[1] - a[1])
-                  .slice(0, 5)
-                  .map(([type, count]) => (
-                    <div key={type} className="flex items-center justify-between text-sm">
-                      <span className={`px-2 py-0.5 rounded ${ACTIVITY_TYPE_COLORS[type as ActivityType]}`}>
-                        {ACTIVITY_TYPE_ICONS[type as ActivityType]} {
-                          type === 'WATERING' ? 'Πότισμα' :
-                          type === 'PRUNING' ? 'Κλάδεμα' :
-                          type === 'FERTILIZING' ? 'Λίπανση' :
-                          type === 'PEST_CONTROL' ? 'Ψεκασμός' :
-                          type === 'SOIL_WORK' ? 'Εδαφοκαλλ.' :
-                          type === 'HARVESTING' ? 'Συγκομιδή' :
-                          type === 'MAINTENANCE' ? 'Συντήρηση' :
-                          type === 'INSPECTION' ? 'Επιθεώρηση' : 'Άλλο'
-                        }
-                      </span>
-                      <span className="font-medium text-gray-700">{count}</span>
-                    </div>
-                  ))}
-              </div>
-            </div>
-
-            {/* Harvests Summary Card */}
-            <div className="bg-white rounded-2xl shadow-sm p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
-                  <Trophy className="w-5 h-5 text-amber-700" />
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-gray-900">
-                    {user.farms.reduce((sum, farm) => sum + farm.harvestsCount, 0)}
-                  </div>
-                  <div className="text-sm text-gray-500">Συγκομιδές</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Stats */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white rounded-2xl p-4 shadow-sm text-center">
-                <div className="text-olive-600 text-xl mb-1">🫒</div>
-                <div className="text-xl font-bold text-gray-800">
+              <div>
+                <div className="text-2xl font-bold text-gray-800">
                   {user.farms.reduce((sum, farm) => sum + farm.treesCount, 0)}
                 </div>
-                <div className="text-xs text-gray-500">Δέντρα</div>
-              </div>
-
-              <div className="bg-white rounded-2xl p-4 shadow-sm text-center">
-                <div className="text-olive-600 text-xl mb-1">📊</div>
-                <div className="text-xl font-bold text-gray-800">
-                  {user.farms.reduce((sum, farm) => sum + (farm.totalArea || 0), 0).toFixed(1)}
-                </div>
-                <div className="text-xs text-gray-500">Στρέμματα</div>
+                <div className="text-sm text-gray-500">Δέντρα</div>
               </div>
             </div>
           </div>
+
+          <div className="bg-white rounded-2xl p-5 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-xl">
+                📊
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-gray-800">
+                  {user.farms.reduce((sum, farm) => sum + (farm.totalArea || 0), 0).toFixed(1)}
+                </div>
+                <div className="text-sm text-gray-500">Στρέμματα</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl p-5 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+                <Activity className="w-5 h-5 text-green-700" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-gray-800">
+                  {user.farms.reduce((sum, farm) => sum + farm.activitiesCount, 0)}
+                </div>
+                <div className="text-sm text-gray-500">Δραστηριότητες</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl p-5 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
+                <Trophy className="w-5 h-5 text-amber-700" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-gray-800">
+                  {user.farms.reduce((sum, farm) => sum + farm.harvestsCount, 0)}
+                </div>
+                <div className="text-sm text-gray-500">Συγκομιδές</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Calendar Section */}
+        <div className="mb-8">
+          {isLoadingActivities ? (
+            <div className="bg-white rounded-2xl shadow-sm p-8 text-center">
+              <div className="animate-spin w-8 h-8 border-4 border-olive-200 border-t-olive-600 rounded-full mx-auto mb-4"></div>
+              <p className="text-gray-600">Φόρτωση ημερολογίου...</p>
+            </div>
+          ) : (
+            <FarmCalendar
+              activities={filteredActivities}
+              onDateSelect={handleDateSelect}
+              onActivityClick={handleActivityClick}
+              filterElement={
+                <div className="relative">
+                  <button
+                    onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                    className={`p-2 rounded-lg transition-colors ${
+                      activityTypeFilter !== 'ALL'
+                        ? 'bg-olive-100 text-olive-700'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                    title="Φίλτρο δραστηριοτήτων"
+                  >
+                    <Filter className="w-4 h-4" />
+                  </button>
+
+                  {showFilterDropdown && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-20">
+                      <button
+                        onClick={() => { setActivityTypeFilter('ALL'); setShowFilterDropdown(false) }}
+                        className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 ${
+                          activityTypeFilter === 'ALL' ? 'text-olive-700 font-medium' : 'text-gray-700'
+                        }`}
+                      >
+                        Όλα
+                      </button>
+                      {Object.entries(ACTIVITY_TYPE_ICONS).map(([type, icon]) => (
+                        <button
+                          key={type}
+                          onClick={() => { setActivityTypeFilter(type as ActivityType); setShowFilterDropdown(false) }}
+                          className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 ${
+                            activityTypeFilter === type ? 'text-olive-700 font-medium' : 'text-gray-700'
+                          }`}
+                        >
+                          <span>{icon}</span>
+                          <span className={`px-2 py-0.5 rounded text-xs ${ACTIVITY_TYPE_COLORS[type as ActivityType]}`}>
+                            {type === 'WATERING' ? 'Πότισμα' :
+                             type === 'PRUNING' ? 'Κλάδεμα' :
+                             type === 'FERTILIZING' ? 'Λίπανση' :
+                             type === 'PEST_CONTROL' ? 'Ψεκασμός' :
+                             type === 'SOIL_WORK' ? 'Εδαφοκαλλιέργεια' :
+                             type === 'HARVESTING' ? 'Συγκομιδή' :
+                             type === 'MAINTENANCE' ? 'Συντήρηση' :
+                             type === 'INSPECTION' ? 'Επιθεώρηση' : 'Άλλο'}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              }
+            />
+          )}
+
+          {/* Last activity info */}
+          {calendarActivities.length > 0 && (
+            <div className="mt-4 text-sm text-gray-500 flex items-center gap-2">
+              <Activity className="w-4 h-4" />
+              <span>
+                Τελευταία δραστηριότητα: {format(
+                  new Date(Math.max(...calendarActivities.map(a => new Date(a.date).getTime()))),
+                  'dd/MM/yyyy',
+                  { locale: el }
+                )} (πριν {Math.floor((Date.now() - Math.max(...calendarActivities.map(a => new Date(a.date).getTime()))) / (1000 * 60 * 60 * 24))} μέρες)
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Farms Grid */}
