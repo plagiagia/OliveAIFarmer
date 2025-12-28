@@ -10,36 +10,55 @@ interface FarmDetailPageProps {
 }
 
 export default async function FarmDetailPage({ params }: FarmDetailPageProps) {
-  const { userId } = await auth()
+  console.log('[FarmDetailPage] Starting to load farm:', params.farmId)
 
-  if (!userId) {
-    redirect('/')
+  try {
+    console.log('[FarmDetailPage] Calling auth()...')
+    const { userId } = await auth()
+    console.log('[FarmDetailPage] auth() returned userId:', userId ? 'present' : 'null')
+
+    if (!userId) {
+      console.log('[FarmDetailPage] No userId, redirecting to /')
+      redirect('/')
+    }
+
+    // Get user data
+    console.log('[FarmDetailPage] Getting user by clerkId...')
+    const user = await getUserByClerkId(userId)
+    console.log('[FarmDetailPage] User found:', user ? 'yes' : 'no')
+
+    if (!user) {
+      console.log('[FarmDetailPage] No user found, redirecting to /dashboard')
+      redirect('/dashboard')
+    }
+
+    // Get farm data with all relationships
+    console.log('[FarmDetailPage] Getting farm by id:', params.farmId)
+    const farm = await getFarmById(params.farmId)
+    console.log('[FarmDetailPage] Farm found:', farm ? 'yes' : 'no')
+
+    if (!farm) {
+      console.log('[FarmDetailPage] No farm found, redirecting to /dashboard')
+      redirect('/dashboard')
+    }
+
+    // Check if user owns this farm
+    if (farm.userId !== user.id) {
+      console.log('[FarmDetailPage] User does not own farm, redirecting to /dashboard')
+      redirect('/dashboard')
+    }
+
+    console.log('[FarmDetailPage] Successfully loaded farm, rendering content')
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <FarmDetailContent
+          farm={farm}
+          user={user}
+        />
+      </div>
+    )
+  } catch (error) {
+    console.error('[FarmDetailPage] Error loading farm:', error)
+    throw error
   }
-
-  // Get user data
-  const user = await getUserByClerkId(userId)
-  if (!user) {
-    redirect('/dashboard')
-  }
-
-  // Get farm data with all relationships
-  const farm = await getFarmById(params.farmId)
-  
-  if (!farm) {
-    redirect('/dashboard')
-  }
-
-  // Check if user owns this farm
-  if (farm.userId !== user.id) {
-    redirect('/dashboard')
-  }
-
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <FarmDetailContent 
-        farm={farm}
-        user={user}
-      />
-    </div>
-  )
 } 
