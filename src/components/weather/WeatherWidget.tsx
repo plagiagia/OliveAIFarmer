@@ -11,8 +11,10 @@ import {
   ChevronDown,
   ChevronUp,
   Bug,
-  Droplet
+  Droplet,
+  History
 } from 'lucide-react'
+import WeatherHistory from './WeatherHistory'
 import {
   WeatherIntelligence,
   WeatherAlert,
@@ -23,9 +25,10 @@ import {
 interface WeatherWidgetProps {
   latitude: number
   longitude: number
+  farmId?: string // Optional farmId for saving weather history
 }
 
-export default function WeatherWidget({ latitude, longitude }: WeatherWidgetProps) {
+export default function WeatherWidget({ latitude, longitude, farmId }: WeatherWidgetProps) {
   const [data, setData] = useState<WeatherIntelligence | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -36,9 +39,13 @@ export default function WeatherWidget({ latitude, longitude }: WeatherWidgetProp
     setError(null)
 
     try {
-      const response = await fetch(
-        `/api/weather?lat=${latitude}&lon=${longitude}`
-      )
+      // Include farmId to enable weather history storage
+      const params = new URLSearchParams({
+        lat: latitude.toString(),
+        lon: longitude.toString(),
+        ...(farmId && { farmId })
+      })
+      const response = await fetch(`/api/weather?${params}`)
 
       if (!response.ok) {
         const errData = await response.json()
@@ -59,7 +66,7 @@ export default function WeatherWidget({ latitude, longitude }: WeatherWidgetProp
     // Refresh every 30 minutes
     const interval = setInterval(fetchWeather, 30 * 60 * 1000)
     return () => clearInterval(interval)
-  }, [latitude, longitude])
+  }, [latitude, longitude, farmId])
 
   if (loading) {
     return <WeatherSkeleton />
@@ -261,6 +268,32 @@ export default function WeatherWidget({ latitude, longitude }: WeatherWidgetProp
               {diseaseRisks.map((risk, i) => (
                 <DiseaseRiskCard key={i} risk={risk} />
               ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Weather History Section */}
+      {farmId && (
+        <div className="border-t border-gray-100">
+          <button
+            onClick={() => toggleSection('history')}
+            className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <History className="w-5 h-5 text-indigo-500" />
+              <span className="font-medium text-gray-800">Ιστορικό Καιρού</span>
+            </div>
+            {expandedSection === 'history' ? (
+              <ChevronUp className="w-5 h-5 text-gray-400" />
+            ) : (
+              <ChevronDown className="w-5 h-5 text-gray-400" />
+            )}
+          </button>
+
+          {expandedSection === 'history' && (
+            <div className="px-6 pb-4">
+              <WeatherHistory farmId={farmId} days={7} />
             </div>
           )}
         </div>

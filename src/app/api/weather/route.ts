@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getWeatherIntelligence } from '@/lib/weather'
+import { saveWeatherRecord } from '@/lib/db'
 
 // Weather data is public - no auth required
 // The widget only shows on authenticated farm pages anyway
 export async function GET(request: NextRequest) {
   try {
-    // Get coordinates from query params
+    // Get coordinates and optional farmId from query params
     const searchParams = request.nextUrl.searchParams
     const lat = searchParams.get('lat')
     const lon = searchParams.get('lon')
+    const farmId = searchParams.get('farmId')
 
     if (!lat || !lon) {
       return NextResponse.json(
@@ -40,6 +42,29 @@ export async function GET(request: NextRequest) {
       latitude,
       longitude
     )
+
+    // Opportunistically save weather data if farmId is provided
+    if (farmId && weatherIntelligence.weather.current) {
+      try {
+        const current = weatherIntelligence.weather.current
+        await saveWeatherRecord({
+          farmId,
+          date: new Date(),
+          tempHigh: current.temperature, // Current temp as high for now
+          tempLow: current.temperature,  // Will be updated by cron with proper min/max
+          tempAvg: current.temperature,
+          humidity: current.humidity,
+          rainfall: 0, // Current API doesn't give rainfall, cron will update
+          windSpeed: current.windSpeed,
+          condition: current.description,
+          icon: current.icon,
+          source: 'API_CURRENT'
+        })
+      } catch (saveError) {
+        // Don't fail the request if saving fails, just log it
+        console.error('Failed to save weather record:', saveError)
+      }
+    }
 
     return NextResponse.json(weatherIntelligence)
   } catch (error) {

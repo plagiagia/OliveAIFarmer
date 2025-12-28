@@ -111,6 +111,7 @@ export default function FarmStats({ farm }: FarmStatsProps) {
         <WeatherWidget
           latitude={coordinates.lat}
           longitude={coordinates.lng}
+          farmId={farm.id}
         />
       )}
 
