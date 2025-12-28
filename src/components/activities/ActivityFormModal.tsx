@@ -63,38 +63,61 @@ export default function ActivityFormModal({
 
   // Fetch current weather from API for today/future
   const fetchWeatherFromAPI = async (dateString: string) => {
-    if (!farmCoordinates) return
+    if (!farmCoordinates) {
+      setFormData(prev => ({ ...prev, weather: '' }))
+      return
+    }
 
     const coords = parseCoordinates(farmCoordinates)
-    if (!coords) return
+    if (!coords) {
+      setFormData(prev => ({ ...prev, weather: '' }))
+      return
+    }
 
     setWeatherLoading(true)
     try {
       const response = await fetch(`/api/weather?lat=${coords.lat}&lon=${coords.lng}`)
-      if (response.ok) {
-        const data = await response.json()
-        const relation = getDateRelation(dateString)
+      if (!response.ok) {
+        setFormData(prev => ({ ...prev, weather: '' }))
+        return
+      }
 
-        if (relation === 'today' && data.weather?.current) {
-          // Today - use current weather
+      const data = await response.json()
+      const relation = getDateRelation(dateString)
+
+      if (relation === 'today') {
+        // Today - use current weather
+        if (data.weather?.current) {
           const current = data.weather.current
           const weatherString = `${current.description}, ${current.temperature}°C, Υγρασία ${current.humidity}%, Άνεμος ${current.windSpeed.toFixed(1)} m/s`
           setFormData(prev => ({ ...prev, weather: weatherString }))
-        } else if (relation === 'future' && data.weather?.forecast) {
-          // Future date - try to find in forecast
-          const forecastDay = data.weather.forecast.find((day: { date: string }) => {
-            const forecastDate = new Date(day.date).toISOString().split('T')[0]
-            return forecastDate === dateString
+        } else {
+          setFormData(prev => ({ ...prev, weather: '' }))
+        }
+      } else if (relation === 'future') {
+        // Future date - try to find in forecast
+        if (data.weather?.forecast && Array.isArray(data.weather.forecast)) {
+          const forecastDay = data.weather.forecast.find((day: { date: string | Date; tempMax: number; tempMin: number; humidity: number; windSpeed: number; description: string }) => {
+            // Handle both Date objects (serialized as ISO strings) and plain strings
+            const dayDateStr = typeof day.date === 'string'
+              ? day.date.split('T')[0]
+              : new Date(day.date).toISOString().split('T')[0]
+            return dayDateStr === dateString
           })
 
           if (forecastDay) {
             const weatherString = `${forecastDay.description}, ${forecastDay.tempMax}°C/${forecastDay.tempMin}°C, Υγρασία ${forecastDay.humidity}%, Άνεμος ${forecastDay.windSpeed.toFixed(1)} m/s`
             setFormData(prev => ({ ...prev, weather: weatherString }))
           } else {
-            // Future date not in forecast range (beyond ~5 days), leave blank
+            // Future date not in forecast range (beyond ~5 days)
             setFormData(prev => ({ ...prev, weather: '' }))
           }
+        } else {
+          setFormData(prev => ({ ...prev, weather: '' }))
         }
+      } else {
+        // Shouldn't happen, but handle gracefully
+        setFormData(prev => ({ ...prev, weather: '' }))
       }
     } catch (error) {
       console.error('Failed to fetch weather:', error)
@@ -106,22 +129,28 @@ export default function ActivityFormModal({
 
   // Fetch historical weather for a past date
   const fetchHistoricalWeather = async (dateString: string) => {
-    if (!farmId) return
+    if (!farmId) {
+      setFormData(prev => ({ ...prev, weather: '' }))
+      return
+    }
 
     setWeatherLoading(true)
     try {
       const response = await fetch(`/api/weather/history?farmId=${farmId}&date=${dateString}`)
-      if (response.ok) {
-        const data = await response.json()
-        if (data.record) {
-          const record = data.record
-          // Format weather string from historical data
-          const weatherString = `${record.condition}, ${Math.round(record.tempAvg)}°C, Υγρασία ${record.humidity}%, Άνεμος ${record.windSpeed.toFixed(1)} m/s`
-          setFormData(prev => ({ ...prev, weather: weatherString }))
-        } else {
-          // No historical data found, leave blank
-          setFormData(prev => ({ ...prev, weather: '' }))
-        }
+      if (!response.ok) {
+        setFormData(prev => ({ ...prev, weather: '' }))
+        return
+      }
+
+      const data = await response.json()
+      if (data.record) {
+        const record = data.record
+        // Format weather string from historical data
+        const weatherString = `${record.condition}, ${Math.round(record.tempAvg)}°C, Υγρασία ${record.humidity}%, Άνεμος ${record.windSpeed.toFixed(1)} m/s`
+        setFormData(prev => ({ ...prev, weather: weatherString }))
+      } else {
+        // No historical data found, leave blank
+        setFormData(prev => ({ ...prev, weather: '' }))
       }
     } catch (error) {
       console.error('Failed to fetch historical weather:', error)
