@@ -177,6 +177,10 @@ export interface WeatherRecordInput {
   rainfall: number
   windSpeed: number
   windGust?: number
+  windDirection?: number
+  pressure?: number
+  clouds?: number
+  uvIndex?: number
   condition: string
   icon?: string
   source?: WeatherDataSource
@@ -204,6 +208,10 @@ export async function saveWeatherRecord(data: WeatherRecordInput) {
         rainfall: data.rainfall,
         windSpeed: data.windSpeed,
         windGust: data.windGust,
+        windDirection: data.windDirection,
+        pressure: data.pressure,
+        clouds: data.clouds,
+        uvIndex: data.uvIndex,
         condition: data.condition,
         icon: data.icon,
         source: data.source || 'API_CURRENT',
@@ -219,6 +227,10 @@ export async function saveWeatherRecord(data: WeatherRecordInput) {
         rainfall: data.rainfall,
         windSpeed: data.windSpeed,
         windGust: data.windGust,
+        windDirection: data.windDirection,
+        pressure: data.pressure,
+        clouds: data.clouds,
+        uvIndex: data.uvIndex,
         condition: data.condition,
         icon: data.icon,
         source: data.source || 'API_CURRENT'

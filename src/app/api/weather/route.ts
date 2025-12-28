@@ -56,6 +56,11 @@ export async function GET(request: NextRequest) {
           humidity: current.humidity,
           rainfall: 0, // Current API doesn't give rainfall, cron will update
           windSpeed: current.windSpeed,
+          windDirection: current.windDirection,
+          pressure: current.pressure,
+          clouds: current.clouds,
+          // UV index requires One Call API (paid) - not available in free tier
+          uvIndex: undefined,
           condition: current.description,
           icon: current.icon,
           source: 'API_CURRENT'

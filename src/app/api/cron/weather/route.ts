@@ -105,6 +105,11 @@ export async function GET(request: NextRequest) {
           rainfall: totalRain,
           windSpeed: weatherData.wind?.speed || 0,
           windGust: weatherData.wind?.gust,
+          windDirection: weatherData.wind?.deg,
+          pressure: weatherData.main?.pressure,
+          clouds: weatherData.clouds?.all,
+          // UV index requires One Call API (paid) - will be null from free API
+          uvIndex: undefined,
           condition: weatherData.weather?.[0]?.description || 'Unknown',
           icon: weatherData.weather?.[0]?.icon,
           source: 'CRON_DAILY'

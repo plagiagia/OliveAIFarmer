@@ -521,6 +521,12 @@ model WeatherRecord {
   // Wind (m/s)
   windSpeed   Float    // Average wind speed
   windGust    Float?   // Max wind gust (if available)
+  windDirection Int?   // Wind direction in degrees (0-360, where 0=North)
+
+  // Atmospheric conditions
+  pressure    Int?     // Atmospheric pressure in hPa
+  clouds      Int?     // Cloud coverage percentage (0-100)
+  uvIndex     Float?   // UV index (requires One Call API, may not always be available)
 
   // Weather condition
   condition   String   // Main condition (sunny, cloudy, rainy, etc.)
