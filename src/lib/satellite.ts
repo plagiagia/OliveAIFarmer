@@ -226,31 +226,29 @@ export async function fetchVegetationIndices(
           };
         }
 
-        function evaluatePixel(samples) {
-          let validCount = 0;
-          let ndviSum = 0;
-          let ndmiSum = 0;
-
-          for (let s of samples) {
-            let scl = s.SCL;
-            if (s.dataMask === 1 && (scl < 7 || scl > 10)) {
-              let ndvi = (s.B08 - s.B04) / (s.B08 + s.B04 + 0.0001);
-              let ndmi = (s.B08 - s.B11) / (s.B08 + s.B11 + 0.0001);
-              ndviSum += ndvi;
-              ndmiSum += ndmi;
-              validCount++;
-            }
+        function evaluatePixel(sample) {
+          // Note: 'sample' (not 'samples') is an object when mosaicking is SIMPLE (default)
+          let scl = sample.SCL;
+          
+          // Filter out invalid pixels: clouds (7-10) and no-data
+          if (sample.dataMask === 1 && (scl < 7 || scl > 10)) {
+            let ndvi = (sample.B08 - sample.B04) / (sample.B08 + sample.B04 + 0.0001);
+            let ndmi = (sample.B08 - sample.B11) / (sample.B08 + sample.B11 + 0.0001);
+            
+            return {
+              ndvi: [ndvi],
+              ndmi: [ndmi],
+              valid: [1],
+              dataMask: [1]
+            };
           }
-
-          if (validCount === 0) {
-            return { ndvi: [-9999], ndmi: [-9999], valid: [0], dataMask: [1] };
-          }
-
-          return {
-            ndvi: [ndviSum / validCount],
-            ndmi: [ndmiSum / validCount],
-            valid: [validCount],
-            dataMask: [1]
+          
+          // Return invalid/masked pixel
+          return { 
+            ndvi: [-9999], 
+            ndmi: [-9999], 
+            valid: [0], 
+            dataMask: [0]
           };
         }
       `
