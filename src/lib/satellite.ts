@@ -211,37 +211,7 @@ function evaluatePixel(sample) {
 /**
  * Evalscript for NDVI visualization (for WMS layer)
  */
-const NDVI_VISUALIZATION_EVALSCRIPT = `
-//VERSION=3
-function setup() {
-  return {
-    input: ["B04", "B08", "SCL", "dataMask"],
-    output: { bands: 4 }
-  };
-}
-
-function evaluatePixel(sample) {
-  let scl = sample.SCL;
-  let isCloud = scl >= 7 && scl <= 10;
-
-  if (sample.dataMask === 0 || isCloud) {
-    return [0, 0, 0, 0]; // Transparent
-  }
-
-  let ndvi = (sample.B08 - sample.B04) / (sample.B08 + sample.B04 + 0.0001);
-
-  // Color ramp for NDVI
-  // < 0.2: Brown (stressed/bare)
-  // 0.2-0.4: Yellow-Green (mild stress)
-  // 0.4-0.6: Light Green (moderate health)
-  // > 0.6: Dark Green (healthy)
-
-  if (ndvi < 0.2) return [0.6, 0.4, 0.2, 1];      // Brown
-  if (ndvi < 0.4) return [0.8, 0.8, 0.2, 1];      // Yellow
-  if (ndvi < 0.6) return [0.4, 0.8, 0.4, 1];      // Light Green
-  return [0.1, 0.5, 0.1, 1];                       // Dark Green
-}
-`
+// NDVI_VISUALIZATION_EVALSCRIPT removed as it was unused
 
 // ===== MAIN API FUNCTIONS =====
 
@@ -539,7 +509,7 @@ async function parseProcessResponse(response: Response): Promise<Omit<SatelliteI
   // Fallback: return mock data structure
   // The actual implementation would parse the tar archive
   try {
-    const arrayBuffer = await response.arrayBuffer()
+    await response.arrayBuffer()
 
     // Simple approach: extract mean values from response
     // In production, use a proper tar parser

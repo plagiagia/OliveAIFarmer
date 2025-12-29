@@ -1,14 +1,12 @@
-import { prisma } from '@/lib/db'
-import { getWeatherHistory } from '@/lib/db'
+import { getWeatherHistory, prisma } from '@/lib/db'
+import {
+  AIInsight,
+  FarmContext,
+  generateInsights,
+  getCurrentSeason
+} from '@/lib/openai'
 import { auth } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
-import {
-  generateInsights,
-  getCurrentSeason,
-  FarmContext,
-  AIInsight
-} from '@/lib/openai'
-import { calculateHealthMetrics, parseCoordinates } from '@/lib/satellite'
 
 // Activity type translation for context
 const ACTIVITY_TYPE_GREEK: Record<string, string> = {
@@ -113,19 +111,19 @@ export async function POST(request: NextRequest) {
     const records = weatherRecords as WeatherRecord[]
     const weatherSummary = records.length > 0
       ? {
-          avgTempHigh: records.reduce((sum: number, r: WeatherRecord) => sum + r.tempHigh, 0) / records.length,
-          avgTempLow: records.reduce((sum: number, r: WeatherRecord) => sum + r.tempLow, 0) / records.length,
-          totalRainfall: records.reduce((sum: number, r: WeatherRecord) => sum + r.rainfall, 0),
-          avgHumidity: records.reduce((sum: number, r: WeatherRecord) => sum + r.humidity, 0) / records.length,
-          rainyDays: records.filter((r: WeatherRecord) => r.rainfall > 0).length
-        }
+        avgTempHigh: records.reduce((sum: number, r: WeatherRecord) => sum + r.tempHigh, 0) / records.length,
+        avgTempLow: records.reduce((sum: number, r: WeatherRecord) => sum + r.tempLow, 0) / records.length,
+        totalRainfall: records.reduce((sum: number, r: WeatherRecord) => sum + r.rainfall, 0),
+        avgHumidity: records.reduce((sum: number, r: WeatherRecord) => sum + r.humidity, 0) / records.length,
+        rainyDays: records.filter((r: WeatherRecord) => r.rainfall > 0).length
+      }
       : {
-          avgTempHigh: 0,
-          avgTempLow: 0,
-          totalRainfall: 0,
-          avgHumidity: 0,
-          rainyDays: 0
-        }
+        avgTempHigh: 0,
+        avgTempLow: 0,
+        totalRainfall: 0,
+        avgHumidity: 0,
+        rainyDays: 0
+      }
 
     // Build farm context for AI
     const farmContext: FarmContext = {

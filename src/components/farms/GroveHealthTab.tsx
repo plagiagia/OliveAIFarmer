@@ -1,33 +1,31 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
 import { format } from 'date-fns'
 import { el } from 'date-fns/locale'
 import {
-  Satellite,
-  RefreshCw,
-  AlertTriangle,
-  TrendingUp,
-  TrendingDown,
-  Minus,
-  Droplets,
-  Leaf,
   Activity,
-  MapPin,
+  AlertTriangle,
+  Droplets,
+  ExternalLink,
   Info,
-  ExternalLink
+  Leaf,
+  MapPin,
+  Minus,
+  RefreshCw,
+  Satellite,
+  TrendingDown,
+  TrendingUp
 } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  ReferenceLine,
   Area,
-  AreaChart
+  AreaChart,
+  CartesianGrid,
+  ReferenceLine,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis
 } from 'recharts'
 
 interface SatelliteIndices {
@@ -337,10 +335,9 @@ export default function GroveHealthTab({ farmId }: GroveHealthTabProps) {
             {health?.ndviTrend && (
               <>
                 <TrendIcon trend={health.ndviTrend} />
-                <span className={`text-sm ${
-                  health.ndviTrend === 'improving' ? 'text-green-600' :
-                  health.ndviTrend === 'declining' ? 'text-red-600' : 'text-gray-500'
-                }`}>
+                <span className={`text-sm ${health.ndviTrend === 'improving' ? 'text-green-600' :
+                    health.ndviTrend === 'declining' ? 'text-red-600' : 'text-gray-500'
+                  }`}>
                   {health.ndviChange > 0 ? '+' : ''}{health.ndviChange}%
                 </span>
               </>
@@ -368,13 +365,12 @@ export default function GroveHealthTab({ farmId }: GroveHealthTabProps) {
           </p>
           {current?.ndmi != null && (
             <div className="mt-2">
-              <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                current.ndmi > 0.2 ? 'bg-blue-50 text-blue-600' :
-                current.ndmi > 0 ? 'bg-yellow-50 text-yellow-600' :
-                'bg-orange-50 text-orange-600'
-              }`}>
+              <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${current.ndmi > 0.2 ? 'bg-blue-50 text-blue-600' :
+                  current.ndmi > 0 ? 'bg-yellow-50 text-yellow-600' :
+                    'bg-orange-50 text-orange-600'
+                }`}>
                 {current.ndmi > 0.2 ? 'Καλή υγρασία' :
-                 current.ndmi > 0 ? 'Μέτρια υγρασία' : 'Χαμηλή υγρασία'}
+                  current.ndmi > 0 ? 'Μέτρια υγρασία' : 'Χαμηλή υγρασία'}
               </span>
             </div>
           )}

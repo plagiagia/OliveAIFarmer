@@ -1,15 +1,15 @@
-import { auth } from '@clerk/nextjs/server'
-import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import {
+  calculateHealthMetrics,
   fetchVegetationIndices,
   fetchVegetationTimeSeries,
-  calculateHealthMetrics,
-  parseCoordinates,
   isSatelliteConfigured,
+  parseCoordinates,
   SatelliteIndices
 } from '@/lib/satellite'
-import { SatelliteSource, StressLevel } from '@prisma/client'
+import { auth } from '@clerk/nextjs/server'
+import { SatelliteSource } from '@prisma/client'
+import { NextRequest, NextResponse } from 'next/server'
 
 interface RouteContext {
   params: Promise<{ farmId: string }>
