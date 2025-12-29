@@ -300,8 +300,11 @@ export async function fetchVegetationIndices(
       new Date(b.interval.from).getTime() - new Date(a.interval.from).getTime()
     );
 
+    console.log('[fetchVegetationIndices] Checking', sorted.length, 'entries for valid data')
+
     for (const entry of sorted) {
       const validCount = entry.outputs?.valid?.bands?.B0?.stats?.sum;
+      console.log('[fetchVegetationIndices] Entry date:', entry.interval.from, 'validCount:', validCount)
       if (validCount > 0) {
         latestEntry = entry;
         break;
@@ -310,6 +313,7 @@ export async function fetchVegetationIndices(
   }
 
   if (!latestEntry) {
+    console.log('[fetchVegetationIndices] No valid entries found, returning null')
     return {
       ndvi: null,
       ndmi: null,
