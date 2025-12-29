@@ -303,10 +303,12 @@ export async function fetchVegetationIndices(
     console.log('[fetchVegetationIndices] Checking', sorted.length, 'entries for valid data')
 
     for (const entry of sorted) {
-      console.log('[fetchVegetationIndices] Entry outputs structure:', JSON.stringify(entry.outputs).substring(0, 500))
-      const validCount = entry.outputs?.valid?.bands?.B0?.stats?.sum;
-      console.log('[fetchVegetationIndices] Entry date:', entry.interval.from, 'validCount:', validCount)
-      if (validCount > 0) {
+      // 'valid' band mean is the ratio of valid pixels (0 to 1)
+      const validRatio = entry.outputs?.valid?.bands?.B0?.stats?.mean;
+      console.log('[fetchVegetationIndices] Entry date:', entry.interval.from, 'validRatio:', validRatio)
+
+      // If we have some valid pixels (e.g. > 5% of the area)
+      if (validRatio > 0.05) {
         latestEntry = entry;
         break;
       }
