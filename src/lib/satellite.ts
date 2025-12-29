@@ -179,10 +179,13 @@ export async function fetchVegetationIndices(
     ? createBoundingBoxFromArea(lat, lon, areaStremmata)
     : createBoundingBox(lat, lon, 300)
 
-  // Use provided date or get latest
-  const toDate = date || new Date()
+  // Use provided date or get latest (normalized to end of day for clear boundaries)
+  const toDate = date ? new Date(date) : new Date()
+  toDate.setHours(23, 59, 59, 999)
+
   const fromDate = new Date(toDate)
   fromDate.setDate(fromDate.getDate() - 30) // Look back 30 days for clear imagery
+  fromDate.setHours(0, 0, 0, 0)
 
   // console.log removed
 
@@ -348,9 +351,13 @@ export async function fetchVegetationTimeSeries(
     ? createBoundingBoxFromArea(lat, lon, areaStremmata)
     : createBoundingBox(lat, lon, 300)
 
+  // Normalize dates to ensure consistent 10-day aggregation buckets
   const toDate = new Date()
-  const fromDate = new Date()
+  toDate.setHours(23, 59, 59, 999)
+
+  const fromDate = new Date(toDate)
   fromDate.setMonth(fromDate.getMonth() - monthsBack)
+  fromDate.setHours(0, 0, 0, 0)
 
   // Use Statistical API for time series
   const request = {
