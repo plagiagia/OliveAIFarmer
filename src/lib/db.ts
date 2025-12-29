@@ -13,18 +13,18 @@ if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
 export async function testDatabaseConnection() {
   try {
     await prisma.$connect()
-    console.log('✅ Database connected successfully!')
-    
+    console.log('Database connected successfully!')
+
     // Test a simple query
     await prisma.$queryRaw`SELECT version()`
-    console.log('✅ Database query test successful!')
-    
+    console.log('Database query test successful!')
+
     return { success: true, message: 'Database connection successful!' }
   } catch (error) {
-    console.error('❌ Database connection failed:', error)
-    return { 
-      success: false, 
-      message: `Database connection failed: ${error instanceof Error ? error.message : 'Unknown error'}` 
+    console.error('Database connection failed:', error)
+    return {
+      success: false,
+      message: `Database connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`
     }
   } finally {
     await prisma.$disconnect()
@@ -53,11 +53,11 @@ export async function createUser(clerkUser: {
         lastName: clerkUser.lastName || '',
       },
     })
-    
-    console.log('✅ User created/updated:', user.id)
+
+    console.log('User created/updated:', user.id)
     return user
   } catch (error) {
-    console.error('❌ Error creating user:', error)
+    console.error('Error creating user:', error)
     throw error
   }
 }
@@ -68,10 +68,10 @@ export async function getUserByClerkIdBasic(clerkId: string) {
     const user = await prisma.user.findUnique({
       where: { clerkId }
     })
-    
+
     return user
   } catch (error) {
-    console.error('❌ Error getting user:', error)
+    console.error('Error getting user:', error)
     throw error
   }
 }
@@ -84,7 +84,6 @@ export async function getUserByClerkId(clerkId: string) {
       include: {
         farms: {
           include: {
-            trees: true,
             activities: {
               orderBy: { date: 'desc' },
               take: 1 // Only get the most recent activity for each farm
@@ -94,10 +93,10 @@ export async function getUserByClerkId(clerkId: string) {
         }
       }
     })
-    
+
     return user
   } catch (error) {
-    console.error('❌ Error getting user:', error)
+    console.error('Error getting user:', error)
     throw error
   }
 }
@@ -116,51 +115,18 @@ export async function getFarmById(farmId: string) {
             email: true
           }
         },
-        trees: {
-          include: {
-            treeActivities: {
-              include: {
-                activity: true
-              },
-              orderBy: { createdAt: 'desc' },
-              take: 3
-            },
-            treeHarvests: {
-              include: {
-                harvest: true
-              },
-              orderBy: { harvestDate: 'desc' },
-              take: 2
-            }
-          },
-          orderBy: { treeNumber: 'asc' }
-        },
         activities: {
-          include: {
-            treeActivities: {
-              include: {
-                tree: true
-              }
-            }
-          },
           orderBy: { date: 'desc' }
         },
         harvests: {
-          include: {
-            treeHarvests: {
-              include: {
-                tree: true
-              }
-            }
-          },
           orderBy: { year: 'desc' }
         }
       }
     })
-    
+
     return farm
   } catch (error) {
-    console.error('❌ Error getting farm:', error)
+    console.error('Error getting farm:', error)
     throw error
   }
 }
@@ -239,7 +205,7 @@ export async function saveWeatherRecord(data: WeatherRecordInput) {
 
     return record
   } catch (error) {
-    console.error('❌ Error saving weather record:', error)
+    console.error('Error saving weather record:', error)
     throw error
   }
 }
@@ -267,7 +233,7 @@ export async function getWeatherForDate(farmId: string, date: Date) {
 
     return record
   } catch (error) {
-    console.error('❌ Error getting weather for date:', error)
+    console.error('Error getting weather for date:', error)
     return null
   }
 }
@@ -295,7 +261,7 @@ export async function getWeatherHistory(farmId: string, options?: {
 
     return records
   } catch (error) {
-    console.error('❌ Error getting weather history:', error)
+    console.error('Error getting weather history:', error)
     throw error
   }
 }
@@ -316,7 +282,7 @@ export async function getAllFarmsWithCoordinates() {
 
     return farms
   } catch (error) {
-    console.error('❌ Error getting farms with coordinates:', error)
+    console.error('Error getting farms with coordinates:', error)
     throw error
   }
 }
@@ -357,7 +323,7 @@ export async function getWeatherStats(farmId: string, days: number = 30) {
       }
     }
   } catch (error) {
-    console.error('❌ Error getting weather stats:', error)
+    console.error('Error getting weather stats:', error)
     throw error
   }
-} 
+}

@@ -17,15 +17,12 @@ interface ActivityData {
   duration: number | null
 }
 
-interface TreeData {
-  id: string
-}
-
 interface FarmWithRelations {
   id: string
   name: string
   totalArea: number | null
-  trees: TreeData[]
+  treeCount: number | null
+  oliveVariety: string | null
   activities: ActivityData[]
   harvests: HarvestData[]
 }
@@ -44,7 +41,6 @@ export async function GET() {
       include: {
         farms: {
           include: {
-            trees: true,
             activities: true,
             harvests: true,
           }
@@ -60,7 +56,7 @@ export async function GET() {
 
     // Calculate summary stats
     const totalFarms = farms.length
-    const totalTrees = farms.reduce((sum, farm) => sum + farm.trees.length, 0)
+    const totalTrees = farms.reduce((sum, farm) => sum + (farm.treeCount || 0), 0)
     const totalArea = farms.reduce((sum, farm) => sum + (farm.totalArea || 0), 0)
     const totalActivities = farms.reduce((sum, farm) => sum + farm.activities.length, 0)
 
@@ -155,7 +151,7 @@ export async function GET() {
       return {
         farmName: farm.name,
         totalArea: farm.totalArea || 0,
-        treeCount: farm.trees.length,
+        treeCount: farm.treeCount || 0,
         totalYield: farmTotalYield,
         yieldPerStremma: farm.totalArea && farm.totalArea > 0
           ? farmTotalYield / farm.totalArea

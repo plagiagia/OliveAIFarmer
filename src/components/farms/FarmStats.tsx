@@ -41,12 +41,24 @@ function WeatherWidgetSkeleton() {
 }
 
 interface FarmStatsProps {
-  farm: any
+  farm: {
+    id: string
+    treeCount?: number | null
+    oliveVariety?: string | null
+    coordinates?: string | null
+    activities?: Array<{
+      id: string
+      title: string
+      date: string | Date
+      completed: boolean
+    }>
+    harvests?: Array<unknown>
+  }
 }
 
 export default function FarmStats({ farm }: FarmStatsProps) {
   // Calculate statistics
-  const totalTrees = farm.trees?.length || 0
+  const totalTrees = farm.treeCount || 0
   const totalActivities = farm.activities?.length || 0
   const totalHarvests = farm.harvests?.length || 0
 
@@ -55,7 +67,7 @@ export default function FarmStats({ farm }: FarmStatsProps) {
 
   // Recent activity
   const recentActivities = farm.activities?.slice(0, 5) || []
-  const upcomingActivities = farm.activities?.filter((activity: any) =>
+  const upcomingActivities = farm.activities?.filter((activity) =>
     new Date(activity.date) > new Date() && !activity.completed
   ).slice(0, 3) || []
 
@@ -122,10 +134,10 @@ export default function FarmStats({ farm }: FarmStatsProps) {
             <Activity className="w-5 h-5 text-green-600 mr-2" />
             Πρόσφατες Δραστηριότητες
           </h3>
-          
+
           {recentActivities.length > 0 ? (
             <div className="space-y-4">
-              {recentActivities.map((activity: any) => (
+              {recentActivities.map((activity) => (
                 <div key={activity.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
                   <div className={`p-2 rounded-full ${activity.completed ? 'bg-green-100' : 'bg-orange-100'}`}>
                     {activity.completed ? (
@@ -141,8 +153,8 @@ export default function FarmStats({ farm }: FarmStatsProps) {
                     </p>
                   </div>
                   <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    activity.completed 
-                      ? 'bg-green-100 text-green-800' 
+                    activity.completed
+                      ? 'bg-green-100 text-green-800'
                       : 'bg-orange-100 text-orange-800'
                   }`}>
                     {activity.completed ? 'Ολοκληρώθηκε' : 'Εκκρεμεί'}
@@ -161,10 +173,10 @@ export default function FarmStats({ farm }: FarmStatsProps) {
             <Calendar className="w-5 h-5 text-green-600 mr-2" />
             Επερχόμενες Δραστηριότητες
           </h3>
-          
+
           {upcomingActivities.length > 0 ? (
             <div className="space-y-4">
-              {upcomingActivities.map((activity: any) => (
+              {upcomingActivities.map((activity) => (
                 <div key={activity.id} className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
                   <div className="p-2 bg-blue-100 rounded-full">
                     <Calendar className="w-4 h-4 text-blue-600" />
@@ -188,4 +200,4 @@ export default function FarmStats({ farm }: FarmStatsProps) {
       </div>
     </div>
   )
-} 
+}

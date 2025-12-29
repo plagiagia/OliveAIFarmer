@@ -7,7 +7,6 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const varietyId = searchParams.get('id')
-    const includeDetails = searchParams.get('details') === 'true'
 
     if (varietyId) {
       // Get specific variety with full details
@@ -22,14 +21,7 @@ export async function GET(request: NextRequest) {
           },
           careGuidelines: {
             orderBy: { importance: 'desc' }
-          },
-          trees: includeDetails ? {
-            include: {
-              farm: {
-                select: { name: true, location: true }
-              }
-            }
-          } : false
+          }
         }
       })
 
@@ -62,8 +54,7 @@ export async function GET(request: NextRequest) {
             select: {
               monthlyTasks: true,
               riskFactors: true,
-              careGuidelines: true,
-              trees: true
+              careGuidelines: true
             }
           }
         },

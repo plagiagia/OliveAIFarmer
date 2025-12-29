@@ -20,13 +20,6 @@ interface Activity {
   completed: boolean
 }
 
-interface OliveTree {
-  treeNumber: string
-  variety: string
-  health: string | null
-  status: string
-}
-
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ farmId: string }> }
@@ -52,9 +45,6 @@ export async function GET(
     const farm = await prisma.farm.findUnique({
       where: { id: farmId },
       include: {
-        trees: {
-          orderBy: { treeNumber: 'asc' }
-        },
         activities: {
           orderBy: { date: 'desc' }
         },
@@ -76,7 +66,6 @@ export async function GET(
     // Calculate summary
     const harvests = farm.harvests as Harvest[]
     const activities = farm.activities as Activity[]
-    const trees = farm.trees as OliveTree[]
 
     const totalYield = harvests.reduce((sum: number, h: Harvest) => sum + (h.totalYield || 0), 0)
     const totalValue = harvests.reduce((sum: number, h: Harvest) => sum + (h.totalValue || 0), 0)
@@ -88,14 +77,10 @@ export async function GET(
         name: farm.name,
         location: farm.location,
         totalArea: farm.totalArea,
+        treeCount: farm.treeCount,
+        oliveVariety: farm.oliveVariety,
         coordinates: farm.coordinates
       },
-      trees: trees.map((tree: OliveTree) => ({
-        treeNumber: tree.treeNumber,
-        variety: tree.variety,
-        health: tree.health,
-        status: tree.status
-      })),
       activities: activities.map((activity: Activity) => ({
         type: activity.type,
         title: activity.title,
@@ -111,7 +96,7 @@ export async function GET(
         pricePerKg: harvest.pricePerKg
       })),
       summary: {
-        totalTrees: trees.length,
+        totalTrees: farm.treeCount || 0,
         totalActivities: activities.length,
         totalHarvests: harvests.length,
         totalYield,
