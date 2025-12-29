@@ -231,33 +231,21 @@ model User {
 }
 
 model Farm {
-  id          String   @id
-  name        String
-  location    String
-  coordinates String?
-  totalArea   Float?   // In stremmata
-  trees       OliveTree[]
-  activities  Activity[]
-  harvests    Harvest[]
-}
-
-model OliveTree {
-  id           String
-  treeNumber   String
-  variety      String
-  plantingYear Int?
-  health       TreeHealth
-  status       TreeStatus
-  varietyInfo  OliveVariety?
+  id           String   @id
+  name         String
+  location     String
+  coordinates  String?
+  totalArea    Float?   // In stremmata
+  treeCount    Int?     // Number of olive trees
+  oliveVariety String?  // Primary olive variety
+  activities   Activity[]
+  harvests     Harvest[]
 }
 ```
 
-### Knowledge Base Models
-- **OliveVariety**: Greek olive variety characteristics and care requirements
-- **MonthlyTask**: Seasonal task calendar per variety
-- **RiskFactor**: Disease and pest risk information
-- **CareGuideline**: Detailed care instructions
-- **SmartRecommendation**: Context-aware farming suggestions
+### Additional Models
+- **SmartRecommendation**: Context-aware AI farming suggestions
+- **WeatherRecord**: Historical weather data per farm
 
 See `prisma/schema.prisma` for the complete schema.
 

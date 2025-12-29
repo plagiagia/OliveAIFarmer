@@ -138,135 +138,6 @@ enum PriceUnit {
   PER_LITER     // Ανά λίτρο (για λάδι)
 }
 
-// ===== OLIVE VARIETY KNOWLEDGE BASE MODELS =====
-
-// Olive variety master data
-model OliveVariety {
-  id                String   @id @default(cuid())
-  name              String   @unique // e.g., "Κορωνέικη"
-  scientificName    String?  // e.g., "Olea europaea var. Koroneiki"
-  alternativeNames  String[] // Alternative regional names
-  primaryRegions    String[] // Main growing regions in Greece
-  
-  // Characteristics
-  treeSize          TreeSizeCategory
-  fruitType         FruitType        // OIL, TABLE, DUAL
-  oilContent        Float?           // Oil percentage (for oil varieties)
-  maturityPeriod    String           // e.g., "Οκτώβριος-Νοέμβριος"
-  
-  // Yield & Production
-  avgYieldPerTree   Float?           // kg per tree
-  avgYieldPerStremma Float?          // kg per stremma
-  productionStart   Int?             // Years until first production
-  peakProduction    Int?             // Years to reach peak
-  
-  // Quality characteristics
-  oilQuality        String?          // Quality description
-  flavor            String?          // Flavor profile
-  storageLife       String?          // Storage characteristics
-  
-  // Climate & Environment
-  climateNeeds      Json             // Climate requirements
-  soilNeeds         Json             // Soil requirements
-  waterNeeds        WaterNeedsLevel
-  sunlightNeeds     SunlightLevel
-  windTolerance     ToleranceLevel
-  
-  // Disease & Pest resistance
-  diseaseResistance Json             // Disease resistance levels
-  pestResistance    Json             // Pest resistance levels
-  
-  // Care requirements
-  pruningNeeds      PruningLevel
-  fertilizingNeeds  FertilizingLevel
-  irrigationNeeds   IrrigationLevel
-  
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  // Relations
-  monthlyTasks      MonthlyTask[]
-  riskFactors       RiskFactor[]
-  careGuidelines    CareGuideline[]
-  recommendations   SmartRecommendation[]
-
-  @@map("olive_varieties")
-}
-
-// Monthly care calendar for each variety
-model MonthlyTask {
-  id          String      @id @default(cuid())
-  month       Int         // 1-12
-  taskType    TaskType
-  title       String      // e.g., "Κλάδεμα χειμερινό"
-  description String
-  priority    Priority
-  timing      String?     // e.g., "Αρχές μήνα", "Μέσα μήνα"
-  duration    String?     // Expected duration
-  tools       String[]    // Required tools
-  notes       String?     // Additional notes
-  
-  // Weather dependencies
-  weatherConditions Json? // Ideal weather for this task
-  temperatureRange  String? // e.g., "5-15°C"
-  
-  varietyId   String
-  variety     OliveVariety @relation(fields: [varietyId], references: [id], onDelete: Cascade)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@unique([varietyId, month, taskType])
-  @@map("monthly_tasks")
-}
-
-// Risk factors and warnings for each variety
-model RiskFactor {
-  id            String        @id @default(cuid())
-  riskType      RiskType
-  title         String        // e.g., "Παγετός άνοιξης"
-  description   String
-  severity      SeverityLevel
-  seasonality   String[]      // Months when risk is high
-  
-  // Conditions that trigger this risk
-  triggers      Json          // Weather/environmental triggers
-  prevention    String        // Prevention measures
-  treatment     String?       // Treatment if occurs
-  
-  varietyId     String
-  variety       OliveVariety @relation(fields: [varietyId], references: [id], onDelete: Cascade)
-  
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  @@map("risk_factors")
-}
-
-// Care guidelines and tips
-model CareGuideline {
-  id          String          @id @default(cuid())
-  category    GuidelineCategory
-  title       String
-  content     String          // Detailed guidance
-  importance  Priority
-  seasonality String[]        // When applicable
-  
-  // Interactive elements
-  hasImages   Boolean @default(false)
-  hasVideo    Boolean @default(false)
-  hasSteps    Boolean @default(false)
-  steps       Json?           // Step-by-step instructions
-  
-  varietyId   String
-  variety     OliveVariety @relation(fields: [varietyId], references: [id], onDelete: Cascade)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@map("care_guidelines")
-}
-
 // Smart recommendations based on context
 model SmartRecommendation {
   id              String             @id @default(cuid())
@@ -287,7 +158,6 @@ model SmartRecommendation {
 
   // Context
   farmId          String?
-  varietyId       String?
   weatherBased    Boolean @default(false)
   seasonBased     Boolean @default(false)
 
@@ -302,103 +172,17 @@ model SmartRecommendation {
 
   // Relations
   farm            Farm? @relation(fields: [farmId], references: [id], onDelete: Cascade)
-  variety         OliveVariety? @relation(fields: [varietyId], references: [id])
 
   @@map("smart_recommendations")
 }
 
-// ===== NEW ENUMS FOR KNOWLEDGE BASE =====
-
-enum TreeSizeCategory {
-  SMALL    // Μικρό
-  MEDIUM   // Μεσαίο  
-  LARGE    // Μεγάλο
-}
-
-enum FruitType {
-  OIL      // Ελαιοπαραγωγικό
-  TABLE    // Επιτραπέζιο
-  DUAL     // Διπλής χρήσης
-}
-
-enum WaterNeedsLevel {
-  LOW      // Χαμηλές
-  MEDIUM   // Μέτριες
-  HIGH     // Υψηλές
-}
-
-enum SunlightLevel {
-  PARTIAL  // Μερική
-  FULL     // Πλήρης
-}
-
-enum ToleranceLevel {
-  LOW      // Χαμηλή
-  MEDIUM   // Μέτρια
-  HIGH     // Υψηλή
-}
-
-enum PruningLevel {
-  MINIMAL  // Ελάχιστο
-  MODERATE // Μέτριο
-  INTENSIVE // Εντατικό
-}
-
-enum FertilizingLevel {
-  LOW      // Χαμηλές
-  MEDIUM   // Μέτριες
-  HIGH     // Υψηλές
-}
-
-enum IrrigationLevel {
-  MINIMAL  // Ελάχιστο
-  REGULAR  // Τακτικό
-  INTENSIVE // Εντατικό
-}
-
-enum TaskType {
-  PRUNING           // Κλάδεμα
-  WATERING          // Πότισμα
-  FERTILIZING       // Λίπανση
-  PEST_CONTROL      // Έλεγχος παρασίτων
-  DISEASE_PREVENTION // Πρόληψη ασθενειών
-  SOIL_PREPARATION  // Προετοιμασία εδάφους
-  HARVESTING        // Συγκομιδή
-  MONITORING        // Παρακολούθηση
-  GENERAL_CARE      // Γενική φροντίδα
-}
+// ===== ENUMS FOR RECOMMENDATIONS =====
 
 enum Priority {
   LOW      // Χαμηλή
   MEDIUM   // Μέτρια
   HIGH     // Υψηλή
   CRITICAL // Κρίσιμη
-}
-
-enum RiskType {
-  DISEASE          // Ασθένεια
-  PEST             // Παράσιτο
-  WEATHER          // Καιρικό φαινόμενο
-  ENVIRONMENTAL    // Περιβαλλοντικό
-  SEASONAL         // Εποχιακό
-}
-
-enum SeverityLevel {
-  LOW      // Χαμηλή
-  MEDIUM   // Μέτρια
-  HIGH     // Υψηλή
-  SEVERE   // Σοβαρή
-}
-
-enum GuidelineCategory {
-  PLANTING         // Φύτευση
-  PRUNING          // Κλάδεμα
-  WATERING         // Πότισμα
-  FERTILIZING      // Λίπανση
-  PEST_MANAGEMENT  // Διαχείριση παρασίτων
-  HARVESTING       // Συγκομιδή
-  GENERAL_CARE     // Γενική φροντίδα
-  TROUBLESHOOTING  // Αντιμετώπιση προβλημάτων
 }
 
 enum RecommendationType {
