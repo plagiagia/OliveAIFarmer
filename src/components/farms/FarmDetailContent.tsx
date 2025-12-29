@@ -3,6 +3,7 @@
 import {
     Activity,
     BarChart3,
+    Satellite,
     Sparkles,
     Wheat
 } from 'lucide-react'
@@ -10,6 +11,7 @@ import { useRouter } from 'next/navigation'
 import { useState, useEffect, useCallback } from 'react'
 import AIGeoponosTab from './AIGeoponosTab'
 import FarmActivities from './FarmActivities'
+import GroveHealthTab from './GroveHealthTab'
 import FarmEditModal from './FarmEditModal'
 import FarmHarvests from './FarmHarvests'
 import FarmHeader from './FarmHeader'
@@ -22,7 +24,7 @@ interface FarmDetailContentProps {
 
 export default function FarmDetailContent({ farm, user }: FarmDetailContentProps) {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<'overview' | 'activities' | 'harvests' | 'ai-geoponos'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'activities' | 'harvests' | 'grove-health' | 'ai-geoponos'>('overview')
   const [showEditModal, setShowEditModal] = useState(false)
   const [unreadInsightsCount, setUnreadInsightsCount] = useState(0)
 
@@ -56,6 +58,7 @@ export default function FarmDetailContent({ farm, user }: FarmDetailContentProps
     { id: 'overview', label: 'Επισκόπηση', icon: BarChart3 },
     { id: 'activities', label: 'Δραστηριότητες', icon: Activity },
     { id: 'harvests', label: 'Συγκομιδές', icon: Wheat },
+    { id: 'grove-health', label: 'Υγεία Ελαιώνα', icon: Satellite },
     { id: 'ai-geoponos', label: 'AI Γεωπόνος', icon: Sparkles, badge: unreadInsightsCount },
   ]
 
@@ -80,7 +83,7 @@ export default function FarmDetailContent({ farm, user }: FarmDetailContentProps
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id as 'overview' | 'activities' | 'harvests' | 'ai-geoponos')}
+                    onClick={() => setActiveTab(tab.id as 'overview' | 'activities' | 'harvests' | 'grove-health' | 'ai-geoponos')}
                     className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
                       activeTab === tab.id
                         ? 'border-green-500 text-green-600'
@@ -106,6 +109,7 @@ export default function FarmDetailContent({ farm, user }: FarmDetailContentProps
           {activeTab === 'overview' && <FarmStats farm={farm} />}
           {activeTab === 'activities' && <FarmActivities farm={farm} />}
           {activeTab === 'harvests' && <FarmHarvests farm={farm} />}
+          {activeTab === 'grove-health' && <GroveHealthTab farmId={farm.id} />}
           {activeTab === 'ai-geoponos' && <AIGeoponosTab farmId={farm.id} />}
         </div>
       </div>
