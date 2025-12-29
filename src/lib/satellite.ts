@@ -395,35 +395,35 @@ export async function fetchVegetationTimeSeries(
             output: [
               { id: "ndvi", bands: 1 },
               { id: "ndmi", bands: 1 },
-              { id: "valid", bands: 1 }
+              { id: "valid", bands: 1 },
+              { id: "dataMask", bands: 1 }
             ]
           };
         }
 
-        function evaluatePixel(samples) {
-          let validCount = 0;
-          let ndviSum = 0;
-          let ndmiSum = 0;
-
-          for (let s of samples) {
-            let scl = s.SCL;
-            if (s.dataMask === 1 && (scl < 7 || scl > 10)) {
-              let ndvi = (s.B08 - s.B04) / (s.B08 + s.B04 + 0.0001);
-              let ndmi = (s.B08 - s.B11) / (s.B08 + s.B11 + 0.0001);
-              ndviSum += ndvi;
-              ndmiSum += ndmi;
-              validCount++;
-            }
+        function evaluatePixel(sample) {
+          // Note: 'sample' (not 'samples') is an object when mosaicking is SIMPLE (default)
+          let scl = sample.SCL;
+          
+          // Filter out invalid pixels: clouds (7-10) and no-data
+          if (sample.dataMask === 1 && (scl < 7 || scl > 10)) {
+            let ndvi = (sample.B08 - sample.B04) / (sample.B08 + sample.B04 + 0.0001);
+            let ndmi = (sample.B08 - sample.B11) / (sample.B08 + sample.B11 + 0.0001);
+            
+            return {
+              ndvi: [ndvi],
+              ndmi: [ndmi],
+              valid: [1],
+              dataMask: [1]
+            };
           }
-
-          if (validCount === 0) {
-            return { ndvi: [-9999], ndmi: [-9999], valid: [0] };
-          }
-
-          return {
-            ndvi: [ndviSum / validCount],
-            ndmi: [ndmiSum / validCount],
-            valid: [validCount]
+          
+          // Return invalid/masked pixel
+          return { 
+            ndvi: [-9999], 
+            ndmi: [-9999], 
+            valid: [0], 
+            dataMask: [0]
           };
         }
       `
@@ -450,7 +450,8 @@ export async function fetchVegetationTimeSeries(
 
   if (!response.ok) {
     // Fallback to basic data if statistics API fails
-    console.warn('Statistics API failed, returning empty time series')
+    const error = await response.text()
+    console.warn('Statistics API failed, returning empty time series:', error)
     return []
   }
 
@@ -564,21 +565,29 @@ function parseStatisticsResponse(data: any): SatelliteTimeSeriesPoint[] {
     if (data.data) {
       for (const entry of data.data) {
         const date = new Date(entry.interval.from)
-        const ndviStats = entry.outputs?.ndvi?.bands?.B0?.stats
-        const ndmiStats = entry.outputs?.ndmi?.bands?.B0?.stats
 
-        points.push({
-          date,
-          ndvi: ndviStats?.mean ?? null,
-          ndmi: ndmiStats?.mean ?? null,
-          cloudCoverage: 0 // Would need separate calculation
-        })
+        // 'valid' band mean is the ratio of valid pixels (0 to 1)
+        const validRatio = entry.outputs?.valid?.bands?.B0?.stats?.mean ?? 0
+
+        // Only include if we have some valid pixels (e.g. > 5% of the area)
+        if (validRatio > 0.05) {
+          const ndviStats = entry.outputs?.ndvi?.bands?.B0?.stats
+          const ndmiStats = entry.outputs?.ndmi?.bands?.B0?.stats
+
+          points.push({
+            date,
+            ndvi: ndviStats?.mean ?? null,
+            ndmi: ndmiStats?.mean ?? null,
+            cloudCoverage: (1 - validRatio) * 100 // Estimate cloud coverage from invalid pixels
+          })
+        }
       }
     }
   } catch (error) {
     console.error('Failed to parse statistics response:', error)
   }
 
+  // Sort ascending by date for charts
   return points.sort((a, b) => a.date.getTime() - b.date.getTime())
 }
 
