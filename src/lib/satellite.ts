@@ -184,7 +184,7 @@ export async function fetchVegetationIndices(
   const fromDate = new Date(toDate)
   fromDate.setDate(fromDate.getDate() - 30) // Look back 30 days for clear imagery
 
-  console.log('[fetchVegetationIndices] Creating request for:', { lat, lon, areaStremmata, bbox })
+  // console.log removed
 
   const request = {
     input: {
@@ -265,10 +265,7 @@ export async function fetchVegetationIndices(
   }
 
   const endpoint = `${SENTINEL_HUB_URL}/api/v1/statistics`
-  console.log('[fetchVegetationIndices] Calling Statistics API endpoint:', endpoint)
-  console.log('[fetchVegetationIndices] Request has aggregation:', !!request.aggregation)
-  console.log('[fetchVegetationIndices] Request payload keys:', Object.keys(request))
-  console.log('[fetchVegetationIndices] Evalscript first 200 chars:', request.aggregation.evalscript.substring(0, 200))
+  const endpoint = `${SENTINEL_HUB_URL}/api/v1/statistics`
 
   const response = await fetch(endpoint, {
     method: 'POST',
@@ -279,44 +276,40 @@ export async function fetchVegetationIndices(
     body: JSON.stringify(request)
   })
 
-  console.log('[fetchVegetationIndices] Response status:', response.status, response.statusText)
+})
 
-  if (!response.ok) {
-    const error = await response.text()
-    console.error('[fetchVegetationIndices] API ERROR:', error)
-    console.error('[fetchVegetationIndices] Request was sent to:', endpoint)
-    console.error('[fetchVegetationIndices] Request had keys:', Object.keys(request))
-    throw new Error('Failed to fetch satellite data from Copernicus')
-  }
+if (!response.ok) {
+  const error = await response.text()
+  console.error('[fetchVegetationIndices] API ERROR:', error)
+  console.error('[fetchVegetationIndices] Request was sent to:', endpoint)
+  console.error('[fetchVegetationIndices] Request had keys:', Object.keys(request))
+  throw new Error('Failed to fetch satellite data from Copernicus')
+}
 
-  const data = await response.json()
-  console.log('[fetchVegetationIndices] Received data entries:', data.data?.length || 0)
+const data = await response.json()
 
-  // Find latest valid entry
-  let latestEntry = null;
-  if (data.data) {
-    // Sort desc by date
-    const sorted = data.data.sort((a: any, b: any) =>
-      new Date(b.interval.from).getTime() - new Date(a.interval.from).getTime()
-    );
+// Find latest valid entry
+let latestEntry = null;
+if (data.data) {
+  // Sort desc by date
+  const sorted = data.data.sort((a: any, b: any) =>
+    new Date(b.interval.from).getTime() - new Date(a.interval.from).getTime()
+  );
 
-    console.log('[fetchVegetationIndices] Checking', sorted.length, 'entries for valid data')
+  for (const entry of sorted) {
+    // 'valid' band mean is the ratio of valid pixels (0 to 1)
+    const validRatio = entry.outputs?.valid?.bands?.B0?.stats?.mean;
 
-    for (const entry of sorted) {
-      // 'valid' band mean is the ratio of valid pixels (0 to 1)
-      const validRatio = entry.outputs?.valid?.bands?.B0?.stats?.mean;
-      console.log('[fetchVegetationIndices] Entry date:', entry.interval.from, 'validRatio:', validRatio)
-
-      // If we have some valid pixels (e.g. > 5% of the area)
-      if (validRatio > 0.05) {
-        latestEntry = entry;
-        break;
-      }
+    // If we have some valid pixels (e.g. > 5% of the area)
+    if (validRatio > 0.05) {
+      latestEntry = entry;
+      break;
     }
   }
+}
 
+if (!latestEntry) {
   if (!latestEntry) {
-    console.log('[fetchVegetationIndices] No valid entries found, returning null')
     return {
       ndvi: null,
       ndmi: null,
@@ -329,8 +322,6 @@ export async function fetchVegetationIndices(
 
   const ndvi = latestEntry.outputs?.ndvi?.bands?.B0?.stats?.mean ?? null;
   const ndmi = latestEntry.outputs?.ndmi?.bands?.B0?.stats?.mean ?? null;
-
-  console.log('[fetchVegetationIndices] Parsed values:', { ndvi, ndmi, date: latestEntry.interval.from })
 
   return {
     ndvi,
