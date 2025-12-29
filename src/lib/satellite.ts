@@ -7,7 +7,8 @@
  * Documentation: https://documentation.dataspace.copernicus.eu/APIs/SentinelHub.html
  */
 
-import { StressLevel } from '@prisma/client'
+// Removed Prisma import to avoid build errors
+export type StressLevel = 'HEALTHY' | 'MILD_STRESS' | 'MODERATE_STRESS' | 'SEVERE_STRESS'
 
 // ===== CONFIGURATION =====
 
