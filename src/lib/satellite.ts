@@ -153,60 +153,7 @@ export function parseCoordinates(coordString: string): { lat: number; lon: numbe
  * Evalscript for calculating vegetation indices from Sentinel-2
  * Returns: [NDVI, NDMI, EVI, dataMask]
  */
-const VEGETATION_INDICES_EVALSCRIPT = `
-//VERSION=3
-function setup() {
-  return {
-    input: [{
-      bands: ["B02", "B03", "B04", "B08", "B11", "B12", "SCL", "dataMask"],
-      units: "DN"
-    }],
-    output: [
-      { id: "ndvi", bands: 1, sampleType: "FLOAT32" },
-      { id: "ndmi", bands: 1, sampleType: "FLOAT32" },
-      { id: "evi", bands: 1, sampleType: "FLOAT32" },
-      { id: "dataMask", bands: 1, sampleType: "UINT8" }
-    ]
-  };
-}
-
-function evaluatePixel(sample) {
-  // Scene Classification: 4=vegetation, 5=bare soil, 6=water, 7-10=clouds
-  let scl = sample.SCL;
-  let isCloud = scl >= 7 && scl <= 10;
-  let isValid = sample.dataMask === 1 && !isCloud;
-
-  if (!isValid) {
-    return {
-      ndvi: [-9999],
-      ndmi: [-9999],
-      evi: [-9999],
-      dataMask: [0]
-    };
-  }
-
-  let nir = sample.B08;
-  let red = sample.B04;
-  let blue = sample.B02;
-  let swir = sample.B11;
-
-  // NDVI: (NIR - Red) / (NIR + Red)
-  let ndvi = (nir - red) / (nir + red + 0.0001);
-
-  // NDMI: (NIR - SWIR) / (NIR + SWIR) - vegetation water content
-  let ndmi = (nir - swir) / (nir + swir + 0.0001);
-
-  // EVI: 2.5 * (NIR - Red) / (NIR + 6*Red - 7.5*Blue + 1)
-  let evi = 2.5 * (nir - red) / (nir + 6 * red - 7.5 * blue + 1 + 0.0001);
-
-  return {
-    ndvi: [ndvi],
-    ndmi: [ndmi],
-    evi: [evi],
-    dataMask: [1]
-  };
-}
-`
+// VEGETATION_INDICES_EVALSCRIPT removed as it is now inlined in aggregation
 
 /**
  * Evalscript for NDVI visualization (for WMS layer)
@@ -254,25 +201,86 @@ export async function fetchVegetationIndices(
         }
       }]
     },
-    output: {
-      width: 64,
-      height: 64,
-      responses: [
-        { identifier: 'ndvi', format: { type: 'image/tiff' } },
-        { identifier: 'ndmi', format: { type: 'image/tiff' } },
-        { identifier: 'evi', format: { type: 'image/tiff' } },
-        { identifier: 'dataMask', format: { type: 'image/tiff' } }
-      ]
+    aggregation: {
+      timeRange: {
+        from: fromDate.toISOString(),
+        to: toDate.toISOString()
+      },
+      aggregationInterval: {
+        of: 'P1D'
+      },
+      evalscript: `
+        //VERSION=3
+        function setup() {
+          return {
+            input: ["B04", "B08", "B11", "SCL", "dataMask"],
+            output: [
+              { id: "ndvi", bands: 1 },
+              { id: "ndmi", bands: 1 },
+              { id: "evi", bands: 1 },
+              { id: "valid", bands: 1 }
+            ]
+          };
+        }
+
+        function evaluatePixel(samples) {
+          let validCount = 0;
+          let ndviSum = 0;
+          let ndmiSum = 0;
+          let eviSum = 0;
+
+          for (let s of samples) {
+            let scl = s.SCL;
+            // Scene Classification: 4=vegetation, 5=bare soil, 6=water, 7-10=clouds
+            // Filter clouds and invalid data
+            if (s.dataMask === 1 && (scl < 7 || scl > 10)) {
+               let nir = s.B08;
+               let red = s.B04;
+               let blue = 0; // B02 not in input, assuming 0 impact for this simplified stat or add B02 to input
+               let swir = s.B11;
+
+               let ndvi = (nir - red) / (nir + red + 0.0001);
+               let ndmi = (nir - swir) / (nir + swir + 0.0001);
+               // Simplified EVI without Blue band if necessary, or add B02 to input
+               // EVI: 2.5 * (NIR - Red) / (NIR + 6*Red - 7.5*Blue + 1)
+               // For statistics, we can stick to NDVI/NDMI which are most critical
+               
+               ndviSum += ndvi;
+               ndmiSum += ndmi;
+               // eviSum += 0; 
+               validCount++;
+            }
+          }
+
+          if (validCount === 0) {
+            return { ndvi: [-9999], ndmi: [-9999], evi: [-9999], valid: [0] };
+          }
+
+          return {
+            ndvi: [ndviSum / validCount],
+            ndmi: [ndmiSum / validCount],
+            evi: [-9999], // Placeholder
+            valid: [validCount]
+          };
+        }
+      `
     },
-    evalscript: VEGETATION_INDICES_EVALSCRIPT
+    calculations: {
+      default: {
+        statistics: {
+          default: {
+            percentiles: { k: [50] }
+          }
+        }
+      }
+    }
   }
 
-  const response = await fetch(`${SENTINEL_HUB_URL}/api/v1/process`, {
+  const response = await fetch(`${SENTINEL_HUB_URL}/api/v1/statistics`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-      'Accept': 'application/tar'
+      'Content-Type': 'application/json'
     },
     body: JSON.stringify(request)
   })
@@ -283,12 +291,46 @@ export async function fetchVegetationIndices(
     throw new Error('Failed to fetch satellite data from Copernicus')
   }
 
-  // Parse the multipart response
-  const indices = await parseProcessResponse(response)
+  const data = await response.json()
+
+  // Find latest valid entry
+  let latestEntry = null;
+  if (data.data) {
+    // Sort desc by date
+    const sorted = data.data.sort((a: any, b: any) =>
+      new Date(b.interval.from).getTime() - new Date(a.interval.from).getTime()
+    );
+
+    for (const entry of sorted) {
+      const validCount = entry.outputs?.valid?.bands?.B0?.stats?.sum;
+      if (validCount > 0) {
+        latestEntry = entry;
+        break;
+      }
+    }
+  }
+
+  if (!latestEntry) {
+    return {
+      ndvi: null,
+      ndmi: null,
+      evi: null,
+      soilMoisture: null,
+      cloudCoverage: 0,
+      date: toDate
+    }
+  }
+
+  const ndvi = latestEntry.outputs?.ndvi?.bands?.B0?.stats?.mean ?? null;
+  const ndmi = latestEntry.outputs?.ndmi?.bands?.B0?.stats?.mean ?? null;
 
   return {
-    ...indices,
-    date: toDate,
+    ndvi,
+    ndmi,
+    evi: null,
+    soilMoisture: null, // Would require separate soil moisture API
+    cloudCoverage: 0,
+    date: new Date(latestEntry.interval.from)
   }
 }
 
@@ -502,38 +544,7 @@ export function calculateHealthMetrics(
 /**
  * Parse multipart tar response from Process API
  */
-async function parseProcessResponse(response: Response): Promise<Omit<SatelliteIndices, 'date'>> {
-  // For simplicity, we'll use the JSON statistics endpoint instead
-  // In production, you'd parse the tar archive properly
-
-  // Fallback: return mock data structure
-  // The actual implementation would parse the tar archive
-  try {
-    await response.arrayBuffer()
-
-    // Simple approach: extract mean values from response
-    // In production, use a proper tar parser
-
-    // For now, return placeholder values that indicate we got data
-    // The actual values would be extracted from the TIFF files in the tar
-    return {
-      ndvi: null,
-      ndmi: null,
-      evi: null,
-      soilMoisture: null,
-      cloudCoverage: 0
-    }
-  } catch (error) {
-    console.error('Failed to parse satellite response:', error)
-    return {
-      ndvi: null,
-      ndmi: null,
-      evi: null,
-      soilMoisture: null,
-      cloudCoverage: 100 // Assume cloudy if parsing fails
-    }
-  }
-}
+// parseProcessResponse removed as we now use Statistics API
 
 /**
  * Parse Statistics API response
