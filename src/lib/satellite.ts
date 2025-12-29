@@ -220,9 +220,7 @@ export async function fetchVegetationIndices(
             output: [
               { id: "ndvi", bands: 1 },
               { id: "ndmi", bands: 1 },
-              { id: "evi", bands: 1 },
-              { id: "valid", bands: 1 },
-              { id: "dataMask", bands: 1 }
+              { id: "valid", bands: 1 }
             ]
           };
         }
@@ -231,42 +229,26 @@ export async function fetchVegetationIndices(
           let validCount = 0;
           let ndviSum = 0;
           let ndmiSum = 0;
-          let eviSum = 0;
 
           for (let s of samples) {
             let scl = s.SCL;
-            // Scene Classification: 4=vegetation, 5=bare soil, 6=water, 7-10=clouds
-            // Filter clouds and invalid data
-            if (s.dataMask === 1 && scl >= 4 && scl <= 6) {
-               let nir = s.B08;
-               let red = s.B04;
-               let swir = s.B11;
-
-               let ndvi = (nir - red) / (nir + red + 0.0001);
-               let ndmi = (nir - swir) / (nir + swir + 0.0001);
-               
-               ndviSum += ndvi;
-               ndmiSum += ndmi;
-               validCount++;
+            if (s.dataMask === 1 && (scl < 7 || scl > 10)) {
+              let ndvi = (s.B08 - s.B04) / (s.B08 + s.B04 + 0.0001);
+              let ndmi = (s.B08 - s.B11) / (s.B08 + s.B11 + 0.0001);
+              ndviSum += ndvi;
+              ndmiSum += ndmi;
+              validCount++;
             }
           }
 
           if (validCount === 0) {
-            return { 
-              ndvi: [-9999], 
-              ndmi: [-9999], 
-              evi: [-9999], 
-              valid: [0],
-              dataMask: [0]
-            };
+            return { ndvi: [-9999], ndmi: [-9999], valid: [0] };
           }
 
           return {
             ndvi: [ndviSum / validCount],
             ndmi: [ndmiSum / validCount],
-            evi: [-9999], // Placeholder
-            valid: [validCount],
-            dataMask: [1]
+            valid: [validCount]
           };
         }
       `
