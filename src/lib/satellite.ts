@@ -216,12 +216,13 @@ export async function fetchVegetationIndices(
         //VERSION=3
         function setup() {
           return {
-            input: ["B04", "B08", "B11", "SCL"],
+            input: ["B04", "B08", "B11", "SCL", "dataMask"],
             output: [
               { id: "ndvi", bands: 1 },
               { id: "ndmi", bands: 1 },
               { id: "evi", bands: 1 },
-              { id: "valid", bands: 1 }
+              { id: "valid", bands: 1 },
+              { id: "dataMask", bands: 1 }
             ]
           };
         }
@@ -235,8 +236,8 @@ export async function fetchVegetationIndices(
           for (let s of samples) {
             let scl = s.SCL;
             // Scene Classification: 4=vegetation, 5=bare soil, 6=water, 7-10=clouds
-            // Filter clouds and invalid data (only use clear land pixels)
-            if (scl >= 4 && scl <= 6) {
+            // Filter clouds and invalid data
+            if (s.dataMask === 1 && scl >= 4 && scl <= 6) {
                let nir = s.B08;
                let red = s.B04;
                let swir = s.B11;
@@ -251,14 +252,21 @@ export async function fetchVegetationIndices(
           }
 
           if (validCount === 0) {
-            return { ndvi: [-9999], ndmi: [-9999], evi: [-9999], valid: [0] };
+            return { 
+              ndvi: [-9999], 
+              ndmi: [-9999], 
+              evi: [-9999], 
+              valid: [0],
+              dataMask: [0]
+            };
           }
 
           return {
             ndvi: [ndviSum / validCount],
             ndmi: [ndmiSum / validCount],
             evi: [-9999], // Placeholder
-            valid: [validCount]
+            valid: [validCount],
+            dataMask: [1]
           };
         }
       `
