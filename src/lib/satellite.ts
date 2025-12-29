@@ -268,7 +268,6 @@ export async function fetchVegetationIndices(
   }
 
   const endpoint = `${SENTINEL_HUB_URL}/api/v1/statistics`
-  const endpoint = `${SENTINEL_HUB_URL}/api/v1/statistics`
 
   const response = await fetch(endpoint, {
     method: 'POST',
@@ -279,113 +278,113 @@ export async function fetchVegetationIndices(
     body: JSON.stringify(request)
   })
 
-})
 
-if (!response.ok) {
-  const error = await response.text()
-  console.error('[fetchVegetationIndices] API ERROR:', error)
-  console.error('[fetchVegetationIndices] Request was sent to:', endpoint)
-  console.error('[fetchVegetationIndices] Request had keys:', Object.keys(request))
-  throw new Error('Failed to fetch satellite data from Copernicus')
-}
 
-const data = await response.json()
+  if (!response.ok) {
+    const error = await response.text()
+    console.error('[fetchVegetationIndices] API ERROR:', error)
+    console.error('[fetchVegetationIndices] Request was sent to:', endpoint)
+    console.error('[fetchVegetationIndices] Request had keys:', Object.keys(request))
+    throw new Error('Failed to fetch satellite data from Copernicus')
+  }
 
-// Find latest valid entry
-let latestEntry = null;
-if (data.data) {
-  // Sort desc by date
-  const sorted = data.data.sort((a: any, b: any) =>
-    new Date(b.interval.from).getTime() - new Date(a.interval.from).getTime()
-  );
+  const data = await response.json()
 
-  for (const entry of sorted) {
-    // 'valid' band mean is the ratio of valid pixels (0 to 1)
-    const validRatio = entry.outputs?.valid?.bands?.B0?.stats?.mean;
+  // Find latest valid entry
+  let latestEntry = null;
+  if (data.data) {
+    // Sort desc by date
+    const sorted = data.data.sort((a: any, b: any) =>
+      new Date(b.interval.from).getTime() - new Date(a.interval.from).getTime()
+    );
 
-    // If we have some valid pixels (e.g. > 5% of the area)
-    if (validRatio > 0.05) {
-      latestEntry = entry;
-      break;
+    for (const entry of sorted) {
+      // 'valid' band mean is the ratio of valid pixels (0 to 1)
+      const validRatio = entry.outputs?.valid?.bands?.B0?.stats?.mean;
+
+      // If we have some valid pixels (e.g. > 5% of the area)
+      if (validRatio > 0.05) {
+        latestEntry = entry;
+        break;
+      }
     }
   }
-}
 
-if (!latestEntry) {
   if (!latestEntry) {
+    if (!latestEntry) {
+      return {
+        ndvi: null,
+        ndmi: null,
+        evi: null,
+        soilMoisture: null,
+        cloudCoverage: 0,
+        date: toDate
+      }
+    }
+
+    const ndvi = latestEntry.outputs?.ndvi?.bands?.B0?.stats?.mean ?? null;
+    const ndmi = latestEntry.outputs?.ndmi?.bands?.B0?.stats?.mean ?? null;
+
     return {
-      ndvi: null,
-      ndmi: null,
+      ndvi,
+      ndmi,
       evi: null,
-      soilMoisture: null,
+      soilMoisture: null, // Would require separate soil moisture API
       cloudCoverage: 0,
-      date: toDate
+      date: new Date(latestEntry.interval.from)
     }
   }
 
-  const ndvi = latestEntry.outputs?.ndvi?.bands?.B0?.stats?.mean ?? null;
-  const ndmi = latestEntry.outputs?.ndmi?.bands?.B0?.stats?.mean ?? null;
+  /**
+   * Fetch vegetation indices time series for trend analysis
+   */
+  export async function fetchVegetationTimeSeries(
+    lat: number,
+    lon: number,
+    areaStremmata: number | undefined,
+    monthsBack: number = 6
+  ): Promise<SatelliteTimeSeriesPoint[]> {
+    const token = await getAccessToken()
 
-  return {
-    ndvi,
-    ndmi,
-    evi: null,
-    soilMoisture: null, // Would require separate soil moisture API
-    cloudCoverage: 0,
-    date: new Date(latestEntry.interval.from)
-  }
-}
+    const bbox = areaStremmata
+      ? createBoundingBoxFromArea(lat, lon, areaStremmata)
+      : createBoundingBox(lat, lon, 300)
 
-/**
- * Fetch vegetation indices time series for trend analysis
- */
-export async function fetchVegetationTimeSeries(
-  lat: number,
-  lon: number,
-  areaStremmata: number | undefined,
-  monthsBack: number = 6
-): Promise<SatelliteTimeSeriesPoint[]> {
-  const token = await getAccessToken()
+    // Normalize dates to ensure consistent 10-day aggregation buckets
+    const toDate = new Date()
+    toDate.setHours(23, 59, 59, 999)
 
-  const bbox = areaStremmata
-    ? createBoundingBoxFromArea(lat, lon, areaStremmata)
-    : createBoundingBox(lat, lon, 300)
+    const fromDate = new Date(toDate)
+    fromDate.setMonth(fromDate.getMonth() - monthsBack)
+    fromDate.setHours(0, 0, 0, 0)
 
-  // Normalize dates to ensure consistent 10-day aggregation buckets
-  const toDate = new Date()
-  toDate.setHours(23, 59, 59, 999)
-
-  const fromDate = new Date(toDate)
-  fromDate.setMonth(fromDate.getMonth() - monthsBack)
-  fromDate.setHours(0, 0, 0, 0)
-
-  // Use Statistical API for time series
-  const request = {
-    input: {
-      bounds: {
-        bbox: [bbox.west, bbox.south, bbox.east, bbox.north],
-        properties: { crs: 'http://www.opengis.net/def/crs/EPSG/0/4326' }
+    // Use Statistical API for time series
+    const request = {
+      input: {
+        bounds: {
+          bbox: [bbox.west, bbox.south, bbox.east, bbox.north],
+          properties: { crs: 'http://www.opengis.net/def/crs/EPSG/0/4326' }
+        },
+        data: [{
+          type: 'sentinel-2-l2a',
+          dataFilter: {
+            timeRange: {
+              from: fromDate.toISOString(),
+              to: toDate.toISOString()
+            },
+            maxCloudCoverage: 40
+          }
+        }]
       },
-      data: [{
-        type: 'sentinel-2-l2a',
-        dataFilter: {
-          timeRange: {
-            from: fromDate.toISOString(),
-            to: toDate.toISOString()
-          },
-          maxCloudCoverage: 40
-        }
-      }]
-    },
-    aggregation: {
-      timeRange: {
-        from: fromDate.toISOString(),
-        to: toDate.toISOString()
-      },
-      aggregationInterval: {
-        of: 'P10D' // 10-day intervals
-      },
-      evalscript: `
+      aggregation: {
+        timeRange: {
+          from: fromDate.toISOString(),
+          to: toDate.toISOString()
+        },
+        aggregationInterval: {
+          of: 'P10D' // 10-day intervals
+        },
+        evalscript: `
         //VERSION=3
         function setup() {
           return {
@@ -425,201 +424,201 @@ export async function fetchVegetationTimeSeries(
           };
         }
       `
-    },
-    calculations: {
-      default: {
-        statistics: {
-          default: {
-            percentiles: { k: [50] }
+      },
+      calculations: {
+        default: {
+          statistics: {
+            default: {
+              percentiles: { k: [50] }
+            }
           }
         }
       }
     }
-  }
 
-  const response = await fetch(`${SENTINEL_HUB_URL}/api/v1/statistics`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(request)
-  })
+    const response = await fetch(`${SENTINEL_HUB_URL}/api/v1/statistics`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(request)
+    })
 
-  if (!response.ok) {
-    // Fallback to basic data if statistics API fails
-    const error = await response.text()
-    console.warn('Statistics API failed, returning empty time series:', error)
-    return []
-  }
-
-  const data = await response.json()
-
-  return parseStatisticsResponse(data)
-}
-
-/**
- * Get NDVI WMS layer URL for Mapbox integration
- */
-export function getNdviWmsUrl(bbox: BoundingBox, width: number = 512, height: number = 512): string {
-  // This returns a URL template that can be used with Mapbox
-  // Actual implementation would require the evalscript to be saved as a configuration
-  const params = new URLSearchParams({
-    SERVICE: 'WMS',
-    VERSION: '1.3.0',
-    REQUEST: 'GetMap',
-    BBOX: `${bbox.south},${bbox.west},${bbox.north},${bbox.east}`,
-    CRS: 'EPSG:4326',
-    WIDTH: width.toString(),
-    HEIGHT: height.toString(),
-    LAYERS: 'NDVI',
-    FORMAT: 'image/png',
-    TRANSPARENT: 'true'
-  })
-
-  return `${SENTINEL_HUB_URL}/ogc/wms?${params.toString()}`
-}
-
-// ===== HEALTH ANALYSIS =====
-
-/**
- * Calculate grove health metrics from satellite indices
- */
-export function calculateHealthMetrics(
-  current: SatelliteIndices,
-  previous?: SatelliteIndices
-): GroveHealthMetrics {
-  const ndvi = current.ndvi ?? 0.5
-
-  // Calculate health score (0-100)
-  // NDVI range for olives: 0.2 (stressed) to 0.8 (very healthy)
-  const healthScore = Math.round(Math.min(100, Math.max(0, ((ndvi - 0.2) / 0.6) * 100)))
-
-  // Determine stress level
-  let stressLevel: StressLevel
-  if (ndvi >= 0.6) stressLevel = 'HEALTHY'
-  else if (ndvi >= 0.4) stressLevel = 'MILD_STRESS'
-  else if (ndvi >= 0.3) stressLevel = 'MODERATE_STRESS'
-  else stressLevel = 'SEVERE_STRESS'
-
-  // Calculate trend
-  let ndviTrend: 'improving' | 'stable' | 'declining' = 'stable'
-  let ndviChange = 0
-
-  if (previous?.ndvi != null && current.ndvi != null) {
-    ndviChange = ((current.ndvi - previous.ndvi) / Math.abs(previous.ndvi || 0.5)) * 100
-    if (ndviChange > 5) ndviTrend = 'improving'
-    else if (ndviChange < -5) ndviTrend = 'declining'
-  }
-
-  // Generate recommendations
-  const recommendations: string[] = []
-
-  if (stressLevel === 'SEVERE_STRESS') {
-    recommendations.push('Άμεση επιθεώρηση του ελαιώνα για εντοπισμό προβλήματος')
-    recommendations.push('Έλεγχος για ασθένειες ή έλλειψη νερού')
-  } else if (stressLevel === 'MODERATE_STRESS') {
-    recommendations.push('Παρακολούθηση της κατάστασης - πιθανό στρες λόγω ξηρασίας')
-    if (current.ndmi != null && current.ndmi < 0) {
-      recommendations.push('Χαμηλή υγρασία φυλλώματος - εξετάστε το πότισμα')
+    if (!response.ok) {
+      // Fallback to basic data if statistics API fails
+      const error = await response.text()
+      console.warn('Statistics API failed, returning empty time series:', error)
+      return []
     }
-  } else if (stressLevel === 'MILD_STRESS') {
-    recommendations.push('Ελαφρύ στρες - συνεχίστε την κανονική φροντίδα')
+
+    const data = await response.json()
+
+    return parseStatisticsResponse(data)
   }
 
-  if (ndviTrend === 'declining') {
-    recommendations.push('Φθίνουσα τάση υγείας - εντατικοποιήστε την παρακολούθηση')
-  } else if (ndviTrend === 'improving') {
-    recommendations.push('Θετική τάση - η φροντίδα αποδίδει')
+  /**
+   * Get NDVI WMS layer URL for Mapbox integration
+   */
+  export function getNdviWmsUrl(bbox: BoundingBox, width: number = 512, height: number = 512): string {
+    // This returns a URL template that can be used with Mapbox
+    // Actual implementation would require the evalscript to be saved as a configuration
+    const params = new URLSearchParams({
+      SERVICE: 'WMS',
+      VERSION: '1.3.0',
+      REQUEST: 'GetMap',
+      BBOX: `${bbox.south},${bbox.west},${bbox.north},${bbox.east}`,
+      CRS: 'EPSG:4326',
+      WIDTH: width.toString(),
+      HEIGHT: height.toString(),
+      LAYERS: 'NDVI',
+      FORMAT: 'image/png',
+      TRANSPARENT: 'true'
+    })
+
+    return `${SENTINEL_HUB_URL}/ogc/wms?${params.toString()}`
   }
 
-  if (current.soilMoisture != null && current.soilMoisture < 20) {
-    recommendations.push('Χαμηλή εδαφική υγρασία - προγραμματίστε πότισμα')
+  // ===== HEALTH ANALYSIS =====
+
+  /**
+   * Calculate grove health metrics from satellite indices
+   */
+  export function calculateHealthMetrics(
+    current: SatelliteIndices,
+    previous?: SatelliteIndices
+  ): GroveHealthMetrics {
+    const ndvi = current.ndvi ?? 0.5
+
+    // Calculate health score (0-100)
+    // NDVI range for olives: 0.2 (stressed) to 0.8 (very healthy)
+    const healthScore = Math.round(Math.min(100, Math.max(0, ((ndvi - 0.2) / 0.6) * 100)))
+
+    // Determine stress level
+    let stressLevel: StressLevel
+    if (ndvi >= 0.6) stressLevel = 'HEALTHY'
+    else if (ndvi >= 0.4) stressLevel = 'MILD_STRESS'
+    else if (ndvi >= 0.3) stressLevel = 'MODERATE_STRESS'
+    else stressLevel = 'SEVERE_STRESS'
+
+    // Calculate trend
+    let ndviTrend: 'improving' | 'stable' | 'declining' = 'stable'
+    let ndviChange = 0
+
+    if (previous?.ndvi != null && current.ndvi != null) {
+      ndviChange = ((current.ndvi - previous.ndvi) / Math.abs(previous.ndvi || 0.5)) * 100
+      if (ndviChange > 5) ndviTrend = 'improving'
+      else if (ndviChange < -5) ndviTrend = 'declining'
+    }
+
+    // Generate recommendations
+    const recommendations: string[] = []
+
+    if (stressLevel === 'SEVERE_STRESS') {
+      recommendations.push('Άμεση επιθεώρηση του ελαιώνα για εντοπισμό προβλήματος')
+      recommendations.push('Έλεγχος για ασθένειες ή έλλειψη νερού')
+    } else if (stressLevel === 'MODERATE_STRESS') {
+      recommendations.push('Παρακολούθηση της κατάστασης - πιθανό στρες λόγω ξηρασίας')
+      if (current.ndmi != null && current.ndmi < 0) {
+        recommendations.push('Χαμηλή υγρασία φυλλώματος - εξετάστε το πότισμα')
+      }
+    } else if (stressLevel === 'MILD_STRESS') {
+      recommendations.push('Ελαφρύ στρες - συνεχίστε την κανονική φροντίδα')
+    }
+
+    if (ndviTrend === 'declining') {
+      recommendations.push('Φθίνουσα τάση υγείας - εντατικοποιήστε την παρακολούθηση')
+    } else if (ndviTrend === 'improving') {
+      recommendations.push('Θετική τάση - η φροντίδα αποδίδει')
+    }
+
+    if (current.soilMoisture != null && current.soilMoisture < 20) {
+      recommendations.push('Χαμηλή εδαφική υγρασία - προγραμματίστε πότισμα')
+    }
+
+    return {
+      healthScore,
+      stressLevel,
+      ndviTrend,
+      ndviChange: Math.round(ndviChange * 10) / 10,
+      recommendations
+    }
   }
 
-  return {
-    healthScore,
-    stressLevel,
-    ndviTrend,
-    ndviChange: Math.round(ndviChange * 10) / 10,
-    recommendations
-  }
-}
+  // ===== RESPONSE PARSERS =====
 
-// ===== RESPONSE PARSERS =====
+  /**
+   * Parse multipart tar response from Process API
+   */
+  // parseProcessResponse removed as we now use Statistics API
 
-/**
- * Parse multipart tar response from Process API
- */
-// parseProcessResponse removed as we now use Statistics API
+  /**
+   * Parse Statistics API response
+   */
+  function parseStatisticsResponse(data: any): SatelliteTimeSeriesPoint[] {
+    const points: SatelliteTimeSeriesPoint[] = []
 
-/**
- * Parse Statistics API response
- */
-function parseStatisticsResponse(data: any): SatelliteTimeSeriesPoint[] {
-  const points: SatelliteTimeSeriesPoint[] = []
+    try {
+      if (data.data) {
+        for (const entry of data.data) {
+          const date = new Date(entry.interval.from)
 
-  try {
-    if (data.data) {
-      for (const entry of data.data) {
-        const date = new Date(entry.interval.from)
+          // 'valid' band mean is the ratio of valid pixels (0 to 1)
+          const validRatio = entry.outputs?.valid?.bands?.B0?.stats?.mean ?? 0
 
-        // 'valid' band mean is the ratio of valid pixels (0 to 1)
-        const validRatio = entry.outputs?.valid?.bands?.B0?.stats?.mean ?? 0
+          // Only include if we have some valid pixels (e.g. > 5% of the area)
+          if (validRatio > 0.05) {
+            const ndviStats = entry.outputs?.ndvi?.bands?.B0?.stats
+            const ndmiStats = entry.outputs?.ndmi?.bands?.B0?.stats
 
-        // Only include if we have some valid pixels (e.g. > 5% of the area)
-        if (validRatio > 0.05) {
-          const ndviStats = entry.outputs?.ndvi?.bands?.B0?.stats
-          const ndmiStats = entry.outputs?.ndmi?.bands?.B0?.stats
-
-          points.push({
-            date,
-            ndvi: ndviStats?.mean ?? null,
-            ndmi: ndmiStats?.mean ?? null,
-            cloudCoverage: (1 - validRatio) * 100 // Estimate cloud coverage from invalid pixels
-          })
+            points.push({
+              date,
+              ndvi: ndviStats?.mean ?? null,
+              ndmi: ndmiStats?.mean ?? null,
+              cloudCoverage: (1 - validRatio) * 100 // Estimate cloud coverage from invalid pixels
+            })
+          }
         }
       }
+    } catch (error) {
+      console.error('Failed to parse statistics response:', error)
     }
-  } catch (error) {
-    console.error('Failed to parse statistics response:', error)
+
+    // Sort ascending by date for charts
+    return points.sort((a, b) => a.date.getTime() - b.date.getTime())
   }
 
-  // Sort ascending by date for charts
-  return points.sort((a, b) => a.date.getTime() - b.date.getTime())
-}
+  // ===== UTILITY FUNCTIONS =====
 
-// ===== UTILITY FUNCTIONS =====
-
-/**
- * Check if Copernicus credentials are configured
- */
-export function isSatelliteConfigured(): boolean {
-  return !!(process.env.COPERNICUS_CLIENT_ID && process.env.COPERNICUS_CLIENT_SECRET)
-}
-
-/**
- * Get stress level label in Greek
- */
-export function getStressLevelLabel(level: StressLevel): string {
-  const labels: Record<StressLevel, string> = {
-    HEALTHY: 'Υγιής',
-    MILD_STRESS: 'Ελαφρύ Στρες',
-    MODERATE_STRESS: 'Μέτριο Στρες',
-    SEVERE_STRESS: 'Σοβαρό Στρες'
+  /**
+   * Check if Copernicus credentials are configured
+   */
+  export function isSatelliteConfigured(): boolean {
+    return !!(process.env.COPERNICUS_CLIENT_ID && process.env.COPERNICUS_CLIENT_SECRET)
   }
-  return labels[level]
-}
 
-/**
- * Get stress level color for UI
- */
-export function getStressLevelColor(level: StressLevel): string {
-  const colors: Record<StressLevel, string> = {
-    HEALTHY: 'text-green-600 bg-green-50',
-    MILD_STRESS: 'text-yellow-600 bg-yellow-50',
-    MODERATE_STRESS: 'text-orange-600 bg-orange-50',
-    SEVERE_STRESS: 'text-red-600 bg-red-50'
+  /**
+   * Get stress level label in Greek
+   */
+  export function getStressLevelLabel(level: StressLevel): string {
+    const labels: Record<StressLevel, string> = {
+      HEALTHY: 'Υγιής',
+      MILD_STRESS: 'Ελαφρύ Στρες',
+      MODERATE_STRESS: 'Μέτριο Στρες',
+      SEVERE_STRESS: 'Σοβαρό Στρες'
+    }
+    return labels[level]
   }
-  return colors[level]
-}
+
+  /**
+   * Get stress level color for UI
+   */
+  export function getStressLevelColor(level: StressLevel): string {
+    const colors: Record<StressLevel, string> = {
+      HEALTHY: 'text-green-600 bg-green-50',
+      MILD_STRESS: 'text-yellow-600 bg-yellow-50',
+      MODERATE_STRESS: 'text-orange-600 bg-orange-50',
+      SEVERE_STRESS: 'text-red-600 bg-red-50'
+    }
+    return colors[level]
+  }

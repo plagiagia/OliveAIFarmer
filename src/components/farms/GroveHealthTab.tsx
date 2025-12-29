@@ -5,8 +5,10 @@ import { el } from 'date-fns/locale'
 import {
   Activity,
   AlertTriangle,
+  ChevronDown,
   Droplets,
   ExternalLink,
+  HelpCircle,
   Info,
   Leaf,
   MapPin,
@@ -66,6 +68,33 @@ interface GroveHealthTabProps {
   farmId: string
 }
 
+const METRIC_EXPLANATIONS = [
+  {
+    title: 'Βαθμός Υγείας (0-100)',
+    icon: Activity,
+    color: 'text-blue-600',
+    desc: 'Μια γενική βαθμολογία για την κατάσταση του ελαιώνα. Όσο πιο κοντά στο 100, τόσο πιο εύρωστα είναι τα δέντρα.'
+  },
+  {
+    title: 'NDVI (Δείκτης Βλάστησης)',
+    icon: Leaf,
+    color: 'text-green-600',
+    desc: 'Δείχνει πόσο "πράσινα" και πυκνά είναι τα φύλλα. Τιμές κάτω από 0.40 συνήθως σημαίνουν αραίωση, ασθένεια ή πρόσφατο κλάδεμα.'
+  },
+  {
+    title: 'NDMI (Υγρασία Φυλλώματος)',
+    icon: Droplets,
+    color: 'text-blue-500',
+    desc: 'Μετράει την περιεκτικότητα νερού στα φύλλα. Χαμηλές τιμές δείχνουν ότι τα δέντρα χρειάζονται πότισμα.'
+  },
+  {
+    title: 'Στρες (Stress Level)',
+    icon: AlertTriangle,
+    color: 'text-orange-500',
+    desc: 'Αυτόματη διάγνωση με βάση τους δείκτες. Το "Ελαφρύ Στρες" είναι συνηθισμένο τον χειμώνα ή μετά τη συγκομιδή.'
+  }
+]
+
 // Stress level configuration
 const STRESS_CONFIG = {
   HEALTHY: {
@@ -110,6 +139,7 @@ export default function GroveHealthTab({ farmId }: GroveHealthTabProps) {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showExplanations, setShowExplanations] = useState(false)
 
   // Fetch satellite data
   const fetchData = useCallback(async (forceRefresh = false) => {
@@ -336,7 +366,7 @@ export default function GroveHealthTab({ farmId }: GroveHealthTabProps) {
               <>
                 <TrendIcon trend={health.ndviTrend} />
                 <span className={`text-sm ${health.ndviTrend === 'improving' ? 'text-green-600' :
-                    health.ndviTrend === 'declining' ? 'text-red-600' : 'text-gray-500'
+                  health.ndviTrend === 'declining' ? 'text-red-600' : 'text-gray-500'
                   }`}>
                   {health.ndviChange > 0 ? '+' : ''}{health.ndviChange}%
                 </span>
@@ -366,8 +396,8 @@ export default function GroveHealthTab({ farmId }: GroveHealthTabProps) {
           {current?.ndmi != null && (
             <div className="mt-2">
               <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${current.ndmi > 0.2 ? 'bg-blue-50 text-blue-600' :
-                  current.ndmi > 0 ? 'bg-yellow-50 text-yellow-600' :
-                    'bg-orange-50 text-orange-600'
+                current.ndmi > 0 ? 'bg-yellow-50 text-yellow-600' :
+                  'bg-orange-50 text-orange-600'
                 }`}>
                 {current.ndmi > 0.2 ? 'Καλή υγρασία' :
                   current.ndmi > 0 ? 'Μέτρια υγρασία' : 'Χαμηλή υγρασία'}
@@ -521,6 +551,38 @@ export default function GroveHealthTab({ farmId }: GroveHealthTabProps) {
           </button>
         </div>
       )}
+
+      {/* Metric Explanations Header */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <button
+          onClick={() => setShowExplanations(!showExplanations)}
+          className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <HelpCircle className="w-5 h-5 text-blue-600" />
+            <span className="font-semibold text-gray-900">Πώς να διαβάσετε τους δείκτες (Οδηγός)</span>
+          </div>
+          <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform ${showExplanations ? 'rotate-180' : ''}`} />
+        </button>
+
+        {showExplanations && (
+          <div className="p-5 grid gap-6 md:grid-cols-2 bg-white animate-in slide-in-from-top-2 duration-200">
+            {METRIC_EXPLANATIONS.map((item, idx) => (
+              <div key={idx} className="flex gap-3">
+                <div className={`p-2 rounded-lg bg-gray-50 h-fit`}>
+                  <item.icon className={`w-5 h-5 ${item.color}`} />
+                </div>
+                <div>
+                  <h4 className="font-medium text-gray-900 text-sm">{item.title}</h4>
+                  <p className="text-sm text-gray-600 mt-1 leading-relaxed">
+                    {item.desc}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Data Source Info */}
       <div className="text-center text-xs text-gray-400">
