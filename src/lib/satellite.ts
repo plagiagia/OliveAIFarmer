@@ -303,6 +303,7 @@ export async function fetchVegetationIndices(
     console.log('[fetchVegetationIndices] Checking', sorted.length, 'entries for valid data')
 
     for (const entry of sorted) {
+      console.log('[fetchVegetationIndices] Entry outputs structure:', JSON.stringify(entry.outputs).substring(0, 500))
       const validCount = entry.outputs?.valid?.bands?.B0?.stats?.sum;
       console.log('[fetchVegetationIndices] Entry date:', entry.interval.from, 'validCount:', validCount)
       if (validCount > 0) {
