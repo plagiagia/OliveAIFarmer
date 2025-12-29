@@ -333,7 +333,7 @@ export async function fetchVegetationIndices(
     date: new Date(latestEntry.interval.from)
   }
 }
-  }
+
 
 /**
  * Fetch vegetation indices time series for trend analysis
