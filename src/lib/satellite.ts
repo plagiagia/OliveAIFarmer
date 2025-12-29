@@ -184,6 +184,8 @@ export async function fetchVegetationIndices(
   const fromDate = new Date(toDate)
   fromDate.setDate(fromDate.getDate() - 30) // Look back 30 days for clear imagery
 
+  console.log('[fetchVegetationIndices] Creating request for:', { lat, lon, areaStremmata, bbox })
+
   const request = {
     input: {
       bounds: {
@@ -277,7 +279,12 @@ export async function fetchVegetationIndices(
     }
   }
 
-  const response = await fetch(`${SENTINEL_HUB_URL}/api/v1/statistics`, {
+  const endpoint = `${SENTINEL_HUB_URL}/api/v1/statistics`
+  console.log('[fetchVegetationIndices] Calling Statistics API endpoint:', endpoint)
+  console.log('[fetchVegetationIndices] Request has aggregation:', !!request.aggregation)
+  console.log('[fetchVegetationIndices] Request payload keys:', Object.keys(request))
+
+  const response = await fetch(endpoint, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -286,13 +293,18 @@ export async function fetchVegetationIndices(
     body: JSON.stringify(request)
   })
 
+  console.log('[fetchVegetationIndices] Response status:', response.status, response.statusText)
+
   if (!response.ok) {
     const error = await response.text()
-    console.error('Sentinel Hub process error:', error)
+    console.error('[fetchVegetationIndices] API ERROR:', error)
+    console.error('[fetchVegetationIndices] Request was sent to:', endpoint)
+    console.error('[fetchVegetationIndices] Request had keys:', Object.keys(request))
     throw new Error('Failed to fetch satellite data from Copernicus')
   }
 
   const data = await response.json()
+  console.log('[fetchVegetationIndices] Received data entries:', data.data?.length || 0)
 
   // Find latest valid entry
   let latestEntry = null;
@@ -324,6 +336,8 @@ export async function fetchVegetationIndices(
 
   const ndvi = latestEntry.outputs?.ndvi?.bands?.B0?.stats?.mean ?? null;
   const ndmi = latestEntry.outputs?.ndmi?.bands?.B0?.stats?.mean ?? null;
+
+  console.log('[fetchVegetationIndices] Parsed values:', { ndvi, ndmi, date: latestEntry.interval.from })
 
   return {
     ndvi,
