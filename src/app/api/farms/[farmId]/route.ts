@@ -23,7 +23,6 @@ export async function GET(
         }
       },
       include: {
-        trees: true,
         activities: {
           orderBy: { date: 'desc' },
           take: 5
@@ -79,9 +78,6 @@ export async function PUT(
         user: {
           clerkId: userId
         }
-      },
-      include: {
-        trees: true
       }
     })
 
@@ -92,7 +88,7 @@ export async function PUT(
       )
     }
 
-    // Update farm
+    // Update farm with treeCount and oliveVariety stored directly
     const updatedFarm = await prisma.farm.update({
       where: { id: farmId },
       data: {
@@ -100,68 +96,13 @@ export async function PUT(
         location: location.trim(),
         coordinates: coordinates || null,
         totalArea: totalArea ? parseFloat(totalArea) : null,
+        treeCount: treeCount !== null && treeCount !== undefined ? parseInt(treeCount) : null,
+        oliveVariety: oliveVariety?.trim() || null,
         treeAge: treeAge !== null && treeAge !== undefined ? parseInt(treeAge) : null,
         description: description?.trim() || null,
         updatedAt: new Date()
       }
     })
-
-    // Handle tree updates if treeCount is provided
-    if (treeCount !== null && treeCount !== undefined) {
-      const newTreeCount = parseInt(treeCount)
-      const currentTreeCount = existingFarm.trees.length
-
-      if (newTreeCount !== currentTreeCount) {
-        if (newTreeCount > currentTreeCount) {
-          // Add new trees
-          const treesToCreate = []
-          for (let i = currentTreeCount + 1; i <= newTreeCount; i++) {
-            treesToCreate.push({
-              farmId: farmId,
-              treeNumber: i.toString(),
-              variety: oliveVariety?.trim() || 'Άγνωστο',
-              plantingYear: null,
-              notes: null,
-            })
-          }
-
-          await prisma.oliveTree.createMany({
-            data: treesToCreate
-          })
-
-          console.log(`✅ Added ${newTreeCount - currentTreeCount} trees to farm: ${updatedFarm.name}`)
-        } else if (newTreeCount < currentTreeCount) {
-          // Remove excess trees (remove the highest numbered ones)
-          const treesToDelete = existingFarm.trees
-            .sort((a: { treeNumber: string }, b: { treeNumber: string }) => parseInt(b.treeNumber) - parseInt(a.treeNumber))
-            .slice(0, currentTreeCount - newTreeCount)
-
-          await prisma.oliveTree.deleteMany({
-            where: {
-              id: {
-                in: treesToDelete.map((tree: { id: string }) => tree.id)
-              }
-            }
-          })
-
-          console.log(`✅ Removed ${currentTreeCount - newTreeCount} trees from farm: ${updatedFarm.name}`)
-        }
-      }
-    }
-
-    // Update variety for existing trees if provided (independent of tree count changes)
-    if (oliveVariety?.trim() && existingFarm.trees.length > 0) {
-      await prisma.oliveTree.updateMany({
-        where: {
-          farmId: farmId
-        },
-        data: {
-          variety: oliveVariety.trim()
-        }
-      })
-
-      console.log(`✅ Updated tree varieties to: ${oliveVariety} for farm: ${updatedFarm.name}`)
-    }
 
     console.log(`✅ Farm updated: ${updatedFarm.name} for user: ${userId}`)
 
@@ -202,7 +143,6 @@ export async function DELETE(
         }
       },
       include: {
-        trees: true,
         activities: true,
         harvests: true
       }
@@ -234,4 +174,4 @@ export async function DELETE(
       { status: 500 }
     )
   }
-} 
+}

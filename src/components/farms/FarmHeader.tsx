@@ -2,11 +2,23 @@
 
 import { format } from 'date-fns'
 import { el } from 'date-fns/locale'
-import { ArrowLeft, Calendar, Edit, FileText, MapPin, Ruler, TreeDeciduous } from 'lucide-react'
+import { ArrowLeft, Calendar, Edit, FileText, Leaf, MapPin, Ruler, TreeDeciduous } from 'lucide-react'
 
 interface FarmHeaderProps {
-  farm: any
-  user: any
+  farm: {
+    name: string
+    location: string
+    totalArea?: number | null
+    treeCount?: number | null
+    oliveVariety?: string | null
+    treeAge?: number | null
+    description?: string | null
+    coordinates?: string | null
+    createdAt: string | Date
+    activities?: Array<unknown>
+    harvests?: Array<unknown>
+  }
+  user: unknown
   onEdit: () => void
   onBack: () => void
 }
@@ -41,13 +53,13 @@ export default function FarmHeader({ farm, user: _user, onEdit, onBack }: FarmHe
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
               {farm.name}
             </h1>
-            
+
             <div className="flex flex-wrap items-center gap-6 text-gray-600 mb-4">
               <div className="flex items-center space-x-2">
                 <MapPin className="w-4 h-4 text-green-600" />
                 <span>{farm.location}</span>
               </div>
-              
+
               {farm.totalArea && (
                 <div className="flex items-center space-x-2">
                   <Ruler className="w-4 h-4 text-green-600" />
@@ -82,17 +94,18 @@ export default function FarmHeader({ farm, user: _user, onEdit, onBack }: FarmHe
           <div className="bg-green-50 rounded-xl p-6">
             <h3 className="font-semibold text-green-900 mb-4">Γρήγορα Στατιστικά</h3>
             <div className="space-y-3">
-              {farm.trees?.length > 0 && (
+              {farm.oliveVariety && (
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-green-700">Ποικιλία:</span>
-                  <span className="font-semibold text-green-900">
-                    {Array.from(new Set(farm.trees.map((tree: { variety: string }) => tree.variety))).join(', ')}
+                  <span className="text-sm text-green-700 flex items-center">
+                    <Leaf className="w-4 h-4 mr-1" />
+                    Ποικιλία:
                   </span>
+                  <span className="font-semibold text-green-900">{farm.oliveVariety}</span>
                 </div>
               )}
               <div className="flex justify-between items-center">
                 <span className="text-sm text-green-700">Δέντρα:</span>
-                <span className="font-semibold text-green-900">{farm.trees?.length || 0}</span>
+                <span className="font-semibold text-green-900">{farm.treeCount || 0}</span>
               </div>
               {farm.treeAge && (
                 <div className="flex justify-between items-center">
@@ -121,4 +134,4 @@ export default function FarmHeader({ farm, user: _user, onEdit, onBack }: FarmHe
       </div>
     </div>
   )
-} 
+}

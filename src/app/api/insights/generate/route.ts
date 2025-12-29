@@ -55,14 +55,6 @@ export async function POST(request: NextRequest) {
         user: { clerkId: userId }
       },
       include: {
-        trees: {
-          select: {
-            id: true,
-            variety: true,
-            age: true,
-            health: true
-          }
-        },
         activities: {
           where: {
             date: {
@@ -122,17 +114,6 @@ export async function POST(request: NextRequest) {
           rainyDays: 0
         }
 
-    // Get the most common variety
-    const varieties = farm.trees.map((t: { variety: string }) => t.variety)
-    const varietyCounts = varieties.reduce((acc: Record<string, number>, v: string) => {
-      acc[v] = (acc[v] || 0) + 1
-      return acc
-    }, {} as Record<string, number>)
-    const sortedVarieties = Object.entries(varietyCounts).sort(
-      (a, b) => (b[1] as number) - (a[1] as number)
-    )
-    const mainVariety = sortedVarieties[0]?.[0] || 'Άγνωστη'
-
     // Build farm context for AI
     const farmContext: FarmContext = {
       farmId: farm.id,
@@ -141,8 +122,8 @@ export async function POST(request: NextRequest) {
       coordinates: farm.coordinates || undefined,
       totalArea: farm.totalArea || undefined,
       treeAge: farm.treeAge || undefined,
-      variety: mainVariety,
-      treeCount: farm.trees.length,
+      variety: farm.oliveVariety || 'Άγνωστη',
+      treeCount: farm.treeCount || 0,
       recentActivities: farm.activities.map((a: {
         type: string
         title: string
@@ -205,7 +186,7 @@ export async function POST(request: NextRequest) {
       )
     )
 
-    console.log(`✅ Generated ${savedInsights.length} AI insights for farm: ${farm.name}`)
+    console.log(`Generated ${savedInsights.length} AI insights for farm: ${farm.name}`)
 
     return NextResponse.json({
       success: true,

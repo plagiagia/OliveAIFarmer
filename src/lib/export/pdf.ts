@@ -7,14 +7,10 @@ export interface FarmReportData {
     name: string
     location: string
     totalArea: number | null
+    treeCount: number | null
+    oliveVariety: string | null
     coordinates: string | null
   }
-  trees: Array<{
-    treeNumber: string
-    variety: string
-    health: string
-    status: string
-  }>
   activities: Array<{
     type: string
     title: string
@@ -44,7 +40,8 @@ export interface SummaryReportData {
     name: string
     location: string
     totalArea: number | null
-    treesCount: number
+    treeCount: number | null
+    oliveVariety: string | null
     activitiesCount: number
     harvestsCount: number
   }>
@@ -72,24 +69,6 @@ export const activityTypeLabels: Record<string, string> = {
   MAINTENANCE: 'Συντήρηση',
   INSPECTION: 'Επιθεώρηση',
   OTHER: 'Άλλο',
-}
-
-// Health status translations
-export const healthLabels: Record<string, string> = {
-  EXCELLENT: 'Εξαιρετική',
-  GOOD: 'Καλή',
-  HEALTHY: 'Υγιές',
-  FAIR: 'Μέτρια',
-  POOR: 'Κακή',
-  DISEASED: 'Ασθενές',
-}
-
-// Tree status translations
-export const statusLabels: Record<string, string> = {
-  ACTIVE: 'Ενεργό',
-  INACTIVE: 'Ανενεργό',
-  REMOVED: 'Αφαιρέθηκε',
-  REPLANTED: 'Επαναφυτεύτηκε',
 }
 
 export function formatDate(date: string | Date): string {

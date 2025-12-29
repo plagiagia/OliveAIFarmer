@@ -4,8 +4,6 @@ import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/rendere
 import {
   type FarmReportData,
   activityTypeLabels,
-  healthLabels,
-  statusLabels,
   formatDate,
   formatCurrency,
   formatNumber
@@ -130,7 +128,7 @@ interface FarmPDFReportProps {
 }
 
 export function FarmPDFReport({ data }: FarmPDFReportProps) {
-  const { farm, trees, activities, harvests, summary } = data
+  const { farm, activities, harvests, summary } = data
 
   return (
     <Document>
@@ -152,6 +150,16 @@ export function FarmPDFReport({ data }: FarmPDFReportProps) {
             <Text style={styles.label}>Έκταση:</Text>
             <Text style={styles.value}>{farm.totalArea ? `${farm.totalArea} στρέμματα` : '-'}</Text>
           </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Αριθμός Δέντρων:</Text>
+            <Text style={styles.value}>{farm.treeCount || '-'}</Text>
+          </View>
+          {farm.oliveVariety && (
+            <View style={styles.row}>
+              <Text style={styles.label}>Ποικιλία:</Text>
+              <Text style={styles.value}>{farm.oliveVariety}</Text>
+            </View>
+          )}
           {farm.coordinates && (
             <View style={styles.row}>
               <Text style={styles.label}>Συντεταγμένες:</Text>
@@ -193,42 +201,6 @@ export function FarmPDFReport({ data }: FarmPDFReportProps) {
           Δημιουργήθηκε στις {new Date().toLocaleDateString('el-GR')} από το ΕλαιοLog
         </Text>
       </Page>
-
-      {/* Trees Page */}
-      {trees.length > 0 && (
-        <Page size="A4" style={styles.page}>
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Δέντρα ({trees.length})</Text>
-            <View style={styles.table}>
-              <View style={styles.tableHeader}>
-                <Text style={styles.tableCellSmall}>Αρ.</Text>
-                <Text style={styles.tableCell}>Ποικιλία</Text>
-                <Text style={styles.tableCell}>Υγεία</Text>
-                <Text style={styles.tableCell}>Κατάσταση</Text>
-              </View>
-              {trees.slice(0, 30).map((tree, index) => (
-                <View
-                  key={index}
-                  style={index % 2 === 1 ? [styles.tableRow, styles.tableRowAlt] : styles.tableRow}
-                >
-                  <Text style={styles.tableCellSmall}>{tree.treeNumber}</Text>
-                  <Text style={styles.tableCell}>{tree.variety}</Text>
-                  <Text style={styles.tableCell}>{healthLabels[tree.health] || tree.health}</Text>
-                  <Text style={styles.tableCell}>{statusLabels[tree.status] || tree.status}</Text>
-                </View>
-              ))}
-              {trees.length > 30 && (
-                <View style={styles.tableRow}>
-                  <Text>... και {trees.length - 30} ακόμη δέντρα</Text>
-                </View>
-              )}
-            </View>
-          </View>
-          <Text style={styles.footer}>
-            Δημιουργήθηκε στις {new Date().toLocaleDateString('el-GR')} από το ΕλαιοLog
-          </Text>
-        </Page>
-      )}
 
       {/* Activities Page */}
       {activities.length > 0 && (

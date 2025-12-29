@@ -36,6 +36,8 @@ model Farm {
   location    String   // e.g., "Καλαμάτα, Μεσσηνία"
   coordinates String?  // GPS coordinates (optional)
   totalArea   Float?   // Total farm area in stremmata (στρέμματα)
+  treeCount   Int?     // Number of olive trees in the farm
+  oliveVariety String? // Primary olive variety (e.g., "Κορωνέικη", "Καλαμών")
   treeAge     Int?     // Average age of trees in years (optional)
   description String?
   createdAt   DateTime @default(now())
@@ -45,13 +47,10 @@ model Farm {
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Farm trees
-  trees    OliveTree[]
-  
   // Activities and harvests
   activities Activity[]
   harvests   Harvest[]
-  
+
   // Smart recommendations
   recommendations SmartRecommendation[]
 
@@ -62,35 +61,6 @@ model Farm {
 }
 
 
-// Individual olive trees
-model OliveTree {
-  id           String         @id @default(cuid())
-  treeNumber   String         // Unique identifier within farm
-  variety      String         // e.g., "Κορωνέικη", "Καλαμών" (for backward compatibility)
-  plantingYear Int?           // Year planted
-  age          Int?           // Tree age in years
-  health       TreeHealth     @default(HEALTHY)
-  status       TreeStatus     @default(ACTIVE)
-  coordinates  String?        // GPS coordinates
-  notes        String?
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-
-  // Enhanced variety reference (new knowledge base)
-  varietyId    String?
-  varietyInfo  OliveVariety? @relation(fields: [varietyId], references: [id])
-
-  // Parent farm
-  farmId    String
-  farm      Farm          @relation(fields: [farmId], references: [id], onDelete: Cascade)
-
-  // Tree activities and harvests
-  treeActivities TreeActivity[]
-  treeHarvests   TreeHarvest[]
-
-  @@unique([farmId, treeNumber])
-  @@map("olive_trees")
-}
 
 // Farm activities (watering, pruning, fertilizing, etc.)
 model Activity {
@@ -111,29 +81,9 @@ model Activity {
   farmId String
   farm   Farm   @relation(fields: [farmId], references: [id], onDelete: Cascade)
 
-  // Individual tree activities
-  treeActivities TreeActivity[]
-
   @@map("activities")
 }
 
-// Individual tree activities (for specific trees)
-model TreeActivity {
-  id String @id @default(cuid())
-
-  // Parent activity and tree
-  activityId String
-  activity   Activity  @relation(fields: [activityId], references: [id], onDelete: Cascade)
-  treeId     String
-  tree       OliveTree @relation(fields: [treeId], references: [id], onDelete: Cascade)
-
-  // Tree-specific notes
-  notes     String?
-  createdAt DateTime @default(now())
-
-  @@unique([activityId, treeId])
-  @@map("tree_activities")
-}
 
 // Harvest records
 model Harvest {
@@ -144,18 +94,18 @@ model Harvest {
   collectionDate   DateTime?     // Date of this specific collection event
   totalYield       Float?        // Total yield in kg
   totalYieldTons   Float?        // Total yield in tons (calculated from totalYield)
-  
+
   // Enhanced pricing information
   pricePerKg       Float?        // Price per kilogram
   pricePerTon      Float?        // Price per ton
   priceUnit        PriceUnit     @default(PER_KG)
   totalValue       Float?        // Total harvest value (calculated)
   currency         String        @default("EUR")
-  
+
   // Enhanced production metrics
   yieldPerTree     Float?        // Average yield per tree (calculated)
   yieldPerStremma  Float?        // Yield per stremma (calculated)
-  
+
   notes            String?
   completed        Boolean       @default(false)
   createdAt        DateTime      @default(now())
@@ -165,48 +115,11 @@ model Harvest {
   farmId String
   farm   Farm   @relation(fields: [farmId], references: [id], onDelete: Cascade)
 
-  // Individual tree harvests
-  treeHarvests TreeHarvest[]
-
   @@map("harvests")
 }
 
-// Individual tree harvest data
-model TreeHarvest {
-  id           String    @id @default(cuid())
-  yield        Float     // Yield in kg for this tree
-  quality      String?   // Quality assessment
-  harvestDate  DateTime
-  notes        String?
-  createdAt    DateTime  @default(now())
-
-  // Parent harvest and tree
-  harvestId String
-  harvest   Harvest   @relation(fields: [harvestId], references: [id], onDelete: Cascade)
-  treeId    String
-  tree      OliveTree @relation(fields: [treeId], references: [id], onDelete: Cascade)
-
-  @@unique([harvestId, treeId])
-  @@map("tree_harvests")
-}
 
 // Enums
-enum TreeHealth {
-  EXCELLENT // Εξαιρετική
-  GOOD      // Καλή
-  HEALTHY   // Υγιής
-  FAIR      // Μέτρια
-  POOR      // Κακή
-  DISEASED  // Άρρωστο
-}
-
-enum TreeStatus {
-  ACTIVE    // Ενεργό
-  INACTIVE  // Ανενεργό
-  REMOVED   // Αφαιρέθηκε
-  REPLANTED // Επανακαλλιέργεια
-}
-
 enum ActivityType {
   WATERING      // Πότισμα
   PRUNING       // Κλάδεμα
@@ -275,7 +188,6 @@ model OliveVariety {
   monthlyTasks      MonthlyTask[]
   riskFactors       RiskFactor[]
   careGuidelines    CareGuideline[]
-  trees             OliveTree[]
   recommendations   SmartRecommendation[]
 
   @@map("olive_varieties")

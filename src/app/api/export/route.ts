@@ -25,21 +25,13 @@ interface ActivityData {
   notes: string | null
 }
 
-interface TreeData {
-  treeNumber: string
-  variety: string
-  plantingYear: number | null
-  health: string | null
-  status: string
-  notes: string | null
-}
-
 interface FarmWithRelations {
   name: string
   location: string | null
   totalArea: number | null
+  treeCount: number | null
+  oliveVariety: string | null
   coordinates: string | null
-  trees: TreeData[]
   activities: ActivityData[]
   harvests: HarvestData[]
 }
@@ -62,7 +54,6 @@ export async function GET(request: NextRequest) {
       include: {
         farms: {
           include: {
-            trees: true,
             activities: {
               orderBy: { date: 'desc' }
             },
@@ -88,8 +79,9 @@ export async function GET(request: NextRequest) {
             name: farm.name,
             location: farm.location,
             totalArea: farm.totalArea,
+            treeCount: farm.treeCount,
+            oliveVariety: farm.oliveVariety,
             coordinates: farm.coordinates,
-            treesCount: farm.trees.length,
             activitiesCount: farm.activities.length,
             harvestsCount: farm.harvests.length
           }))
@@ -125,20 +117,6 @@ export async function GET(request: NextRequest) {
           }))
         )
         return NextResponse.json({ data: activities })
-
-      case 'trees':
-        const trees = farms.flatMap(farm =>
-          farm.trees.map((tree: TreeData) => ({
-            farmName: farm.name,
-            treeNumber: tree.treeNumber,
-            variety: tree.variety,
-            plantingYear: tree.plantingYear,
-            health: tree.health,
-            status: tree.status,
-            notes: tree.notes
-          }))
-        )
-        return NextResponse.json({ data: trees })
 
       default:
         return NextResponse.json({ error: 'Invalid export type' }, { status: 400 })

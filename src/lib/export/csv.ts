@@ -94,8 +94,9 @@ export interface FarmExportData {
   name: string
   location: string
   totalArea: number | null
+  treeCount: number | null
+  oliveVariety: string | null
   coordinates: string | null
-  treesCount: number
   activitiesCount: number
   harvestsCount: number
 }
@@ -104,8 +105,9 @@ export const farmExportColumns: ExportColumn<FarmExportData>[] = [
   { key: 'name', header: 'Όνομα Ελαιώνα' },
   { key: 'location', header: 'Τοποθεσία' },
   { key: 'totalArea', header: 'Έκταση (στρ.)', format: (v) => v ? `${v}` : '' },
+  { key: 'treeCount', header: 'Αριθμός Δέντρων', format: (v) => v ? `${v}` : '' },
+  { key: 'oliveVariety', header: 'Ποικιλία' },
   { key: 'coordinates', header: 'Συντεταγμένες' },
-  { key: 'treesCount', header: 'Αριθμός Δέντρων' },
   { key: 'activitiesCount', header: 'Δραστηριότητες' },
   { key: 'harvestsCount', header: 'Συγκομιδές' },
 ]
@@ -165,41 +167,5 @@ export const activityExportColumns: ExportColumn<ActivityExportData>[] = [
   { key: 'duration', header: 'Διάρκεια (λεπτά)', format: (v) => v ? `${v}` : '' },
   { key: 'cost', header: 'Κόστος (€)', format: (v) => v ? `${v}` : '' },
   { key: 'completed', header: 'Ολοκληρώθηκε' },
-  { key: 'notes', header: 'Σημειώσεις' },
-]
-
-export interface TreeExportData {
-  farmName: string
-  treeNumber: string
-  variety: string
-  plantingYear: number | null
-  health: string
-  status: string
-  notes: string | null
-}
-
-const healthLabels: Record<string, string> = {
-  EXCELLENT: 'Εξαιρετική',
-  GOOD: 'Καλή',
-  HEALTHY: 'Υγιές',
-  FAIR: 'Μέτρια',
-  POOR: 'Κακή',
-  DISEASED: 'Ασθενές',
-}
-
-const statusLabels: Record<string, string> = {
-  ACTIVE: 'Ενεργό',
-  INACTIVE: 'Ανενεργό',
-  REMOVED: 'Αφαιρέθηκε',
-  REPLANTED: 'Επαναφυτεύτηκε',
-}
-
-export const treeExportColumns: ExportColumn<TreeExportData>[] = [
-  { key: 'farmName', header: 'Ελαιώνας' },
-  { key: 'treeNumber', header: 'Αριθμός Δέντρου' },
-  { key: 'variety', header: 'Ποικιλία' },
-  { key: 'plantingYear', header: 'Έτος Φύτευσης', format: (v) => v ? `${v}` : '' },
-  { key: 'health', header: 'Υγεία', format: (v) => healthLabels[v as string] || (v as string) },
-  { key: 'status', header: 'Κατάσταση', format: (v) => statusLabels[v as string] || (v as string) },
   { key: 'notes', header: 'Σημειώσεις' },
 ]

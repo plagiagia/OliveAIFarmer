@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server'
 export async function GET(request: NextRequest) {
   try {
     const { userId } = await auth()
-    
+
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Build query conditions
-    const whereConditions: any = {
+    const whereConditions: Record<string, unknown> = {
       farmId: farmId
     }
 
@@ -52,17 +52,9 @@ export async function GET(request: NextRequest) {
       include: {
         farm: {
           select: {
-            name: true
-          }
-        },
-        treeHarvests: {
-          include: {
-            tree: {
-              select: {
-                treeNumber: true,
-                variety: true
-              }
-            }
+            name: true,
+            treeCount: true,
+            oliveVariety: true
           }
         }
       },
@@ -74,9 +66,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(harvests)
   } catch (error) {
-    console.error('❌ Harvest fetch error:', error)
+    console.error('Harvest fetch error:', error)
     return NextResponse.json({
       error: 'Failed to fetch harvests'
     }, { status: 500 })
   }
-} 
+}
