@@ -216,7 +216,7 @@ export async function fetchVegetationIndices(
         //VERSION=3
         function setup() {
           return {
-            input: ["B04", "B08", "B11", "SCL", "dataMask"],
+            input: ["B04", "B08", "B11", "SCL"],
             output: [
               { id: "ndvi", bands: 1 },
               { id: "ndmi", bands: 1 },
@@ -235,22 +235,17 @@ export async function fetchVegetationIndices(
           for (let s of samples) {
             let scl = s.SCL;
             // Scene Classification: 4=vegetation, 5=bare soil, 6=water, 7-10=clouds
-            // Filter clouds and invalid data
-            if (s.dataMask === 1 && (scl < 7 || scl > 10)) {
+            // Filter clouds and invalid data (only use clear land pixels)
+            if (scl >= 4 && scl <= 6) {
                let nir = s.B08;
                let red = s.B04;
-               let blue = 0; // B02 not in input, assuming 0 impact for this simplified stat or add B02 to input
                let swir = s.B11;
 
                let ndvi = (nir - red) / (nir + red + 0.0001);
                let ndmi = (nir - swir) / (nir + swir + 0.0001);
-               // Simplified EVI without Blue band if necessary, or add B02 to input
-               // EVI: 2.5 * (NIR - Red) / (NIR + 6*Red - 7.5*Blue + 1)
-               // For statistics, we can stick to NDVI/NDMI which are most critical
                
                ndviSum += ndvi;
                ndmiSum += ndmi;
-               // eviSum += 0; 
                validCount++;
             }
           }
