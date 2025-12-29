@@ -14,9 +14,6 @@ vi.mock('@/lib/db', () => ({
       update: vi.fn(),
       delete: vi.fn(),
     },
-    oliveTree: {
-      createMany: vi.fn(),
-    },
   },
 }))
 
@@ -95,7 +92,7 @@ describe('POST /api/farms/create', () => {
     expect(data.error).toBe('User not found')
   })
 
-  it('creates farm successfully', async () => {
+  it('creates farm successfully with treeCount and oliveVariety', async () => {
     const mockUser = {
       id: 'user-123',
       clerkId: 'test-clerk-id',
@@ -110,8 +107,9 @@ describe('POST /api/farms/create', () => {
       location: 'Καλαμάτα, Μεσσηνία',
       coordinates: '37.0421, 22.1132',
       totalArea: 5.5,
+      treeCount: 100,
+      oliveVariety: 'Κορωνέικη',
       description: 'Οικογενειακός ελαιώνας',
-      trees: [],
       activities: [],
       harvests: [],
     }
@@ -127,6 +125,8 @@ describe('POST /api/farms/create', () => {
         location: 'Καλαμάτα, Μεσσηνία',
         coordinates: '37.0421, 22.1132',
         totalArea: '5.5',
+        treeCount: '100',
+        oliveVariety: 'Κορωνέικη',
         description: 'Οικογενειακός ελαιώνας',
       }),
     })
@@ -138,45 +138,7 @@ describe('POST /api/farms/create', () => {
     expect(data.success).toBe(true)
     expect(data.farm.name).toBe('Ελαιώνας Καλαμάτας')
     expect(data.farm.location).toBe('Καλαμάτα, Μεσσηνία')
-  })
-
-  it('creates trees when treeCount is provided', async () => {
-    const mockUser = { id: 'user-123', clerkId: 'test-clerk-id', email: 'test@example.com' }
-    const mockFarm = {
-      id: 'farm-123',
-      name: 'Test Farm',
-      location: 'Athens',
-      trees: [],
-      activities: [],
-      harvests: [],
-    }
-
-    vi.mocked(auth).mockResolvedValue({ userId: 'test-clerk-id' } as never)
-    vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser as never)
-    vi.mocked(prisma.farm.create).mockResolvedValue(mockFarm as never)
-    vi.mocked(prisma.oliveTree.createMany).mockResolvedValue({ count: 10 } as never)
-
-    const request = new NextRequest('http://localhost/api/farms/create', {
-      method: 'POST',
-      body: JSON.stringify({
-        name: 'Test Farm',
-        location: 'Athens',
-        treeCount: 10,
-        oliveVariety: 'Κορωνέικη',
-      }),
-    })
-
-    const response = await POST(request)
-
-    expect(response.status).toBe(200)
-    expect(prisma.oliveTree.createMany).toHaveBeenCalledWith({
-      data: expect.arrayContaining([
-        expect.objectContaining({
-          farmId: 'farm-123',
-          treeNumber: '1',
-          variety: 'Κορωνέικη',
-        }),
-      ]),
-    })
+    expect(data.farm.treeCount).toBe(100)
+    expect(data.farm.oliveVariety).toBe('Κορωνέικη')
   })
 })

@@ -26,11 +26,9 @@ import {
   farmExportColumns,
   harvestExportColumns,
   activityExportColumns,
-  treeExportColumns,
   type FarmExportData,
   type HarvestExportData,
-  type ActivityExportData,
-  type TreeExportData
+  type ActivityExportData
 } from '@/lib/export/csv'
 
 interface AnalyticsData {
@@ -156,17 +154,10 @@ export default function AnalyticsPage() {
     exportToCSV<ActivityExportData>(activities, activityExportColumns, `δραστηριότητες_${new Date().toISOString().split('T')[0]}`)
   }
 
-  const handleExportTrees = async () => {
-    const response = await fetch('/api/export?type=trees')
-    const { data: trees } = await response.json()
-    exportToCSV<TreeExportData>(trees, treeExportColumns, `δέντρα_${new Date().toISOString().split('T')[0]}`)
-  }
-
   const exportOptions = [
     { label: 'Ελαιώνες', onExport: handleExportFarms },
     { label: 'Συγκομιδές', onExport: handleExportHarvests },
     { label: 'Δραστηριότητες', onExport: handleExportActivities },
-    { label: 'Δέντρα', onExport: handleExportTrees },
   ]
 
   return (
