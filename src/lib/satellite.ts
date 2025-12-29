@@ -220,7 +220,8 @@ export async function fetchVegetationIndices(
             output: [
               { id: "ndvi", bands: 1 },
               { id: "ndmi", bands: 1 },
-              { id: "valid", bands: 1 }
+              { id: "valid", bands: 1 },
+              { id: "dataMask", bands: 1 }
             ]
           };
         }
@@ -242,13 +243,14 @@ export async function fetchVegetationIndices(
           }
 
           if (validCount === 0) {
-            return { ndvi: [-9999], ndmi: [-9999], valid: [0] };
+            return { ndvi: [-9999], ndmi: [-9999], valid: [0], dataMask: [1] };
           }
 
           return {
             ndvi: [ndviSum / validCount],
             ndmi: [ndmiSum / validCount],
-            valid: [validCount]
+            valid: [validCount],
+            dataMask: [1]
           };
         }
       `
@@ -268,6 +270,7 @@ export async function fetchVegetationIndices(
   console.log('[fetchVegetationIndices] Calling Statistics API endpoint:', endpoint)
   console.log('[fetchVegetationIndices] Request has aggregation:', !!request.aggregation)
   console.log('[fetchVegetationIndices] Request payload keys:', Object.keys(request))
+  console.log('[fetchVegetationIndices] Evalscript first 200 chars:', request.aggregation.evalscript.substring(0, 200))
 
   const response = await fetch(endpoint, {
     method: 'POST',
