@@ -8,7 +8,8 @@ import {
   AlertTriangle,
   BarChart3,
   MapPin,
-  Eye
+  Eye,
+  ArrowLeft
 } from 'lucide-react'
 
 interface Farm {
@@ -72,6 +73,15 @@ export default function DashboardAIGeoponos({ farms }: DashboardAIGeoponosProps)
 
   return (
     <div className="space-y-6">
+      {/* Back Button */}
+      <button
+        onClick={() => router.push('/dashboard')}
+        className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+      >
+        <ArrowLeft className="w-5 h-5" />
+        <span className="font-medium">Επιστροφή στο Dashboard</span>
+      </button>
+
       {/* Header */}
       <div className="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-xl shadow-lg p-8 text-white">
         <div className="flex items-center justify-between mb-6">
