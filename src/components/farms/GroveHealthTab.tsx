@@ -10,6 +10,7 @@ import {
   ExternalLink,
   HelpCircle,
   Info,
+  Layers,
   Leaf,
   MapPin,
   Minus,
@@ -86,6 +87,12 @@ const METRIC_EXPLANATIONS = [
     icon: Droplets,
     color: 'text-blue-500',
     desc: 'Μετράει την περιεκτικότητα νερού στα φύλλα. Χαμηλές τιμές δείχνουν ότι τα δέντρα χρειάζονται πότισμα.'
+  },
+  {
+    title: 'Εδαφική Υγρασία (0-60%)',
+    icon: Layers,
+    color: 'text-cyan-600',
+    desc: 'Μέτρηση από ραντάρ Sentinel-1. Δείχνει πόσο υγρό είναι το έδαφος. Ιδανικό για προγραμματισμό ποτίσματος.'
   },
   {
     title: 'Στρες (Stress Level)',
@@ -194,7 +201,8 @@ export default function GroveHealthTab({ farmId }: GroveHealthTabProps) {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="animate-pulse space-y-4">
             <div className="h-8 bg-gray-200 rounded w-1/3" />
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="h-32 bg-gray-100 rounded-lg" />
               <div className="h-32 bg-gray-100 rounded-lg" />
               <div className="h-32 bg-gray-100 rounded-lg" />
               <div className="h-32 bg-gray-100 rounded-lg" />
@@ -327,7 +335,7 @@ export default function GroveHealthTab({ farmId }: GroveHealthTabProps) {
       )}
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Health Score Card */}
         <div className={`rounded-xl border p-5 ${stressConfig?.bg || 'bg-gray-50'} ${stressConfig?.border || 'border-gray-200'}`}>
           <div className="flex items-center justify-between mb-3">
@@ -401,6 +409,37 @@ export default function GroveHealthTab({ farmId }: GroveHealthTabProps) {
                 }`}>
                 {current.ndmi > 0.2 ? 'Καλή υγρασία' :
                   current.ndmi > 0 ? 'Μέτρια υγρασία' : 'Χαμηλή υγρασία'}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Soil Moisture Card (Sentinel-1 SAR) */}
+        <div className="bg-white rounded-xl border border-gray-200 p-5">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm font-medium text-gray-600">Εδαφική Υγρασία</span>
+            <Layers className="w-5 h-5 text-cyan-600" />
+          </div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-4xl font-bold text-gray-900">
+              {current?.soilMoisture != null ? current.soilMoisture.toFixed(0) : '--'}
+            </span>
+            {current?.soilMoisture != null && <span className="text-gray-500">%</span>}
+          </div>
+          <p className="text-xs text-gray-500 mt-2">
+            Sentinel-1 SAR (0-60%)
+          </p>
+          {current?.soilMoisture != null && (
+            <div className="mt-2">
+              <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
+                current.soilMoisture > 40 ? 'bg-cyan-50 text-cyan-700' :
+                current.soilMoisture > 20 ? 'bg-blue-50 text-blue-600' :
+                current.soilMoisture > 10 ? 'bg-yellow-50 text-yellow-600' :
+                  'bg-orange-50 text-orange-600'
+              }`}>
+                {current.soilMoisture > 40 ? 'Υγρό έδαφος' :
+                  current.soilMoisture > 20 ? 'Κανονική υγρασία' :
+                  current.soilMoisture > 10 ? 'Ξηρό έδαφος' : 'Πολύ ξηρό'}
               </span>
             </div>
           )}

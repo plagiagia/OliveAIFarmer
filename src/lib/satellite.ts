@@ -164,6 +164,187 @@ export function parseCoordinates(coordString: string): { lat: number; lon: numbe
 // ===== MAIN API FUNCTIONS =====
 
 /**
+ * Fetch soil moisture from Sentinel-1 SAR data
+ * Uses VV backscatter with change detection approach
+ */
+export async function fetchSoilMoisture(
+  lat: number,
+  lon: number,
+  areaStremmata?: number,
+  date?: Date
+): Promise<{ soilMoisture: number | null; date: Date }> {
+  const token = await getAccessToken()
+
+  const bbox = areaStremmata
+    ? createBoundingBoxFromArea(lat, lon, areaStremmata)
+    : createBoundingBox(lat, lon, 300)
+
+  // Use provided date or current
+  const toDate = date ? new Date(date) : new Date()
+  toDate.setHours(23, 59, 59, 999)
+
+  const fromDate = new Date(toDate)
+  fromDate.setDate(fromDate.getDate() - 30) // Look back 30 days
+  fromDate.setHours(0, 0, 0, 0)
+
+  // For change detection, we also need historical reference (1 year back)
+  const historicalFrom = new Date(toDate)
+  historicalFrom.setFullYear(historicalFrom.getFullYear() - 1)
+  historicalFrom.setHours(0, 0, 0, 0)
+
+  const request = {
+    input: {
+      bounds: {
+        bbox: [bbox.west, bbox.south, bbox.east, bbox.north],
+        properties: { crs: 'http://www.opengis.net/def/crs/EPSG/0/4326' }
+      },
+      data: [{
+        type: 'sentinel-1-grd',
+        dataFilter: {
+          timeRange: {
+            from: historicalFrom.toISOString(),
+            to: toDate.toISOString()
+          },
+          acquisitionMode: 'IW',
+          polarization: 'DV', // Dual VV+VH
+          resolution: 'HIGH'
+        },
+        processing: {
+          backCoeff: 'SIGMA0_ELLIPSOID',
+          orthorectify: true,
+          demInstance: 'COPERNICUS'
+        }
+      }]
+    },
+    aggregation: {
+      timeRange: {
+        from: historicalFrom.toISOString(),
+        to: toDate.toISOString()
+      },
+      aggregationInterval: {
+        of: 'P10D' // 10-day intervals for historical range
+      },
+      evalscript: `
+        //VERSION=3
+        function setup() {
+          return {
+            input: ["VV", "VH", "dataMask"],
+            output: [
+              { id: "vv", bands: 1 },
+              { id: "vh", bands: 1 },
+              { id: "valid", bands: 1 },
+              { id: "dataMask", bands: 1 }
+            ]
+          };
+        }
+
+        function evaluatePixel(sample) {
+          if (sample.dataMask === 1 && sample.VV > 0 && sample.VH > 0) {
+            // Convert to dB for more linear relationship with soil moisture
+            let vv_db = 10 * Math.log10(sample.VV);
+            let vh_db = 10 * Math.log10(sample.VH);
+
+            return {
+              vv: [vv_db],
+              vh: [vh_db],
+              valid: [1],
+              dataMask: [1]
+            };
+          }
+
+          return {
+            vv: [-999],
+            vh: [-999],
+            valid: [0],
+            dataMask: [0]
+          };
+        }
+      `
+    },
+    calculations: {
+      default: {
+        statistics: {
+          default: {
+            percentiles: { k: [5, 50, 95] } // Need min/max for change detection
+          }
+        }
+      }
+    }
+  }
+
+  try {
+    const response = await fetch(`${SENTINEL_HUB_URL}/api/v1/statistics`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(request)
+    })
+
+    if (!response.ok) {
+      const error = await response.text()
+      console.error('[fetchSoilMoisture] API ERROR:', error)
+      return { soilMoisture: null, date: toDate }
+    }
+
+    const data = await response.json()
+
+    if (!data.data || data.data.length === 0) {
+      return { soilMoisture: null, date: toDate }
+    }
+
+    // Calculate soil moisture using change detection
+    // Collect all valid VV values to find historical range
+    const validEntries = data.data.filter((entry: any) =>
+      entry.outputs?.valid?.bands?.B0?.stats?.mean > 0.05
+    )
+
+    if (validEntries.length < 2) {
+      return { soilMoisture: null, date: toDate }
+    }
+
+    // Get historical min/max VV (5th and 95th percentiles across all data)
+    let vvMin = Infinity
+    let vvMax = -Infinity
+
+    for (const entry of validEntries) {
+      const p5 = entry.outputs?.vv?.bands?.B0?.stats?.percentiles?.p5 ?? entry.outputs?.vv?.bands?.B0?.stats?.min
+      const p95 = entry.outputs?.vv?.bands?.B0?.stats?.percentiles?.p95 ?? entry.outputs?.vv?.bands?.B0?.stats?.max
+
+      if (p5 != null && p5 !== -999) vvMin = Math.min(vvMin, p5)
+      if (p95 != null && p95 !== -999) vvMax = Math.max(vvMax, p95)
+    }
+
+    // Get the most recent valid observation
+    const sortedEntries = validEntries.sort((a: any, b: any) =>
+      new Date(b.interval.from).getTime() - new Date(a.interval.from).getTime()
+    )
+    const latestEntry = sortedEntries[0]
+    const currentVV = latestEntry.outputs?.vv?.bands?.B0?.stats?.mean
+
+    if (currentVV == null || vvMin === Infinity || vvMax === -Infinity || vvMin >= vvMax) {
+      return { soilMoisture: null, date: toDate }
+    }
+
+    // Soil moisture estimation: inverse relationship with VV backscatter
+    // Lower VV (more negative dB) = drier soil
+    // Higher VV (less negative dB) = wetter soil
+    // Normalize to 0-100 scale, capped at 60% (typical saturation)
+    const normalizedMoisture = ((currentVV - vvMin) / (vvMax - vvMin)) * 60
+    const soilMoisture = Math.max(0, Math.min(60, Math.round(normalizedMoisture * 10) / 10))
+
+    return {
+      soilMoisture,
+      date: new Date(latestEntry.interval.from)
+    }
+  } catch (error) {
+    console.error('[fetchSoilMoisture] Error:', error)
+    return { soilMoisture: null, date: toDate }
+  }
+}
+
+/**
  * Fetch current vegetation indices for a farm location
  */
 export async function fetchVegetationIndices(
@@ -328,9 +509,31 @@ export async function fetchVegetationIndices(
     ndvi,
     ndmi,
     evi: null,
-    soilMoisture: null, // Would require separate soil moisture API
+    soilMoisture: null, // Fetched separately via fetchSoilMoisture (Sentinel-1)
     cloudCoverage: 0,
     date: new Date(latestEntry.interval.from)
+  }
+}
+
+/**
+ * Fetch all satellite data (vegetation indices + soil moisture) in parallel
+ * Combines Sentinel-2 (optical) and Sentinel-1 (SAR) data
+ */
+export async function fetchAllSatelliteData(
+  lat: number,
+  lon: number,
+  areaStremmata?: number,
+  date?: Date
+): Promise<SatelliteIndices> {
+  // Fetch both in parallel for better performance
+  const [vegetationResult, soilResult] = await Promise.all([
+    fetchVegetationIndices(lat, lon, areaStremmata, date),
+    fetchSoilMoisture(lat, lon, areaStremmata, date)
+  ])
+
+  return {
+    ...vegetationResult,
+    soilMoisture: soilResult.soilMoisture
   }
 }
 

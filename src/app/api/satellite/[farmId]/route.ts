@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/db'
 import {
   calculateHealthMetrics,
-  fetchVegetationIndices,
+  fetchAllSatelliteData,
   fetchVegetationTimeSeries,
   isSatelliteConfigured,
   parseCoordinates,
@@ -94,8 +94,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
     // Fetch fresh data if needed
     if (forceRefresh || cacheAge > 3) {
       try {
-        // Fetch current indices
-        currentIndices = await fetchVegetationIndices(
+        // Fetch current indices (Sentinel-2 + Sentinel-1 soil moisture)
+        currentIndices = await fetchAllSatelliteData(
           coords.lat,
           coords.lon,
           farm.totalArea || undefined
@@ -242,8 +242,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
       }, { status: 503 })
     }
 
-    // Fetch fresh data
-    const indices = await fetchVegetationIndices(
+    // Fetch fresh data (Sentinel-2 + Sentinel-1 soil moisture)
+    const indices = await fetchAllSatelliteData(
       coords.lat,
       coords.lon,
       farm.totalArea || undefined
