@@ -14,6 +14,7 @@ interface CostBreakdownData {
   typeLabel: string
   cost: number
   percentage: number
+  [key: string]: string | number
 }
 
 interface CostBreakdownChartProps {
