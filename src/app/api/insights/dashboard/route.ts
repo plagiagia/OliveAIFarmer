@@ -134,10 +134,21 @@ export async function POST() {
     console.log('- Number of insights:', aiResponse.insights?.length || 0)
     console.log('- Portfolio summary:', JSON.stringify(aiResponse.portfolioSummary))
 
+    // Get valid farm IDs
+    const validFarmIds = new Set(user.farms.map(f => f.id))
+    console.log('Valid farm IDs:', Array.from(validFarmIds))
+
     // Save insights to database for each farm mentioned
+    // Validate farmId before saving - set to null if invalid
     const savedInsights = await Promise.all(
-      aiResponse.insights.map((insight: any) =>
-        prisma.smartRecommendation.create({
+      aiResponse.insights.map((insight: any) => {
+        const farmId = insight.farmId && validFarmIds.has(insight.farmId)
+          ? insight.farmId
+          : null
+
+        console.log(`Saving insight: "${insight.title}" with farmId: ${farmId}`)
+
+        return prisma.smartRecommendation.create({
           data: {
             type: insight.type as any,
             title: insight.title,
@@ -146,14 +157,14 @@ export async function POST() {
             actionRequired: insight.actionRequired,
             reasoning: insight.reasoning,
             source: 'AI_GENERATED',
-            farmId: insight.farmId || null, // Can be null for portfolio-level insights
+            farmId: farmId, // Validated farm ID or null for portfolio-level insights
             weatherBased: false,
             seasonBased: true,
             validFrom: new Date(),
             validUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
           }
         })
-      )
+      })
     )
 
     console.log(`Generated ${savedInsights.length} dashboard AI insights`)
