@@ -59,6 +59,10 @@ export async function POST() {
       )
     }
 
+    console.log('=== Dashboard Insights Generation ===')
+    console.log('User:', user.firstName, user.lastName)
+    console.log('Number of farms:', user.farms.length)
+
     // Build portfolio context
     const portfolioContext = {
       // Portfolio overview
@@ -116,8 +120,19 @@ export async function POST() {
       userName: `${user.firstName} ${user.lastName}`
     }
 
+    console.log('Portfolio context built:')
+    console.log('- Total farms:', portfolioContext.totalFarms)
+    console.log('- Total trees:', portfolioContext.totalTrees)
+    console.log('- Total area:', portfolioContext.totalArea)
+    console.log('- Farms:', portfolioContext.farms.map(f => `${f.name} (${f.variety})`).join(', '))
+    console.log('- Current season:', portfolioContext.currentSeason)
+
     // Generate insights using OpenAI
+    console.log('Calling OpenAI for dashboard insights...')
     const aiResponse = await generateDashboardInsights(portfolioContext)
+    console.log('OpenAI response received:')
+    console.log('- Number of insights:', aiResponse.insights?.length || 0)
+    console.log('- Portfolio summary:', JSON.stringify(aiResponse.portfolioSummary))
 
     // Save insights to database for each farm mentioned
     const savedInsights = await Promise.all(
@@ -150,7 +165,14 @@ export async function POST() {
       portfolioSummary: aiResponse.portfolioSummary
     })
   } catch (error) {
-    console.error('Error generating dashboard insights:', error)
+    console.error('=== Error generating dashboard insights ===')
+    console.error('Error type:', error instanceof Error ? error.constructor.name : typeof error)
+    console.error('Error message:', error instanceof Error ? error.message : String(error))
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace')
+
+    if (error instanceof Error) {
+      console.error('Full error object:', JSON.stringify(error, Object.getOwnPropertyNames(error)))
+    }
 
     if (error instanceof Error && error.message.includes('OpenAI')) {
       return NextResponse.json(
