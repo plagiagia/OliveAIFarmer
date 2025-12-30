@@ -12,7 +12,7 @@ interface StatsCardProps {
     value: number
     isPositive: boolean
   }
-  color?: 'green' | 'blue' | 'amber' | 'purple' | 'gray'
+  color?: 'green' | 'blue' | 'amber' | 'purple' | 'gray' | 'red'
 }
 
 const colorStyles = {
@@ -40,6 +40,11 @@ const colorStyles = {
     bg: 'bg-gray-50',
     icon: 'bg-gray-100 text-gray-600',
     trend: 'text-gray-600'
+  },
+  red: {
+    bg: 'bg-red-50',
+    icon: 'bg-red-100 text-red-600',
+    trend: 'text-red-600'
   }
 }
 
