@@ -57,18 +57,13 @@ export function CostBreakdownChart({ data, title = 'Κατανομή Κόστο�
     return null
   }
 
-  const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percentage }: {
-    cx: number
-    cy: number
-    midAngle: number
-    innerRadius: number
-    outerRadius: number
-    percentage: number
-  }) => {
+  const renderCustomLabel = (props: any) => {
+    const { cx, cy, midAngle, innerRadius, outerRadius, percent } = props
     const RADIAN = Math.PI / 180
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5
     const x = cx + radius * Math.cos(-midAngle * RADIAN)
     const y = cy + radius * Math.sin(-midAngle * RADIAN)
+    const percentage = percent * 100
 
     if (percentage < 5) return null
 
