@@ -22,7 +22,6 @@
     "@ducanh2912/next-pwa": "^10.2.9",
     "@mapbox/mapbox-gl-geocoder": "^5.0.3",
     "@prisma/client": "^5.22.0",
-    "@react-pdf/renderer": "^4.3.1",
     "@types/react-map-gl": "^6.1.7",
     "@vercel/blob": "^2.0.0",
     "class-variance-authority": "^0.7.0",

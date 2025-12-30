@@ -63,8 +63,8 @@ export function MonthlyActivityChart({ data, title = 'Μηνιαία Δραστ�
               <stop offset="95%" stopColor="#2E7D32" stopOpacity={0.1}/>
             </linearGradient>
             <linearGradient id="colorCosts" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#1976D2" stopOpacity={0.8}/>
-              <stop offset="95%" stopColor="#1976D2" stopOpacity={0.1}/>
+              <stop offset="5%" stopColor="#FF9800" stopOpacity={0.8}/>
+              <stop offset="95%" stopColor="#FF9800" stopOpacity={0.1}/>
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -74,8 +74,16 @@ export function MonthlyActivityChart({ data, title = 'Μηνιαία Δραστ�
             fontSize={12}
           />
           <YAxis
-            stroke="#6b7280"
+            yAxisId="left"
+            stroke="#2E7D32"
             fontSize={12}
+          />
+          <YAxis
+            yAxisId="right"
+            orientation="right"
+            stroke="#FF9800"
+            fontSize={12}
+            tickFormatter={(value) => `€${(value / 1000).toFixed(0)}k`}
           />
           <Tooltip
             contentStyle={{
@@ -92,12 +100,22 @@ export function MonthlyActivityChart({ data, title = 'Μηνιαία Δραστ�
             }}
           />
           <Area
+            yAxisId="left"
             type="monotone"
             dataKey="activities"
             stroke="#2E7D32"
             strokeWidth={2}
             fillOpacity={1}
             fill="url(#colorActivities)"
+          />
+          <Area
+            yAxisId="right"
+            type="monotone"
+            dataKey="costs"
+            stroke="#FF9800"
+            strokeWidth={2}
+            fillOpacity={1}
+            fill="url(#colorCosts)"
           />
         </AreaChart>
       </ResponsiveContainer>

@@ -9,14 +9,22 @@ import {
   Activity,
   TrendingUp,
   Euro,
-  Scale
+  Scale,
+  Wallet
 } from 'lucide-react'
 import {
   HarvestChart,
   ActivityChart,
   FarmComparisonChart,
   MonthlyActivityChart,
-  StatsCard
+  StatsCard,
+  CostBreakdownChart,
+  ProfitabilityChart,
+  YearOverYearComparison,
+  EfficiencyMetrics,
+  FarmPerformanceHighlights,
+  ActivityHeatmap,
+  Recommendations
 } from '@/components/analytics'
 import { SkeletonChart, SkeletonStats } from '@/components/ui/Skeleton'
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
@@ -39,7 +47,16 @@ interface AnalyticsData {
     totalActivities: number
     totalCosts: number
     totalHarvestValue: number
+    totalYield: number
+    netProfit: number
     yieldTrend: { value: number; isPositive: boolean } | null
+  }
+  efficiencyMetrics: {
+    roi: number
+    costPerKg: number
+    yieldPerTree: number
+    avgYieldPerStremma: number
+    profitMargin: number
   }
   harvestData: Array<{
     year: number
@@ -67,6 +84,92 @@ interface AnalyticsData {
     totalYield: number
     yieldPerStremma: number
   }>
+  costBreakdown: Array<{
+    type: string
+    typeLabel: string
+    cost: number
+    percentage: number
+  }>
+  profitabilityTimeline: Array<{
+    year: number
+    revenue: number
+    costs: number
+    profit: number
+  }>
+  yearOverYearComparison: {
+    currentYear: number
+    previousYear: number
+    yieldChange: number
+    revenueChange: number
+    costChange: number
+    activityChange: number
+  } | null
+  farmPerformance: {
+    all: Array<{
+      farmId: string
+      farmName: string
+      totalYield: number
+      revenue: number
+      costs: number
+      profit: number
+      roi: number
+      yieldPerStremma: number
+      yieldPerTree: number
+      efficiency: number
+    }>
+    best: {
+      farmId: string
+      farmName: string
+      totalYield: number
+      revenue: number
+      costs: number
+      profit: number
+      roi: number
+      yieldPerStremma: number
+      yieldPerTree: number
+      efficiency: number
+    } | null
+    worst: {
+      farmId: string
+      farmName: string
+      totalYield: number
+      revenue: number
+      costs: number
+      profit: number
+      roi: number
+      yieldPerStremma: number
+      yieldPerTree: number
+      efficiency: number
+    } | null
+    mostEfficient: {
+      farmId: string
+      farmName: string
+      totalYield: number
+      revenue: number
+      costs: number
+      profit: number
+      roi: number
+      yieldPerStremma: number
+      yieldPerTree: number
+      efficiency: number
+    } | null
+  }
+  activityHeatmapData: Array<{
+    date: string
+    count: number
+  }>
+  recommendations: Array<{
+    type: 'success' | 'warning' | 'info' | 'error'
+    category: string
+    message: string
+    priority: 'high' | 'medium' | 'low'
+  }>
+  seasonalData: {
+    winter: { activities: number; costs: number }
+    spring: { activities: number; costs: number }
+    summer: { activities: number; costs: number }
+    autumn: { activities: number; costs: number }
+  }
 }
 
 export default function AnalyticsPage() {
@@ -133,7 +236,20 @@ export default function AnalyticsPage() {
     return null
   }
 
-  const { summary, harvestData, activityData, monthlyActivityData, farmComparisonData } = data
+  const {
+    summary,
+    efficiencyMetrics,
+    harvestData,
+    activityData,
+    monthlyActivityData,
+    farmComparisonData,
+    costBreakdown,
+    profitabilityTimeline,
+    yearOverYearComparison,
+    farmPerformance,
+    activityHeatmapData,
+    recommendations
+  } = data
 
   // Export handlers
   const handleExportFarms = async () => {
@@ -161,7 +277,7 @@ export default function AnalyticsPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -174,8 +290,8 @@ export default function AnalyticsPage() {
           </Link>
           <div className="flex justify-between items-start">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Αναλύσεις & Στατιστικά</h1>
-              <p className="text-gray-600 mt-1">Συγκεντρωτικά στοιχεία για όλους τους ελαιώνες σας</p>
+              <h1 className="text-4xl font-bold text-gray-900 mb-2">Αναλύσεις & Στατιστικά</h1>
+              <p className="text-gray-600">Εξελιγμένη ανάλυση για όλους τους ελαιώνες σας</p>
             </div>
             <ExportDropdown
               options={exportOptions}
@@ -184,8 +300,8 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-        {/* Summary Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+        {/* Quick Stats Overview */}
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-8">
           <StatsCard
             title="Ελαιώνες"
             value={summary.totalFarms}
@@ -211,26 +327,80 @@ export default function AnalyticsPage() {
             color="purple"
           />
           <StatsCard
-            title="Συνολικά Έσοδα"
+            title="Έσοδα"
             value={`€${summary.totalHarvestValue.toLocaleString('el-GR')}`}
             icon={Euro}
             color="green"
             trend={summary.yieldTrend || undefined}
           />
           <StatsCard
-            title="Συνολικά Έξοδα"
+            title="Έξοδα"
             value={`€${summary.totalCosts.toLocaleString('el-GR')}`}
             icon={TrendingUp}
             color="amber"
           />
+          <StatsCard
+            title="Καθαρό Κέρδος"
+            value={`€${summary.netProfit.toLocaleString('el-GR')}`}
+            icon={Wallet}
+            color={summary.netProfit >= 0 ? 'green' : 'red'}
+          />
         </div>
 
-        {/* Charts Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Recommendations Section */}
+        {recommendations && recommendations.length > 0 && (
+          <div className="mb-8">
+            <ErrorBoundary>
+              <Recommendations data={recommendations} />
+            </ErrorBoundary>
+          </div>
+        )}
+
+        {/* Efficiency Metrics */}
+        <div className="mb-8">
+          <ErrorBoundary>
+            <EfficiencyMetrics data={efficiencyMetrics} />
+          </ErrorBoundary>
+        </div>
+
+        {/* Farm Performance Highlights */}
+        {summary.totalFarms > 1 && (
+          <div className="mb-8">
+            <ErrorBoundary>
+              <FarmPerformanceHighlights data={farmPerformance} />
+            </ErrorBoundary>
+          </div>
+        )}
+
+        {/* Year over Year Comparison */}
+        {yearOverYearComparison && (
+          <div className="mb-8">
+            <ErrorBoundary>
+              <YearOverYearComparison data={yearOverYearComparison} />
+            </ErrorBoundary>
+          </div>
+        )}
+
+        {/* Main Charts Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <ErrorBoundary>
+            <ProfitabilityChart
+              data={profitabilityTimeline}
+              title="Κερδοφορία ανά Έτος"
+            />
+          </ErrorBoundary>
+
           <ErrorBoundary>
             <HarvestChart
               data={harvestData}
               title="Παραγωγή & Αξία ανά Έτος"
+            />
+          </ErrorBoundary>
+
+          <ErrorBoundary>
+            <CostBreakdownChart
+              data={costBreakdown}
+              title="Κατανομή Κόστους ανά Δραστηριότητα"
             />
           </ErrorBoundary>
 
@@ -244,48 +414,118 @@ export default function AnalyticsPage() {
           <ErrorBoundary>
             <MonthlyActivityChart
               data={monthlyActivityData}
-              title={`Μηνιαία Δραστηριότητα ${new Date().getFullYear()}`}
+              title={`Μηνιαία Δραστηριότητα & Κόστος ${new Date().getFullYear()}`}
             />
           </ErrorBoundary>
 
           <ErrorBoundary>
-            <FarmComparisonChart
-              data={farmComparisonData}
-              title="Σύγκριση Ελαιώνων"
+            <ActivityHeatmap
+              data={activityHeatmapData}
+              title="Ένταση Δραστηριοτήτων"
             />
           </ErrorBoundary>
+
+          {summary.totalFarms > 1 && (
+            <ErrorBoundary>
+              <FarmComparisonChart
+                data={farmComparisonData}
+                title="Σύγκριση Απόδοσης Ελαιώνων"
+              />
+            </ErrorBoundary>
+          )}
         </div>
 
-        {/* Additional Insights */}
+        {/* Additional Detailed Insights */}
         {summary.totalFarms > 0 && (
-          <div className="mt-8 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Συνοπτικά Στοιχεία</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <h3 className="text-lg font-semibold text-gray-900 mb-6">Λεπτομερή Στοιχεία</h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* Basic Metrics */}
               <div className="space-y-1">
                 <p className="text-sm text-gray-500">Μέση έκταση ανά ελαιώνα</p>
-                <p className="text-xl font-semibold text-gray-900">
-                  {(summary.totalArea / summary.totalFarms).toFixed(1)} στρέμματα
+                <p className="text-2xl font-bold text-gray-900">
+                  {(summary.totalArea / summary.totalFarms).toFixed(1)} <span className="text-base font-normal text-gray-600">στρ.</span>
                 </p>
               </div>
+
               <div className="space-y-1">
                 <p className="text-sm text-gray-500">Μέσος αριθμός δέντρων ανά ελαιώνα</p>
-                <p className="text-xl font-semibold text-gray-900">
-                  {Math.round(summary.totalTrees / summary.totalFarms)} δέντρα
+                <p className="text-2xl font-bold text-gray-900">
+                  {Math.round(summary.totalTrees / summary.totalFarms)} <span className="text-base font-normal text-gray-600">δέντρα</span>
                 </p>
               </div>
+
               <div className="space-y-1">
-                <p className="text-sm text-gray-500">Καθαρό κέρδος</p>
-                <p className={`text-xl font-semibold ${
-                  summary.totalHarvestValue - summary.totalCosts >= 0
-                    ? 'text-green-600'
-                    : 'text-red-600'
+                <p className="text-sm text-gray-500">Συνολική παραγωγή</p>
+                <p className="text-2xl font-bold text-green-600">
+                  {summary.totalYield.toLocaleString('el-GR')} <span className="text-base font-normal text-gray-600">kg</span>
+                </p>
+              </div>
+
+              <div className="space-y-1">
+                <p className="text-sm text-gray-500">Περιθώριο κέρδους</p>
+                <p className={`text-2xl font-bold ${
+                  efficiencyMetrics.profitMargin >= 40 ? 'text-green-600' :
+                  efficiencyMetrics.profitMargin >= 20 ? 'text-yellow-600' :
+                  'text-red-600'
                 }`}>
-                  €{(summary.totalHarvestValue - summary.totalCosts).toLocaleString('el-GR')}
+                  {efficiencyMetrics.profitMargin.toFixed(1)}%
+                </p>
+              </div>
+
+              <div className="space-y-1">
+                <p className="text-sm text-gray-500">Κόστος ανά κιλό</p>
+                <p className={`text-2xl font-bold ${
+                  efficiencyMetrics.costPerKg < 1.5 ? 'text-green-600' :
+                  efficiencyMetrics.costPerKg < 2.5 ? 'text-yellow-600' :
+                  'text-red-600'
+                }`}>
+                  €{efficiencyMetrics.costPerKg.toFixed(2)}
+                </p>
+              </div>
+
+              <div className="space-y-1">
+                <p className="text-sm text-gray-500">Απόδοση ανά δέντρο</p>
+                <p className={`text-2xl font-bold ${
+                  efficiencyMetrics.yieldPerTree > 20 ? 'text-green-600' :
+                  efficiencyMetrics.yieldPerTree > 10 ? 'text-yellow-600' :
+                  'text-red-600'
+                }`}>
+                  {efficiencyMetrics.yieldPerTree.toFixed(1)} <span className="text-base font-normal text-gray-600">kg</span>
+                </p>
+              </div>
+
+              <div className="space-y-1">
+                <p className="text-sm text-gray-500">Απόδοση ανά στρέμμα</p>
+                <p className={`text-2xl font-bold ${
+                  efficiencyMetrics.avgYieldPerStremma > 150 ? 'text-green-600' :
+                  efficiencyMetrics.avgYieldPerStremma > 100 ? 'text-yellow-600' :
+                  'text-red-600'
+                }`}>
+                  {efficiencyMetrics.avgYieldPerStremma.toFixed(0)} <span className="text-base font-normal text-gray-600">kg</span>
+                </p>
+              </div>
+
+              <div className="space-y-1">
+                <p className="text-sm text-gray-500">ROI (Απόδοση Επένδυσης)</p>
+                <p className={`text-2xl font-bold ${
+                  efficiencyMetrics.roi > 30 ? 'text-green-600' :
+                  efficiencyMetrics.roi > 15 ? 'text-yellow-600' :
+                  'text-red-600'
+                }`}>
+                  {efficiencyMetrics.roi.toFixed(1)}%
                 </p>
               </div>
             </div>
           </div>
         )}
+
+        {/* Footer Info */}
+        <div className="mt-8 text-center text-sm text-gray-500">
+          <p>Τελευταία ενημέρωση: {new Date().toLocaleString('el-GR')}</p>
+          <p className="mt-1">Όλες οι μετρήσεις υπολογίζονται αυτόματα με βάση τα δεδομένα σας</p>
+        </div>
       </div>
     </div>
   )
