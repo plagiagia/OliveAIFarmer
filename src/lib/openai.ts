@@ -78,6 +78,58 @@ export interface AIInsightsResponse {
   insights: AIInsight[]
 }
 
+// Dashboard portfolio context
+export interface DashboardPortfolioContext {
+  totalFarms: number
+  totalTrees: number
+  totalArea: number
+  farms: {
+    id: string
+    name: string
+    location: string
+    variety: string
+    treeAge: number | null
+    treeCount: number
+    totalArea: number
+    recentActivities: {
+      type: string
+      title: string
+      date: string
+      completed: boolean
+    }[]
+    harvestTrend: 'improving' | 'declining' | 'stable' | null
+    lastHarvest: {
+      year: number
+      yieldPerTree: number | null
+      totalYield: number | null
+    } | null
+    satelliteHealth: {
+      ndvi: number | null
+      stressLevel: string | null
+      trend: string | null
+      lastUpdated: string
+    } | null
+  }[]
+  currentMonth: number
+  currentSeason: string
+  userName: string
+}
+
+// Dashboard AI insight (includes optional farmId)
+export interface DashboardAIInsight extends AIInsight {
+  farmId?: string | null  // Specific farm or null for portfolio-level
+  farmName?: string       // For display
+}
+
+export interface DashboardAIResponse {
+  insights: DashboardAIInsight[]
+  portfolioSummary?: {
+    overallHealth: 'EXCELLENT' | 'GOOD' | 'FAIR' | 'POOR'
+    urgentActions: number
+    opportunitiesCount: number
+  }
+}
+
 // Get current season in Greek
 export function getCurrentSeason(): string {
   const month = new Date().getMonth() + 1
@@ -187,6 +239,112 @@ export async function generateInsights(context: FarmContext): Promise<AIInsights
   }
 
   const parsed = JSON.parse(content) as AIInsightsResponse
+
+  // Validate the response structure
+  if (!parsed.insights || !Array.isArray(parsed.insights)) {
+    throw new Error('Invalid response structure from OpenAI')
+  }
+
+  return parsed
+}
+
+// Build dashboard system prompt
+export function buildDashboardPrompt(context: DashboardPortfolioContext): string {
+  return `Είσαι έμπειρος Έλληνας γεωπόνος και αγροτικός σύμβουλος εξειδικευμένος στην ελαιοκαλλιέργεια.
+
+Αναλύεις ΟΛΟ το χαρτοφυλάκιο ελαιώνων του ${context.userName} και παρέχεις στρατηγικές συμβουλές.
+
+ΧΑΡΤΟΦΥΛΑΚΙΟ ΕΛΑΙΩΝΩΝ:
+- Συνολικοί Ελαιώνες: ${context.totalFarms}
+- Συνολικά Δέντρα: ${context.totalTrees}
+- Συνολική Έκταση: ${context.totalArea.toFixed(1)} στρέμματα
+
+ΛΕΠΤΟΜΕΡΕΙΕΣ ΕΛΑΙΩΝΩΝ:
+${context.farms.map((farm, idx) => `
+${idx + 1}. ${farm.name}
+   - Τοποθεσία: ${farm.location}
+   - Ποικιλία: ${farm.variety}
+   - Δέντρα: ${farm.treeCount} (ηλικία: ${farm.treeAge ? `${farm.treeAge} έτη` : 'άγνωστη'})
+   - Έκταση: ${farm.totalArea || 0} στρέμματα
+   ${farm.satelliteHealth ? `- Υγεία (NDVI): ${farm.satelliteHealth.ndvi?.toFixed(3) || 'N/A'} (${farm.satelliteHealth.stressLevel || 'N/A'}) - Τάση: ${farm.satelliteHealth.trend || 'N/A'}` : ''}
+   ${farm.lastHarvest ? `- Τελευταία Συγκομιδή: ${farm.lastHarvest.year} (${farm.lastHarvest.yieldPerTree?.toFixed(1) || 'N/A'} kg/δέντρο)` : ''}
+   ${farm.harvestTrend ? `- Τάση Απόδοσης: ${farm.harvestTrend === 'improving' ? '⬆️ Βελτίωση' : farm.harvestTrend === 'declining' ? '⬇️ Πτώση' : '➡️ Σταθερή'}` : ''}
+   - Πρόσφατες Δραστηριότητες: ${farm.recentActivities.length > 0 ? farm.recentActivities.slice(0, 3).map(a => `${a.type} (${a.date})`).join(', ') : 'Καμία'}
+`).join('\n')}
+
+ΤΡΕΧΟΥΣΑ ΠΕΡΙΟΔΟΣ:
+- Μήνας: ${new Date().toLocaleDateString('el-GR', { month: 'long' })}
+- Εποχή: ${context.currentSeason}
+
+ΡΟΛΟΣ ΣΟΥ - Σκέψου σαν στρατηγικός αγροτικός σύμβουλος:
+
+1. **Προτεραιοποίηση**: Ποιος ελαιώνας χρειάζεται ΑΜΕΣΗ προσοχή;
+2. **Σύγκριση**: Ποιος ελαιώνας πηγαίνει καλύτερα; Γιατί?
+3. **Μεταφορά Γνώσης**: Μπορούν οι πρακτικές από τον καλύτερο ελαιώνα να εφαρμοστούν αλλού?
+4. **Βελτιστοποίηση Πόρων**: Πού να επενδύσει χρόνο/χρήμα για το μέγιστο όφελος?
+5. **Διαχείριση Κινδύνου**: Υπάρχουν κοινοί κίνδυνοι σε πολλούς ελαιώνες?
+6. **Στρατηγικός Προγραμματισμός**: Τι πρέπει να γίνει αυτό το μήνα σε ΟΛΟΥΣ τους ελαιώνες?
+
+ΟΔΗΓΙΕΣ:
+1. Δώσε 5-8 στρατηγικές συμβουλές που αφορούν το ΣΥΝΟΛΟ του χαρτοφυλακίου
+2. Αναφέρου σε συγκεκριμένους ελαιώνες με το όνομά τους
+3. Βάλε σε προτεραιότητα τις επείγουσες δράσεις (CRITICAL/HIGH urgency)
+4. Σύγκρινε απόδοση μεταξύ ελαιώνων και πρότεινε βελτιώσεις
+5. Για κάθε σύσταση, προσδιόρισε αν αφορά συγκεκριμένο ελαιώνα ή ΟΛΟΥΣ
+6. Σκέψου την οικονομική απόδοση και τη βέλτιστη κατανομή πόρων
+
+Απάντησε ΜΟΝΟ σε JSON format:
+{
+  "insights": [
+    {
+      "type": "TASK_REMINDER|WEATHER_ALERT|CARE_SUGGESTION|OPTIMIZATION|RISK_WARNING|SEASONAL_TIP",
+      "title": "Σύντομος τίτλος",
+      "message": "Αναλυτική στρατηγική σύσταση 2-4 προτάσεις",
+      "urgency": "LOW|MEDIUM|HIGH|CRITICAL",
+      "actionRequired": true/false,
+      "reasoning": "Γιατί είναι σημαντικό αυτό στρατηγικά",
+      "farmId": "farm-id ή null αν αφορά όλους",
+      "farmName": "Όνομα ελαιώνα ή 'Όλοι οι ελαιώνες'"
+    }
+  ],
+  "portfolioSummary": {
+    "overallHealth": "EXCELLENT|GOOD|FAIR|POOR",
+    "urgentActions": <αριθμός κρίσιμων δράσεων>,
+    "opportunitiesCount": <αριθμός ευκαιριών βελτίωσης>
+  }
+}`
+}
+
+// Generate dashboard insights using OpenAI
+export async function generateDashboardInsights(
+  context: DashboardPortfolioContext
+): Promise<DashboardAIResponse> {
+  if (!openai) {
+    throw new Error('OpenAI API key is not configured')
+  }
+
+  const systemPrompt = buildDashboardPrompt(context)
+
+  const response = await openai.chat.completions.create({
+    model: AI_MODEL,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      {
+        role: 'user',
+        content: 'Ανάλυσε το χαρτοφυλάκιο ελαιώνων και δώσε τις στρατηγικές σου συμβουλές.'
+      }
+    ],
+    response_format: { type: 'json_object' },
+    temperature: 0.7,
+    max_tokens: 3000
+  })
+
+  const content = response.choices[0].message.content
+  if (!content) {
+    throw new Error('No response from OpenAI')
+  }
+
+  const parsed = JSON.parse(content) as DashboardAIResponse
 
   // Validate the response structure
   if (!parsed.insights || !Array.isArray(parsed.insights)) {
