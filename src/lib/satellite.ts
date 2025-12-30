@@ -166,6 +166,8 @@ export function parseCoordinates(coordString: string): { lat: number; lon: numbe
 /**
  * Fetch soil moisture from Sentinel-1 SAR data
  * Uses VV backscatter with change detection approach
+ *
+ * Reference: https://documentation.dataspace.copernicus.eu/APIs/SentinelHub/Data/S1GRD.html
  */
 export async function fetchSoilMoisture(
   lat: number,
@@ -183,15 +185,12 @@ export async function fetchSoilMoisture(
   const toDate = date ? new Date(date) : new Date()
   toDate.setHours(23, 59, 59, 999)
 
+  // For change detection, we need ~6 months of historical data
   const fromDate = new Date(toDate)
-  fromDate.setDate(fromDate.getDate() - 30) // Look back 30 days
+  fromDate.setMonth(fromDate.getMonth() - 6)
   fromDate.setHours(0, 0, 0, 0)
 
-  // For change detection, we also need historical reference (1 year back)
-  const historicalFrom = new Date(toDate)
-  historicalFrom.setFullYear(historicalFrom.getFullYear() - 1)
-  historicalFrom.setHours(0, 0, 0, 0)
-
+  // Match Sentinel-2 request structure more closely
   const request = {
     input: {
       bounds: {
@@ -202,27 +201,26 @@ export async function fetchSoilMoisture(
         type: 'sentinel-1-grd',
         dataFilter: {
           timeRange: {
-            from: historicalFrom.toISOString(),
+            from: fromDate.toISOString(),
             to: toDate.toISOString()
           },
           acquisitionMode: 'IW',
-          polarization: 'DV', // Dual VV+VH
+          polarization: 'DV',
           resolution: 'HIGH'
         },
         processing: {
           backCoeff: 'SIGMA0_ELLIPSOID',
-          orthorectify: true,
-          demInstance: 'COPERNICUS'
+          orthorectify: true
         }
       }]
     },
     aggregation: {
       timeRange: {
-        from: historicalFrom.toISOString(),
+        from: fromDate.toISOString(),
         to: toDate.toISOString()
       },
       aggregationInterval: {
-        of: 'P10D' // 10-day intervals for historical range
+        of: 'P10D' // 10-day intervals
       },
       evalscript: `
         //VERSION=3
@@ -239,10 +237,11 @@ export async function fetchSoilMoisture(
         }
 
         function evaluatePixel(sample) {
-          if (sample.dataMask === 1 && sample.VV > 0 && sample.VH > 0) {
-            // Convert to dB for more linear relationship with soil moisture
+          // Check if we have valid data
+          if (sample.dataMask === 1 && sample.VV > 0) {
+            // Convert linear power to dB for soil moisture correlation
             let vv_db = 10 * Math.log10(sample.VV);
-            let vh_db = 10 * Math.log10(sample.VH);
+            let vh_db = sample.VH > 0 ? 10 * Math.log10(sample.VH) : -30;
 
             return {
               vv: [vv_db],
@@ -253,8 +252,8 @@ export async function fetchSoilMoisture(
           }
 
           return {
-            vv: [-999],
-            vh: [-999],
+            vv: [-30],
+            vh: [-30],
             valid: [0],
             dataMask: [0]
           };
@@ -265,7 +264,7 @@ export async function fetchSoilMoisture(
       default: {
         statistics: {
           default: {
-            percentiles: { k: [5, 50, 95] } // Need min/max for change detection
+            percentiles: { k: [5, 50, 95] }
           }
         }
       }
@@ -283,37 +282,58 @@ export async function fetchSoilMoisture(
     })
 
     if (!response.ok) {
-      const error = await response.text()
-      console.error('[fetchSoilMoisture] API ERROR:', error)
+      const errorText = await response.text()
+      console.error('[fetchSoilMoisture] API ERROR:', response.status, errorText)
       return { soilMoisture: null, date: toDate }
     }
 
     const data = await response.json()
 
+    // Debug: Log the response structure
+    console.log('[fetchSoilMoisture] Response entries:', data.data?.length || 0)
+
     if (!data.data || data.data.length === 0) {
+      console.log('[fetchSoilMoisture] No data returned from API')
       return { soilMoisture: null, date: toDate }
     }
 
-    // Calculate soil moisture using change detection
-    // Collect all valid VV values to find historical range
-    const validEntries = data.data.filter((entry: any) =>
-      entry.outputs?.valid?.bands?.B0?.stats?.mean > 0.05
-    )
+    // Filter for entries with valid data (at least 5% valid pixels)
+    const validEntries = data.data.filter((entry: any) => {
+      const validMean = entry.outputs?.valid?.bands?.B0?.stats?.mean
+      return validMean != null && validMean > 0.05
+    })
+
+    console.log('[fetchSoilMoisture] Valid entries:', validEntries.length)
 
     if (validEntries.length < 2) {
+      console.log('[fetchSoilMoisture] Not enough valid entries for change detection')
       return { soilMoisture: null, date: toDate }
     }
 
-    // Get historical min/max VV (5th and 95th percentiles across all data)
+    // Collect VV statistics across all valid entries
     let vvMin = Infinity
     let vvMax = -Infinity
+    let allVvMeans: number[] = []
 
     for (const entry of validEntries) {
-      const p5 = entry.outputs?.vv?.bands?.B0?.stats?.percentiles?.p5 ?? entry.outputs?.vv?.bands?.B0?.stats?.min
-      const p95 = entry.outputs?.vv?.bands?.B0?.stats?.percentiles?.p95 ?? entry.outputs?.vv?.bands?.B0?.stats?.max
+      const vvStats = entry.outputs?.vv?.bands?.B0?.stats
+      if (!vvStats) continue
 
-      if (p5 != null && p5 !== -999) vvMin = Math.min(vvMin, p5)
-      if (p95 != null && p95 !== -999) vvMax = Math.max(vvMax, p95)
+      const mean = vvStats.mean
+      const p5 = vvStats.percentiles?.p5 ?? vvStats.min
+      const p95 = vvStats.percentiles?.p95 ?? vvStats.max
+
+      if (mean != null && mean > -30) {
+        allVvMeans.push(mean)
+      }
+      if (p5 != null && p5 > -30) vvMin = Math.min(vvMin, p5)
+      if (p95 != null && p95 > -30) vvMax = Math.max(vvMax, p95)
+    }
+
+    // Fallback to mean-based min/max if percentiles not available
+    if (vvMin === Infinity && allVvMeans.length > 0) {
+      vvMin = Math.min(...allVvMeans)
+      vvMax = Math.max(...allVvMeans)
     }
 
     // Get the most recent valid observation
@@ -323,16 +343,21 @@ export async function fetchSoilMoisture(
     const latestEntry = sortedEntries[0]
     const currentVV = latestEntry.outputs?.vv?.bands?.B0?.stats?.mean
 
+    console.log('[fetchSoilMoisture] VV range:', vvMin, 'to', vvMax, 'current:', currentVV)
+
     if (currentVV == null || vvMin === Infinity || vvMax === -Infinity || vvMin >= vvMax) {
+      console.log('[fetchSoilMoisture] Invalid VV range or current value')
       return { soilMoisture: null, date: toDate }
     }
 
-    // Soil moisture estimation: inverse relationship with VV backscatter
-    // Lower VV (more negative dB) = drier soil
+    // Soil moisture estimation using change detection
     // Higher VV (less negative dB) = wetter soil
-    // Normalize to 0-100 scale, capped at 60% (typical saturation)
+    // Lower VV (more negative dB) = drier soil
+    // Normalize to 0-60% scale (typical saturation for agricultural soil)
     const normalizedMoisture = ((currentVV - vvMin) / (vvMax - vvMin)) * 60
     const soilMoisture = Math.max(0, Math.min(60, Math.round(normalizedMoisture * 10) / 10))
+
+    console.log('[fetchSoilMoisture] Calculated soil moisture:', soilMoisture, '%')
 
     return {
       soilMoisture,
