@@ -2,7 +2,6 @@ import { prisma } from '@/lib/db'
 import {
   calculateHealthMetrics,
   fetchAllSatelliteData,
-  fetchVegetationTimeSeries,
   isSatelliteConfigured,
   parseCoordinates,
   SatelliteIndices
@@ -23,7 +22,6 @@ interface RouteContext {
  *
  * Query params:
  * - refresh=true: Force refresh from Copernicus API
- * - months=6: Number of months for time series (default: 6)
  */
 export async function GET(request: NextRequest, context: RouteContext) {
   try {
@@ -35,7 +33,6 @@ export async function GET(request: NextRequest, context: RouteContext) {
     const { farmId } = await context.params
     const { searchParams } = new URL(request.url)
     const forceRefresh = searchParams.get('refresh') === 'true'
-    const monthsBack = parseInt(searchParams.get('months') || '6', 10)
 
     // Verify farm ownership
     const farm = await prisma.farm.findFirst({
@@ -46,7 +43,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       include: {
         satelliteData: {
           orderBy: { date: 'desc' },
-          take: 30 // Last 30 observations
+          take: 2 // Only need current and previous for trend calculation
         }
       }
     })
@@ -69,10 +66,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       return NextResponse.json({
         configured: false,
         message: 'Η ενσωμάτωση δορυφορικών δεδομένων δεν έχει ρυθμιστεί.',
-        // Return any cached data we have
-        cached: farm.satelliteData,
         current: null,
-        timeSeries: [],
         health: null
       })
     }
@@ -84,12 +78,6 @@ export async function GET(request: NextRequest, context: RouteContext) {
       : Infinity
 
     let currentIndices: SatelliteIndices | null = null
-    let timeSeries = farm.satelliteData.map(d => ({
-      date: d.date,
-      ndvi: d.ndvi,
-      ndmi: d.ndmi,
-      cloudCoverage: d.cloudCoverage || 0
-    }))
 
     // Fetch fresh data if needed
     if (forceRefresh || cacheAge > 3) {
@@ -100,20 +88,6 @@ export async function GET(request: NextRequest, context: RouteContext) {
           coords.lon,
           farm.totalArea || undefined
         )
-
-        // Fetch time series if we don't have enough cached data
-        if (timeSeries.length < 10 || forceRefresh) {
-          const freshTimeSeries = await fetchVegetationTimeSeries(
-            coords.lat,
-            coords.lon,
-            farm.totalArea || undefined,
-            monthsBack
-          )
-
-          if (freshTimeSeries.length > 0) {
-            timeSeries = freshTimeSeries
-          }
-        }
 
         // Store the new data
         if (currentIndices.ndvi !== null) {
@@ -188,7 +162,6 @@ export async function GET(request: NextRequest, context: RouteContext) {
     return NextResponse.json({
       configured: true,
       current: currentIndices,
-      timeSeries: timeSeries.slice(0, 20), // Limit response size
       health: healthMetrics,
       lastUpdated: latestCached?.recordedAt || null,
       coordinates: coords

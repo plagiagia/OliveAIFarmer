@@ -9,7 +9,6 @@ import {
   Droplets,
   ExternalLink,
   HelpCircle,
-  Info,
   Layers,
   Leaf,
   MapPin,
@@ -20,16 +19,6 @@ import {
   TrendingUp
 } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  ReferenceLine,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis
-} from 'recharts'
 
 interface SatelliteIndices {
   ndvi: number | null
@@ -48,17 +37,9 @@ interface HealthMetrics {
   recommendations: string[]
 }
 
-interface TimeSeriesPoint {
-  date: string
-  ndvi: number | null
-  ndmi: number | null
-  cloudCoverage: number
-}
-
 interface SatelliteData {
   configured: boolean
   current: SatelliteIndices | null
-  timeSeries: TimeSeriesPoint[]
   health: HealthMetrics | null
   lastUpdated: string | null
   coordinates: { lat: number; lon: number } | null
@@ -184,16 +165,6 @@ export default function GroveHealthTab({ farmId }: GroveHealthTabProps) {
     fetchData(true)
   }
 
-  // Format chart data
-  const chartData = data?.timeSeries
-    .filter(point => point.ndvi !== null)
-    .map(point => ({
-      date: format(new Date(point.date), 'dd/MM', { locale: el }),
-      fullDate: format(new Date(point.date), 'dd MMM yyyy', { locale: el }),
-      ndvi: point.ndvi ? Math.round(point.ndvi * 100) / 100 : null,
-      ndmi: point.ndmi ? Math.round(point.ndmi * 100) / 100 : null
-    })) || []
-
   // Loading state
   if (loading) {
     return (
@@ -207,7 +178,6 @@ export default function GroveHealthTab({ farmId }: GroveHealthTabProps) {
               <div className="h-32 bg-gray-100 rounded-lg" />
               <div className="h-32 bg-gray-100 rounded-lg" />
             </div>
-            <div className="h-64 bg-gray-100 rounded-lg" />
           </div>
         </div>
       </div>
@@ -304,7 +274,7 @@ export default function GroveHealthTab({ farmId }: GroveHealthTabProps) {
             <div>
               <h2 className="text-xl font-bold">Υγεία Ελαιώνα</h2>
               <p className="text-blue-100 text-sm">
-                Δορυφορική παρακολούθηση με Copernicus Sentinel-2
+                Δορυφορική παρακολούθηση με Copernicus Sentinel
               </p>
             </div>
           </div>
@@ -387,7 +357,7 @@ export default function GroveHealthTab({ farmId }: GroveHealthTabProps) {
           </p>
         </div>
 
-        {/* Soil Moisture / NDMI Card */}
+        {/* NDMI Card */}
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm font-medium text-gray-600">Υγρασία Φυλλώματος</span>
@@ -446,111 +416,6 @@ export default function GroveHealthTab({ farmId }: GroveHealthTabProps) {
         </div>
       </div>
 
-      {/* NDVI Time Series Chart */}
-      {chartData.length > 0 && (
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="font-semibold text-gray-900">Εξέλιξη NDVI</h3>
-              <p className="text-sm text-gray-500">Τελευταίοι 6 μήνες</p>
-            </div>
-            <div className="flex items-center gap-4 text-xs">
-              <div className="flex items-center gap-1">
-                <div className="w-3 h-3 rounded-full bg-green-500" />
-                <span className="text-gray-600">NDVI</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="w-3 h-3 rounded-full bg-blue-500" />
-                <span className="text-gray-600">NDMI</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="ndviGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="ndmiGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis
-                  dataKey="date"
-                  tick={{ fontSize: 12, fill: '#6b7280' }}
-                  tickLine={false}
-                  axisLine={{ stroke: '#e5e7eb' }}
-                />
-                <YAxis
-                  domain={[-0.2, 1]}
-                  tick={{ fontSize: 12, fill: '#6b7280' }}
-                  tickLine={false}
-                  axisLine={{ stroke: '#e5e7eb' }}
-                  tickFormatter={(value) => value.toFixed(1)}
-                />
-                <Tooltip
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      const data = payload[0].payload
-                      return (
-                        <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
-                          <p className="font-medium text-gray-900 mb-1">{data.fullDate}</p>
-                          {payload.map((entry: any, index: number) => (
-                            <p key={index} className="text-sm" style={{ color: entry.color }}>
-                              {entry.name}: {entry.value?.toFixed(3) ?? '--'}
-                            </p>
-                          ))}
-                        </div>
-                      )
-                    }
-                    return null
-                  }}
-                />
-                <ReferenceLine y={0.6} stroke="#22c55e" strokeDasharray="5 5" label={{ value: 'Υγιής', fill: '#22c55e', fontSize: 10 }} />
-                <ReferenceLine y={0.4} stroke="#eab308" strokeDasharray="5 5" label={{ value: 'Στρες', fill: '#eab308', fontSize: 10 }} />
-                <Area
-                  type="monotone"
-                  dataKey="ndvi"
-                  name="NDVI"
-                  stroke="#22c55e"
-                  strokeWidth={2}
-                  fill="url(#ndviGradient)"
-                  dot={{ fill: '#22c55e', strokeWidth: 0, r: 3 }}
-                  activeDot={{ r: 5, stroke: '#fff', strokeWidth: 2 }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="ndmi"
-                  name="NDMI"
-                  stroke="#3b82f6"
-                  strokeWidth={2}
-                  fill="url(#ndmiGradient)"
-                  dot={{ fill: '#3b82f6', strokeWidth: 0, r: 3 }}
-                  activeDot={{ r: 5, stroke: '#fff', strokeWidth: 2 }}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Legend / Info */}
-          <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-            <div className="flex items-start gap-2">
-              <Info className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
-              <p className="text-xs text-gray-600">
-                <strong>NDVI</strong> (Normalized Difference Vegetation Index): Δείκτης υγείας βλάστησης.
-                Τιμές &gt;0.6 υποδεικνύουν υγιή βλάστηση, ενώ τιμές &lt;0.4 υποδεικνύουν στρες.{' '}
-                <strong>NDMI</strong>: Δείκτης υγρασίας φυλλώματος.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Recommendations */}
       {health?.recommendations && health.recommendations.length > 0 && (
         <div className="bg-white rounded-xl border border-gray-200 p-6">
@@ -570,7 +435,7 @@ export default function GroveHealthTab({ farmId }: GroveHealthTabProps) {
       )}
 
       {/* No data state */}
-      {!current && chartData.length === 0 && (
+      {!current && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center">
           <div className="p-4 bg-gray-100 rounded-full w-fit mx-auto mb-4">
             <Satellite className="w-8 h-8 text-gray-400" />
@@ -635,7 +500,7 @@ export default function GroveHealthTab({ farmId }: GroveHealthTabProps) {
           >
             Copernicus Data Space Ecosystem
           </a>
-          {' '}(Sentinel-2 L2A). Ανάλυση 10m, ανανέωση κάθε 5 ημέρες.
+          {' '}(Sentinel-1 &amp; Sentinel-2). Ανάλυση 10m.
         </p>
       </div>
     </div>
