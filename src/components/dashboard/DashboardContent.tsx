@@ -8,7 +8,7 @@ import { parseCoordinates } from '@/lib/mapbox-utils'
 import { ACTIVITY_TYPE_COLORS, ACTIVITY_TYPE_ICONS, ActivityType } from '@/types/activity'
 import { format } from 'date-fns'
 import { el } from 'date-fns/locale'
-import { Activity, MapPin, Plus, BarChart3, Trophy, Filter } from 'lucide-react'
+import { Activity, MapPin, Plus, BarChart3, Trophy, Filter, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useState, useCallback } from 'react'
 
@@ -286,6 +286,13 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
             </p>
           </div>
           <div className="flex gap-3">
+            <Link
+              href="/dashboard/ai-geoponos"
+              className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white py-2 px-4 rounded-xl font-semibold transition-all duration-200 hover:shadow-lg flex items-center gap-2"
+            >
+              <Sparkles className="w-4 h-4" />
+              AI Γεωπόνος
+            </Link>
             <Link
               href="/dashboard/analytics"
               className="bg-white border border-gray-200 hover:border-olive-300 text-gray-700 hover:text-olive-700 py-2 px-4 rounded-xl font-medium transition-all duration-200 hover:shadow-md flex items-center gap-2"
