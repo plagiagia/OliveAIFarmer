@@ -17,7 +17,7 @@ export default async function DashboardPage() {
     email: user.email,
     firstName: user.firstName,
     lastName: user.lastName,
-    farms: user.farms?.map((farm: { id: string; name: string; location: string; coordinates: string | null; totalArea: number | null; trees?: { id: string }[]; activities?: { date: Date }[]; harvests?: { id: string }[] }) => {
+    farms: user.farms?.map((farm: { id: string; name: string; location: string; coordinates: string | null; totalArea: number | null; treeCount?: number | null; activities?: { date: Date }[]; harvests?: { id: string }[] }) => {
       // Calculate the most recent activity date properly
       const mostRecentActivityDate = farm.activities && farm.activities.length > 0
         ? new Date(Math.max(...farm.activities.map((activity: { date: Date }) => new Date(activity.date).getTime())))
@@ -29,7 +29,7 @@ export default async function DashboardPage() {
         location: farm.location,
         coordinates: farm.coordinates,
         totalArea: farm.totalArea,
-        treesCount: farm.trees?.length || 0,
+        treesCount: farm.treeCount || 0,
         lastActivityDate: mostRecentActivityDate,
         activitiesCount: farm.activities?.length || 0,
         harvestsCount: farm.harvests?.length || 0,
