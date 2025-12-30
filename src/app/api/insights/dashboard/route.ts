@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/db'
 import { generateDashboardInsights, getCurrentSeason } from '@/lib/openai'
 import { auth } from '@clerk/nextjs/server'
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 
 // Activity type translation
 const ACTIVITY_TYPE_GREEK: Record<string, string> = {
