@@ -1,13 +1,12 @@
-import { prisma } from '@/lib/db'
-import { getWeatherHistory } from '@/lib/db'
+import { getWeatherHistory, prisma } from '@/lib/db'
+import {
+  AIInsight,
+  FarmContext,
+  generateInsights,
+  getCurrentSeason
+} from '@/lib/openai'
 import { auth } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
-import {
-  generateInsights,
-  getCurrentSeason,
-  FarmContext,
-  AIInsight
-} from '@/lib/openai'
 
 // Activity type translation for context
 const ACTIVITY_TYPE_GREEK: Record<string, string> = {
@@ -79,6 +78,18 @@ export async function POST(request: NextRequest) {
             yieldPerTree: true,
             pricePerKg: true
           }
+        },
+        satelliteData: {
+          orderBy: { date: 'desc' },
+          take: 2, // Latest and previous for trend
+          select: {
+            ndvi: true,
+            ndmi: true,
+            healthScore: true,
+            stressLevel: true,
+            date: true,
+            recordedAt: true
+          }
         }
       }
     })
@@ -100,19 +111,19 @@ export async function POST(request: NextRequest) {
     const records = weatherRecords as WeatherRecord[]
     const weatherSummary = records.length > 0
       ? {
-          avgTempHigh: records.reduce((sum: number, r: WeatherRecord) => sum + r.tempHigh, 0) / records.length,
-          avgTempLow: records.reduce((sum: number, r: WeatherRecord) => sum + r.tempLow, 0) / records.length,
-          totalRainfall: records.reduce((sum: number, r: WeatherRecord) => sum + r.rainfall, 0),
-          avgHumidity: records.reduce((sum: number, r: WeatherRecord) => sum + r.humidity, 0) / records.length,
-          rainyDays: records.filter((r: WeatherRecord) => r.rainfall > 0).length
-        }
+        avgTempHigh: records.reduce((sum: number, r: WeatherRecord) => sum + r.tempHigh, 0) / records.length,
+        avgTempLow: records.reduce((sum: number, r: WeatherRecord) => sum + r.tempLow, 0) / records.length,
+        totalRainfall: records.reduce((sum: number, r: WeatherRecord) => sum + r.rainfall, 0),
+        avgHumidity: records.reduce((sum: number, r: WeatherRecord) => sum + r.humidity, 0) / records.length,
+        rainyDays: records.filter((r: WeatherRecord) => r.rainfall > 0).length
+      }
       : {
-          avgTempHigh: 0,
-          avgTempLow: 0,
-          totalRainfall: 0,
-          avgHumidity: 0,
-          rainyDays: 0
-        }
+        avgTempHigh: 0,
+        avgTempLow: 0,
+        totalRainfall: 0,
+        avgHumidity: 0,
+        rainyDays: 0
+      }
 
     // Build farm context for AI
     const farmContext: FarmContext = {
@@ -150,7 +161,31 @@ export async function POST(request: NextRequest) {
       })),
       weatherSummary,
       currentMonth: new Date().getMonth() + 1,
-      currentSeason: getCurrentSeason()
+      currentSeason: getCurrentSeason(),
+
+      // Include satellite data if available
+      satelliteData: farm.satelliteData.length > 0 ? (() => {
+        const latest = farm.satelliteData[0]
+        const previous = farm.satelliteData[1]
+
+        // Calculate trend
+        let ndviTrend: 'improving' | 'stable' | 'declining' | null = null
+        if (latest.ndvi != null && previous?.ndvi != null) {
+          const change = ((latest.ndvi - previous.ndvi) / Math.abs(previous.ndvi || 0.5)) * 100
+          if (change > 5) ndviTrend = 'improving'
+          else if (change < -5) ndviTrend = 'declining'
+          else ndviTrend = 'stable'
+        }
+
+        return {
+          ndvi: latest.ndvi,
+          ndmi: latest.ndmi,
+          healthScore: latest.healthScore,
+          stressLevel: latest.stressLevel,
+          ndviTrend,
+          lastUpdated: latest.recordedAt?.toISOString() || null
+        }
+      })() : undefined
     }
 
     // Generate insights using OpenAI

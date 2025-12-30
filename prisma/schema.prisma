@@ -57,6 +57,9 @@ model Farm {
   // Weather history
   weatherRecords WeatherRecord[]
 
+  // Satellite data (Copernicus)
+  satelliteData SatelliteData[]
+
   @@map("farms")
 }
 
@@ -259,4 +262,61 @@ enum WeatherDataSource {
   API_FORECAST  // From forecast API
   CRON_DAILY    // From daily cron job
   MANUAL        // Manually entered
+}
+
+// ===== SATELLITE DATA (COPERNICUS) =====
+
+// Satellite-derived vegetation and soil metrics for each farm
+model SatelliteData {
+  id          String   @id @default(cuid())
+
+  // Parent farm
+  farmId      String
+  farm        Farm     @relation(fields: [farmId], references: [id], onDelete: Cascade)
+
+  // Date of the satellite observation
+  date        DateTime // The actual satellite pass date
+  recordedAt  DateTime @default(now()) // When we fetched/stored this data
+
+  // Vegetation Indices (from Sentinel-2)
+  ndvi        Float?   // Normalized Difference Vegetation Index (-1 to 1, typically 0.2-0.8 for olive groves)
+  ndmi        Float?   // Normalized Difference Moisture Index (vegetation water content)
+  evi         Float?   // Enhanced Vegetation Index (better for dense vegetation)
+
+  // Derived health metrics
+  healthScore Int?     // Calculated 0-100 score based on indices
+  stressLevel StressLevel? // Categorized stress level
+
+  // Soil moisture (from Sentinel-1 SAR)
+  soilMoisture Float?  // Relative soil moisture (0-100%)
+
+  // Cloud coverage for this observation
+  cloudCoverage Float? // Percentage of clouds over the farm area
+
+  // Metadata
+  source      SatelliteSource @default(SENTINEL_2)
+  resolution  Int?     // Spatial resolution in meters (10, 20, 60)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // One record per farm per observation date per source
+  @@unique([farmId, date, source])
+  @@index([farmId])
+  @@index([date])
+  @@index([farmId, date])
+  @@map("satellite_data")
+}
+
+enum StressLevel {
+  HEALTHY     // Υγιής - NDVI > 0.6
+  MILD_STRESS // Ελαφρύ στρες - NDVI 0.4-0.6
+  MODERATE_STRESS // Μέτριο στρες - NDVI 0.3-0.4
+  SEVERE_STRESS   // Σοβαρό στρες - NDVI < 0.3
+}
+
+enum SatelliteSource {
+  SENTINEL_1  // Radar (SAR) - for soil moisture
+  SENTINEL_2  // Optical - for vegetation indices
+  SENTINEL_3  // Ocean and Land Colour Instrument
 }

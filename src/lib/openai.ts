@@ -53,6 +53,16 @@ export interface FarmContext {
   // Current context
   currentMonth: number
   currentSeason: string
+
+  // Satellite data (optional - from Copernicus)
+  satelliteData?: {
+    ndvi: number | null           // Vegetation index (-1 to 1)
+    ndmi: number | null           // Moisture index
+    healthScore: number | null    // 0-100 score
+    stressLevel: string | null    // HEALTHY, MILD_STRESS, etc.
+    ndviTrend: string | null      // improving, stable, declining
+    lastUpdated: string | null    // ISO date string
+  }
 }
 
 export interface AIInsight {
@@ -115,13 +125,27 @@ ${context.harvests.length > 0
 - Μήνας: ${new Date().toLocaleDateString('el-GR', { month: 'long' })}
 - Εποχή: ${context.currentSeason}
 
+${context.satelliteData ? `ΔΟΡΥΦΟΡΙΚΑ ΔΕΔΟΜΕΝΑ (Copernicus Sentinel-2):
+- Δείκτης βλάστησης NDVI: ${context.satelliteData.ndvi?.toFixed(3) || 'Μη διαθέσιμο'} (κλίμακα: -1 έως 1, >0.6 = υγιής, <0.4 = στρες)
+- Δείκτης υγρασίας NDMI: ${context.satelliteData.ndmi?.toFixed(3) || 'Μη διαθέσιμο'} (>0.2 = καλή υγρασία, <0 = χαμηλή)
+- Βαθμός υγείας: ${context.satelliteData.healthScore || 'Μη διαθέσιμο'}/100
+- Επίπεδο στρες: ${context.satelliteData.stressLevel === 'HEALTHY' ? 'Υγιής' :
+    context.satelliteData.stressLevel === 'MILD_STRESS' ? 'Ελαφρύ στρες' :
+    context.satelliteData.stressLevel === 'MODERATE_STRESS' ? 'Μέτριο στρες' :
+    context.satelliteData.stressLevel === 'SEVERE_STRESS' ? 'Σοβαρό στρες' : 'Μη διαθέσιμο'}
+- Τάση NDVI: ${context.satelliteData.ndviTrend === 'improving' ? 'Βελτίωση ↑' :
+    context.satelliteData.ndviTrend === 'declining' ? 'Πτώση ↓' :
+    context.satelliteData.ndviTrend === 'stable' ? 'Σταθερή' : 'Μη διαθέσιμο'}
+- Τελευταία ενημέρωση: ${context.satelliteData.lastUpdated ? new Date(context.satelliteData.lastUpdated).toLocaleDateString('el-GR') : 'Μη διαθέσιμο'}
+` : ''}
 ΟΔΗΓΙΕΣ:
 1. Δώσε 3-5 εξατομικευμένες συμβουλές βασισμένες ΑΠΟΚΛΕΙΣΤΙΚΑ στα παραπάνω δεδομένα
 2. Λάβε υπόψη την τοποθεσία, την ποικιλία, και την ηλικία των δέντρων
 3. Σχολίασε τις πρόσφατες δραστηριότητες - τι λείπει ή τι πρέπει να επαναληφθεί
 4. Βασίσου στις καιρικές συνθήκες για συστάσεις άρδευσης και φυτοπροστασίας
 5. Σύγκρινε με προηγούμενες συγκομιδές για βελτιστοποίηση απόδοσης
-6. Να είσαι συγκεκριμένος και πρακτικός - όχι γενικές συμβουλές
+6. ΑΝ υπάρχουν δορυφορικά δεδομένα, αξιολόγησε την υγεία της βλάστησης (NDVI) και την υγρασία (NDMI) - προειδοποίησε για στρες ή πτωτικές τάσεις
+7. Να είσαι συγκεκριμένος και πρακτικός - όχι γενικές συμβουλές
 
 Απάντησε ΜΟΝΟ σε JSON format με την ακόλουθη δομή:
 {
