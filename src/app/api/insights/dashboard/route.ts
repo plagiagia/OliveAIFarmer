@@ -167,7 +167,7 @@ export async function POST() {
 }
 
 // Helper: Calculate harvest trend
-function calculateHarvestTrend(harvests: any[]) {
+function calculateHarvestTrend(harvests: any[]): 'improving' | 'declining' | 'stable' | null {
   if (harvests.length < 2) return null
 
   const latest = harvests[0].yieldPerTree || 0
@@ -183,7 +183,7 @@ function calculateHarvestTrend(harvests: any[]) {
 }
 
 // Helper: Calculate NDVI trend
-function calculateNDVITrend(latest: any, previous: any) {
+function calculateNDVITrend(latest: any, previous: any): 'improving' | 'declining' | 'stable' | null {
   if (!latest.ndvi || !previous.ndvi) return null
 
   const change = ((latest.ndvi - previous.ndvi) / Math.abs(previous.ndvi || 0.5)) * 100
