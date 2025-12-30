@@ -27,9 +27,9 @@ export default function FarmEditModal({ farm, onClose, onSuccess }: FarmEditModa
     latitude: parseCoordinates(farm.coordinates)?.lat || null as number | null,
     totalArea: farm.totalArea ? convertFromStremmata(farm.totalArea, 'στρέμματα').toString() : '',
     areaUnit: 'στρέμματα' as AreaUnit,
-    treeCount: farm.trees?.length.toString() || '',
+    treeCount: farm.treeCount?.toString() || '',
     treeAge: farm.treeAge?.toString() || '',
-    oliveVariety: farm.trees?.length > 0 ? farm.trees[0].variety : '',
+    oliveVariety: farm.oliveVariety || '',
     description: farm.description || '',
   })
 
@@ -316,9 +316,9 @@ export default function FarmEditModal({ farm, onClose, onSuccess }: FarmEditModa
                   placeholder="π.χ. 100"
                   className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all duration-200 placeholder-gray-400"
                 />
-                {farm.trees?.length > 0 && (
+                {farm.treeCount && farm.treeCount > 0 && (
                   <p className="text-sm text-gray-500 mt-2">
-                    Τρέχων αριθμός: {farm.trees.length} δέντρα
+                    Τρέχων αριθμός: {farm.treeCount} δέντρα
                   </p>
                 )}
               </div>
@@ -364,12 +364,10 @@ export default function FarmEditModal({ farm, onClose, onSuccess }: FarmEditModa
                   <option value="Λιανολιά">Λιανολιά (Σάμου)</option>
                   <option value="Άλλη">Άλλη ποικιλία</option>
                 </select>
-                {farm.trees?.length > 0 && (
+                {farm.oliveVariety && (
                   <div className="mt-2 p-2 bg-blue-50 rounded-lg">
                     <p className="text-sm text-blue-700">
-                      <strong>Τρέχουσες ποικιλίες:</strong> {
-                        Array.from(new Set(farm.trees.map((tree: { variety: string }) => tree.variety))).join(', ')
-                      }
+                      <strong>Τρέχουσα ποικιλία:</strong> {farm.oliveVariety}
                     </p>
                   </div>
                 )}

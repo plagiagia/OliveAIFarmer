@@ -9,7 +9,7 @@ interface Farm {
   id: string
   name: string
   totalArea: number | null
-  trees: any[]
+  treeCount: number | null
   harvests: any[]
 }
 
@@ -373,11 +373,11 @@ export default function FarmHarvests({ farm }: FarmHarvestsProps) {
                       <div className="text-sm text-gray-600">τόνοι</div>
                     </div>
                     
-                    {farm.trees && farm.trees.length > 0 && (
+                    {farm.treeCount && farm.treeCount > 0 && (
                       <div className="text-center">
                         <div className="text-2xl font-bold text-blue-700 flex items-center justify-center">
                           <TreePine className="w-5 h-5 mr-1" />
-                          {(harvest.totalYield / farm.trees.length).toFixed(1)}
+                          {(harvest.totalYield / farm.treeCount).toFixed(1)}
                         </div>
                         <div className="text-sm text-gray-600">kg/δέντρο</div>
                       </div>
@@ -516,7 +516,7 @@ export default function FarmHarvests({ farm }: FarmHarvestsProps) {
         farmData={{
           name: farm.name,
           totalArea: farm.totalArea ?? undefined,
-          treesCount: farm.trees?.length || 0
+          treesCount: farm.treeCount || 0
         }}
         onSuccess={handleCreateSuccess}
         editingHarvest={editingHarvest}
