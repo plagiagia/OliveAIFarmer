@@ -59,10 +59,6 @@ export async function POST() {
       )
     }
 
-    console.log('=== Dashboard Insights Generation ===')
-    console.log('User:', user.firstName, user.lastName)
-    console.log('Number of farms:', user.farms.length)
-
     // Build portfolio context
     const portfolioContext = {
       // Portfolio overview
@@ -120,23 +116,11 @@ export async function POST() {
       userName: `${user.firstName} ${user.lastName}`
     }
 
-    console.log('Portfolio context built:')
-    console.log('- Total farms:', portfolioContext.totalFarms)
-    console.log('- Total trees:', portfolioContext.totalTrees)
-    console.log('- Total area:', portfolioContext.totalArea)
-    console.log('- Farms:', portfolioContext.farms.map(f => `${f.name} (${f.variety})`).join(', '))
-    console.log('- Current season:', portfolioContext.currentSeason)
-
     // Generate insights using OpenAI
-    console.log('Calling OpenAI for dashboard insights...')
     const aiResponse = await generateDashboardInsights(portfolioContext)
-    console.log('OpenAI response received:')
-    console.log('- Number of insights:', aiResponse.insights?.length || 0)
-    console.log('- Portfolio summary:', JSON.stringify(aiResponse.portfolioSummary))
 
     // Get valid farm IDs
     const validFarmIds = new Set(user.farms.map(f => f.id))
-    console.log('Valid farm IDs:', Array.from(validFarmIds))
 
     // Save insights to database for each farm mentioned
     // Validate farmId before saving - set to null if invalid
@@ -145,8 +129,6 @@ export async function POST() {
         const farmId = insight.farmId && validFarmIds.has(insight.farmId)
           ? insight.farmId
           : null
-
-        console.log(`Saving insight: "${insight.title}" with farmId: ${farmId}`)
 
         return prisma.smartRecommendation.create({
           data: {
@@ -167,8 +149,6 @@ export async function POST() {
       })
     )
 
-    console.log(`Generated ${savedInsights.length} dashboard AI insights`)
-
     return NextResponse.json({
       success: true,
       message: `Δημιουργήθηκαν ${savedInsights.length} στρατηγικές συστάσεις`,
@@ -176,14 +156,7 @@ export async function POST() {
       portfolioSummary: aiResponse.portfolioSummary
     })
   } catch (error) {
-    console.error('=== Error generating dashboard insights ===')
-    console.error('Error type:', error instanceof Error ? error.constructor.name : typeof error)
-    console.error('Error message:', error instanceof Error ? error.message : String(error))
-    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace')
-
-    if (error instanceof Error) {
-      console.error('Full error object:', JSON.stringify(error, Object.getOwnPropertyNames(error)))
-    }
+    console.error('Error generating dashboard insights:', error)
 
     if (error instanceof Error && error.message.includes('OpenAI')) {
       return NextResponse.json(

@@ -325,10 +325,6 @@ export async function generateDashboardInsights(
 
   const systemPrompt = buildDashboardPrompt(context)
 
-  console.log('=== OpenAI Dashboard Insights Call ===')
-  console.log('System prompt length:', systemPrompt.length, 'characters')
-  console.log('System prompt preview (first 500 chars):', systemPrompt.substring(0, 500))
-
   const response = await openai.chat.completions.create({
     model: AI_MODEL,
     messages: [
@@ -344,32 +340,16 @@ export async function generateDashboardInsights(
   })
 
   const content = response.choices[0].message.content
-  console.log('OpenAI response content length:', content?.length || 0, 'characters')
-  console.log('OpenAI response preview (first 500 chars):', content?.substring(0, 500))
-
   if (!content) {
-    console.error('No content received from OpenAI')
     throw new Error('No response from OpenAI')
   }
 
-  console.log('Parsing JSON response...')
-  let parsed: DashboardAIResponse
-  try {
-    parsed = JSON.parse(content) as DashboardAIResponse
-    console.log('JSON parsed successfully')
-    console.log('Parsed insights count:', parsed.insights?.length || 0)
-  } catch (parseError) {
-    console.error('JSON parse error:', parseError)
-    console.error('Failed content:', content)
-    throw new Error('Failed to parse OpenAI response as JSON')
-  }
+  const parsed = JSON.parse(content) as DashboardAIResponse
 
   // Validate the response structure
   if (!parsed.insights || !Array.isArray(parsed.insights)) {
-    console.error('Invalid response structure. Insights:', parsed.insights)
     throw new Error('Invalid response structure from OpenAI')
   }
 
-  console.log('Dashboard insights generated successfully:', parsed.insights.length, 'insights')
   return parsed
 }
