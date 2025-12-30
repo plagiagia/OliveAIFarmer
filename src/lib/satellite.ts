@@ -313,7 +313,7 @@ export async function fetchSoilMoisture(
     // Collect VV statistics across all valid entries
     let vvMin = Infinity
     let vvMax = -Infinity
-    let allVvMeans: number[] = []
+    const allVvMeans: number[] = []
 
     for (const entry of validEntries) {
       const vvStats = entry.outputs?.vv?.bands?.B0?.stats
