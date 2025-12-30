@@ -6,9 +6,6 @@ import {
   Sparkles,
   RefreshCw,
   AlertTriangle,
-  TrendingUp,
-  TrendingDown,
-  Minus,
   BarChart3,
   MapPin,
   Eye
@@ -28,11 +25,10 @@ interface DashboardAIGeoponosProps {
   farms: Farm[]
 }
 
-export default function DashboardAIGeoponos({ user, farms }: DashboardAIGeoponosProps) {
+export default function DashboardAIGeoponos({ farms }: DashboardAIGeoponosProps) {
   const router = useRouter()
   const [insights, setInsights] = useState<any[]>([])
   const [portfolioSummary, setPortfolioSummary] = useState<any>(null)
-  const [loading, setLoading] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -212,7 +208,7 @@ export default function DashboardAIGeoponos({ user, farms }: DashboardAIGeoponos
           </div>
           <h3 className="font-bold text-gray-900 text-xl mb-2">Καλώς ήρθατε στον AI Γεωπόνο!</h3>
           <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
-            Πατήστε "Νέα Ανάλυση" για να λάβετε στρατηγικές συμβουλές που αφορούν όλους τους ελαιώνες σας.
+            Πατήστε &ldquo;Νέα Ανάλυση&rdquo; για να λάβετε στρατηγικές συμβουλές που αφορούν όλους τους ελαιώνες σας.
             Ο AI αναλύει τα δεδομένα από κάθε ελαιώνα και σας δίνει προτεραιοποιημένες δράσεις.
           </p>
           <button

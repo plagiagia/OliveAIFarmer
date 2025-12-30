@@ -1,4 +1,4 @@
-import { prisma, getWeatherHistory } from '@/lib/db'
+import { prisma } from '@/lib/db'
 import { generateDashboardInsights, getCurrentSeason } from '@/lib/openai'
 import { auth } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
@@ -17,7 +17,7 @@ const ACTIVITY_TYPE_GREEK: Record<string, string> = {
 }
 
 // POST - Generate dashboard-level AI insights for all farms
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     const { userId } = await auth()
     if (!userId) {
