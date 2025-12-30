@@ -23,7 +23,8 @@ export interface SatelliteIndices {
   evi: number | null        // Enhanced Vegetation Index
   soilMoisture: number | null // Relative soil moisture (0-100)
   cloudCoverage: number     // Cloud coverage percentage
-  date: Date                // Observation date
+  date: Date                // Observation date (Sentinel-2)
+  soilMoistureDate?: Date   // Soil moisture observation date (Sentinel-1)
 }
 
 export interface GroveHealthMetrics {
@@ -558,7 +559,8 @@ export async function fetchAllSatelliteData(
 
   return {
     ...vegetationResult,
-    soilMoisture: soilResult.soilMoisture
+    soilMoisture: soilResult.soilMoisture,
+    soilMoistureDate: soilResult.date
   }
 }
 

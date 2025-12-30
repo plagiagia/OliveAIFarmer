@@ -140,7 +140,9 @@ export async function GET(request: NextRequest, context: RouteContext) {
         evi: latestCached.evi,
         soilMoisture: latestCached.soilMoisture,
         cloudCoverage: latestCached.cloudCoverage || 0,
-        date: latestCached.date
+        date: latestCached.date,
+        // For cached data, use same date (Sentinel-1 date not stored separately)
+        soilMoistureDate: latestCached.soilMoisture != null ? latestCached.date : undefined
       }
     }
 

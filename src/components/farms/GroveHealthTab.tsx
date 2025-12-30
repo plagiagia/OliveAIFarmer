@@ -5,6 +5,7 @@ import { el } from 'date-fns/locale'
 import {
   Activity,
   AlertTriangle,
+  Calendar,
   ChevronDown,
   Droplets,
   ExternalLink,
@@ -27,6 +28,7 @@ interface SatelliteIndices {
   soilMoisture: number | null
   cloudCoverage: number
   date: string
+  soilMoistureDate?: string
 }
 
 interface HealthMetrics {
@@ -355,6 +357,12 @@ export default function GroveHealthTab({ farmId }: GroveHealthTabProps) {
           <p className="text-xs text-gray-500 mt-1">
             Δείκτης βλάστησης (0-1)
           </p>
+          {current?.date && (
+            <div className="flex items-center gap-1 mt-2 text-xs text-gray-400">
+              <Calendar className="w-3 h-3" />
+              <span>Λήψη: {format(new Date(current.date), 'dd MMM yyyy', { locale: el })}</span>
+            </div>
+          )}
         </div>
 
         {/* NDMI Card */}
@@ -380,6 +388,12 @@ export default function GroveHealthTab({ farmId }: GroveHealthTabProps) {
                 {current.ndmi > 0.2 ? 'Καλή υγρασία' :
                   current.ndmi > 0 ? 'Μέτρια υγρασία' : 'Χαμηλή υγρασία'}
               </span>
+            </div>
+          )}
+          {current?.date && (
+            <div className="flex items-center gap-1 mt-2 text-xs text-gray-400">
+              <Calendar className="w-3 h-3" />
+              <span>Λήψη: {format(new Date(current.date), 'dd MMM yyyy', { locale: el })}</span>
             </div>
           )}
         </div>
@@ -411,6 +425,12 @@ export default function GroveHealthTab({ farmId }: GroveHealthTabProps) {
                   current.soilMoisture > 20 ? 'Κανονική υγρασία' :
                   current.soilMoisture > 10 ? 'Ξηρό έδαφος' : 'Πολύ ξηρό'}
               </span>
+            </div>
+          )}
+          {current?.soilMoistureDate && (
+            <div className="flex items-center gap-1 mt-2 text-xs text-gray-400">
+              <Calendar className="w-3 h-3" />
+              <span>Λήψη: {format(new Date(current.soilMoistureDate), 'dd MMM yyyy', { locale: el })}</span>
             </div>
           )}
         </div>
