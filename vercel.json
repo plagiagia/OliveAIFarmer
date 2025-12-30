@@ -14,6 +14,10 @@
     {
       "path": "/api/cron/weather",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/satellite",
+      "schedule": "0 7 * * 0"
     }
   ]
 }
