@@ -1,4 +1,4 @@
-import { db } from '@/lib/db'
+import { prisma } from '@/lib/db'
 import {
   calculateHealthMetrics,
   fetchVegetationIndices,
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
     const monthsBack = parseInt(searchParams.get('months') || '6', 10)
 
     // Verify farm ownership
-    const farm = await db.farm.findFirst({
+    const farm = await prisma.farm.findFirst({
       where: {
         id: farmId,
         user: { clerkId: userId }
@@ -119,7 +119,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
         if (currentIndices.ndvi !== null) {
           const healthMetrics = calculateHealthMetrics(currentIndices)
 
-          await db.satelliteData.upsert({
+          await prisma.satelliteData.upsert({
             where: {
               farmId_date_source: {
                 farmId: farm.id,
@@ -218,7 +218,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const { farmId } = await context.params
 
     // Verify farm ownership
-    const farm = await db.farm.findFirst({
+    const farm = await prisma.farm.findFirst({
       where: {
         id: farmId,
         user: { clerkId: userId }
@@ -259,7 +259,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const healthMetrics = calculateHealthMetrics(indices)
 
     // Store the data
-    const savedData = await db.satelliteData.create({
+    const savedData = await prisma.satelliteData.create({
       data: {
         farmId: farm.id,
         date: indices.date,
