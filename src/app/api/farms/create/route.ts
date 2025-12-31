@@ -20,6 +20,13 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
+    // Validate treeCount is required and positive
+    if (!treeCount || parseInt(treeCount) < 1) {
+      return NextResponse.json({
+        error: 'Ο αριθμός δέντρων είναι υποχρεωτικός και πρέπει να είναι τουλάχιστον 1'
+      }, { status: 400 })
+    }
+
     // Get user from database to ensure they exist
     const user = await prisma.user.findUnique({
       where: { clerkId: userId }

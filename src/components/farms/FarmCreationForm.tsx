@@ -114,7 +114,7 @@ export default function FarmCreationForm({ userId: _userId }: FarmCreationFormPr
   }
 
   // Check if form is valid
-  const isFormValid = formData.name.trim() && formData.location.trim()
+  const isFormValid = formData.name.trim() && formData.location.trim() && formData.treeCount.trim() && parseInt(formData.treeCount) > 0
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 p-4">
@@ -247,15 +247,20 @@ export default function FarmCreationForm({ userId: _userId }: FarmCreationFormPr
                 {/* Tree Count */}
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-3">
-                    Αριθμός Δέντρων
+                    Αριθμός Δέντρων *
                   </label>
                   <input
                     type="number"
+                    required
+                    min="1"
                     value={formData.treeCount}
                     onChange={(e) => handleInputChange('treeCount', e.target.value)}
                     placeholder="π.χ. 100"
                     className="w-full px-4 py-4 text-lg border-2 border-gray-300 rounded-xl focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all duration-200 placeholder-gray-400"
                   />
+                  <p className="text-sm text-gray-500 mt-2">
+                    Απαραίτητο για τον υπολογισμό κατανομής κόστους
+                  </p>
                 </div>
 
                 {/* Tree Age */}

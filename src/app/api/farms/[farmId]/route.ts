@@ -71,6 +71,14 @@ export async function PUT(
       )
     }
 
+    // Validate treeCount is required and positive
+    if (!treeCount || parseInt(treeCount) < 1) {
+      return NextResponse.json(
+        { error: 'Ο αριθμός δέντρων είναι υποχρεωτικός και πρέπει να είναι τουλάχιστον 1' },
+        { status: 400 }
+      )
+    }
+
     // Check if farm exists and belongs to user
     const existingFarm = await prisma.farm.findFirst({
       where: {
