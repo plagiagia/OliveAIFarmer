@@ -45,7 +45,7 @@ export default function FarmCreationForm({ userId: _userId }: FarmCreationFormPr
 
     try {
       // Convert area to stremmata for storage
-      const areaInStremmata = formData.totalArea 
+      const areaInStremmata = formData.totalArea
         ? convertToStremmata(parseFloat(formData.totalArea), formData.areaUnit)
         : null
 
@@ -150,8 +150,8 @@ export default function FarmCreationForm({ userId: _userId }: FarmCreationFormPr
           )}
 
           <form onSubmit={handleSubmit} className="space-y-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Left Column - Form Fields */}
+            <div className="space-y-8 max-w-2xl mx-auto">
+              {/* Form Fields Column */}
               <div className="space-y-6">
                 {/* Farm Name */}
                 <div>
@@ -185,18 +185,45 @@ export default function FarmCreationForm({ userId: _userId }: FarmCreationFormPr
                   </p>
                 </div>
 
-                {/* Coordinates Display */}
-                {formData.longitude && formData.latitude && (
-                  <div className="bg-green-50 p-4 rounded-xl border border-green-200">
-                    <div className="flex items-center text-green-700">
-                      <MapPin className="w-5 h-5 mr-2" />
-                      <div>
-                        <p className="font-medium">Συντεταγμένες GPS</p>
-                        <p className="text-sm">
-                          {formatCoordinates(formData.longitude, formData.latitude)}
+                {/* Coordinates Display & Map Inline */}
+                {(formData.location) && (
+                  <div className="space-y-4">
+                    <label className="block text-sm font-bold text-gray-700">
+                      Χάρτης & Συντεταγμένες
+                    </label>
+                    <div className="border-2 border-gray-200 rounded-2xl overflow-hidden shadow-inner">
+                      <MapboxMap
+                        longitude={formData.longitude || undefined}
+                        latitude={formData.latitude || undefined}
+                        markerLongitude={formData.longitude || undefined}
+                        markerLatitude={formData.latitude || undefined}
+                        zoom={formData.longitude && formData.latitude ? 14 : 6}
+                        height={350}
+                        interactive={true}
+                        showMarker={!!(formData.longitude && formData.latitude)}
+                        onLocationSelect={handleMapLocationSelect}
+                        className="w-full"
+                      />
+                    </div>
+
+                    {formData.longitude && formData.latitude ? (
+                      <div className="bg-green-50 p-4 rounded-xl border border-green-200 flex items-center gap-3">
+                        <MapPin className="w-5 h-5 text-green-600 flex-shrink-0" />
+                        <div>
+                          <p className="text-xs font-bold text-green-800 uppercase tracking-wider">Επιλεγμένη Τοποθεσία</p>
+                          <p className="text-sm text-green-700 font-mono">
+                            {formatCoordinates(formData.longitude, formData.latitude)}
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="bg-blue-50 p-4 rounded-xl border border-blue-200 flex items-center gap-3">
+                        <MapPin className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                        <p className="text-sm text-blue-700">
+                          Κάντε κλικ στον χάρτη για να ορίσετε το ακριβές σημείο του ελαιώνα σας
                         </p>
                       </div>
-                    </div>
+                    )}
                   </div>
                 )}
 
@@ -216,7 +243,7 @@ export default function FarmCreationForm({ userId: _userId }: FarmCreationFormPr
                       placeholder="π.χ. 52"
                       className="w-full px-4 py-4 text-lg border-2 border-gray-300 rounded-xl focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all duration-200 placeholder-gray-400"
                     />
-                    
+
                     {/* Unit Selection */}
                     <select
                       value={formData.areaUnit}
@@ -229,7 +256,7 @@ export default function FarmCreationForm({ userId: _userId }: FarmCreationFormPr
                       <option value="τετραγωνικά χιλιόμετρα">Χλμ²</option>
                     </select>
                   </div>
-                  
+
                   {/* Conversion Preview */}
                   {formData.totalArea && (
                     <div className="mt-3 p-3 bg-green-50 rounded-lg border border-green-200">
@@ -238,7 +265,7 @@ export default function FarmCreationForm({ userId: _userId }: FarmCreationFormPr
                       </p>
                     </div>
                   )}
-                  
+
                   <p className="text-sm text-gray-500 mt-2">
                     Προαιρετικό - μπορείτε να το προσθέσετε αργότερα
                   </p>
@@ -321,56 +348,6 @@ export default function FarmCreationForm({ userId: _userId }: FarmCreationFormPr
                     placeholder="Περιγράψτε τον ελαιώνα σας (προαιρετικό)..."
                     className="w-full px-4 py-4 text-lg border-2 border-gray-300 rounded-xl focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all duration-200 placeholder-gray-400 resize-none"
                   />
-                </div>
-              </div>
-
-              {/* Right Column - Map */}
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-3">
-                    Χάρτης Ελαιώνα
-                  </label>
-                  
-                  {formData.location ? (
-                    <div className="space-y-4">
-                      <MapboxMap
-                        longitude={formData.longitude || undefined}
-                        latitude={formData.latitude || undefined}
-                        markerLongitude={formData.longitude || undefined}
-                        markerLatitude={formData.latitude || undefined}
-                        zoom={formData.longitude && formData.latitude ? 14 : 6}
-                        height={400}
-                        interactive={true}
-                        showMarker={!!(formData.longitude && formData.latitude)}
-                        onLocationSelect={handleMapLocationSelect}
-                        className="border-2 border-gray-300 focus-within:border-green-500"
-                      />
-                      
-                      {!formData.longitude || !formData.latitude ? (
-                        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                          <p className="text-sm text-blue-700 flex items-center">
-                            <MapPin className="w-4 h-4 mr-2" />
-                            Κάντε κλικ στον χάρτη για να τοποθετήσετε τον ελαιώνα σας με ακρίβεια
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                          <p className="text-sm text-green-700 flex items-center">
-                            <MapPin className="w-4 h-4 mr-2" />
-                            Τέλεια! Η τοποθεσία του ελαιώνα σας έχει επιλεγεί
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="bg-gray-100 border-2 border-dashed border-gray-300 rounded-xl h-96 flex flex-col items-center justify-center text-gray-500">
-                      <MapPin className="w-12 h-12 mb-4" />
-                      <p className="text-lg font-medium mb-2">Επιλέξτε πρώτα τοποθεσία</p>
-                      <p className="text-sm text-center max-w-xs">
-                        Αναζητήστε την τοποθεσία του ελαιώνα σας για να εμφανιστεί ο χάρτης
-                      </p>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
