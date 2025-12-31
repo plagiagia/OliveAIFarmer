@@ -1,23 +1,23 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
 import { format } from 'date-fns'
 import { el } from 'date-fns/locale'
 import {
-  Sparkles,
-  RefreshCw,
   AlertTriangle,
+  Bell,
   CheckCircle2,
+  ChevronDown,
+  ChevronUp,
   Clock,
-  Lightbulb,
   CloudRain,
   Leaf,
+  Lightbulb,
+  RefreshCw,
+  Sparkles,
   TrendingUp,
-  Bell,
-  X,
-  ChevronDown,
-  ChevronUp
+  X
 } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
 
 interface Insight {
   id: string
@@ -217,26 +217,26 @@ export default function AIGeoponosTab({ farmId }: AIGeoponosTabProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-xl shadow-lg p-6 text-white">
-        <div className="flex items-center justify-between">
+      <div className="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-xl shadow-lg p-4 sm:p-6 text-white">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-white/20 rounded-lg">
-              <Sparkles className="w-6 h-6" />
+            <div className="p-2 sm:p-3 bg-white/20 rounded-lg flex-shrink-0">
+              <Sparkles className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div>
-              <h2 className="text-xl font-bold">AI Γεωπόνος</h2>
-              <p className="text-emerald-100 text-sm">
-                Εξατομικευμένες συμβουλές για τον ελαιώνα σας
+              <h2 className="text-lg sm:text-xl font-bold">AI Γεωπόνος</h2>
+              <p className="text-emerald-100 text-xs sm:text-sm">
+                Εξατομικευμένες συμβουλές
               </p>
             </div>
           </div>
           <button
             onClick={handleGenerate}
             disabled={generating}
-            className="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30
-                       rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30
+                       rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
           >
             <RefreshCw className={`w-4 h-4 ${generating ? 'animate-spin' : ''}`} />
             {generating ? 'Δημιουργία...' : 'Νέες Προτάσεις'}
@@ -244,8 +244,8 @@ export default function AIGeoponosTab({ farmId }: AIGeoponosTabProps) {
         </div>
 
         {lastGeneratedAt && (
-          <p className="text-emerald-200 text-xs mt-3">
-            Τελευταία ενημέρωση: {format(new Date(lastGeneratedAt), 'dd MMM yyyy, HH:mm', { locale: el })}
+          <p className="text-emerald-200 text-[10px] sm:text-xs mt-3">
+            Ενημέρωση: {format(new Date(lastGeneratedAt), 'dd/MM/yy, HH:mm', { locale: el })}
           </p>
         )}
       </div>

@@ -28,18 +28,18 @@ export default function FarmHeader({ farm, user: _user, onEdit, onBack }: FarmHe
     <div className="bg-white shadow-sm border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Navigation */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <button
             onClick={onBack}
-            className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
+            className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors text-sm sm:text-base"
           >
             <ArrowLeft className="w-5 h-5" />
-            <span className="font-medium">Πίσω στον Πίνακα Ελέγχου</span>
+            <span className="font-medium">Πίσω</span>
           </button>
 
           <button
             onClick={onEdit}
-            className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+            className="w-full sm:w-auto flex items-center justify-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm"
           >
             <Edit className="w-4 h-4" />
             <span>Επεξεργασία</span>
@@ -50,34 +50,34 @@ export default function FarmHeader({ farm, user: _user, onEdit, onBack }: FarmHe
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Info */}
           <div className="lg:col-span-2">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
               {farm.name}
             </h1>
 
-            <div className="flex flex-wrap items-center gap-6 text-gray-600 mb-4">
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-gray-600 mb-4 text-sm sm:text-base">
               <div className="flex items-center space-x-2">
-                <MapPin className="w-4 h-4 text-green-600" />
+                <MapPin className="w-4 h-4 text-green-600 flex-shrink-0" />
                 <span>{farm.location}</span>
               </div>
 
               {farm.totalArea && (
                 <div className="flex items-center space-x-2">
-                  <Ruler className="w-4 h-4 text-green-600" />
-                  <span>{farm.totalArea} στρέμματα</span>
+                  <Ruler className="w-4 h-4 text-green-600 flex-shrink-0" />
+                  <span>{farm.totalArea} στρ.</span>
                 </div>
               )}
 
               {farm.treeAge && (
                 <div className="flex items-center space-x-2">
-                  <TreeDeciduous className="w-4 h-4 text-green-600" />
+                  <TreeDeciduous className="w-4 h-4 text-green-600 flex-shrink-0" />
                   <span>{farm.treeAge} ετών</span>
                 </div>
               )}
 
               <div className="flex items-center space-x-2">
-                <Calendar className="w-4 h-4 text-green-600" />
+                <Calendar className="w-4 h-4 text-green-600 flex-shrink-0" />
                 <span>
-                  Δημιουργήθηκε {format(new Date(farm.createdAt), 'dd MMMM yyyy', { locale: el })}
+                  {format(new Date(farm.createdAt), 'dd/MM/yyyy', { locale: el })}
                 </span>
               </div>
             </div>
