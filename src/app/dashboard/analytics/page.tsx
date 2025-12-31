@@ -1,43 +1,43 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import Link from 'next/link'
 import {
-  ArrowLeft,
-  TreeDeciduous,
-  MapPin,
-  Activity,
-  TrendingUp,
-  Euro,
-  Scale,
-  Wallet
-} from 'lucide-react'
-import {
-  HarvestChart,
   ActivityChart,
-  FarmComparisonChart,
-  MonthlyActivityChart,
-  StatsCard,
-  CostBreakdownChart,
-  ProfitabilityChart,
-  YearOverYearComparison,
-  EfficiencyMetrics,
-  FarmPerformanceHighlights,
   ActivityHeatmap,
-  Recommendations
+  CostBreakdownChart,
+  EfficiencyMetrics,
+  FarmComparisonChart,
+  FarmPerformanceHighlights,
+  HarvestChart,
+  MonthlyActivityChart,
+  ProfitabilityChart,
+  Recommendations,
+  StatsCard,
+  YearOverYearComparison
 } from '@/components/analytics'
-import { SkeletonChart, SkeletonStats } from '@/components/ui/Skeleton'
-import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { ExportDropdown } from '@/components/export/ExportButton'
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
+import { SkeletonChart, SkeletonStats } from '@/components/ui/Skeleton'
 import {
+  activityExportColumns,
   exportToCSV,
   farmExportColumns,
   harvestExportColumns,
-  activityExportColumns,
+  type ActivityExportData,
   type FarmExportData,
-  type HarvestExportData,
-  type ActivityExportData
+  type HarvestExportData
 } from '@/lib/export/csv'
+import {
+  Activity,
+  ArrowLeft,
+  Euro,
+  MapPin,
+  Scale,
+  TreeDeciduous,
+  TrendingUp,
+  Wallet
+} from 'lucide-react'
+import Link from 'next/link'
+import { useEffect, useState } from 'react'
 
 interface AnalyticsData {
   summary: {
@@ -283,25 +283,27 @@ export default function AnalyticsPage() {
         <div className="mb-8">
           <Link
             href="/dashboard"
-            className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 transition-colors"
+            className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 transition-colors text-sm sm:text-base"
           >
             <ArrowLeft className="w-5 h-5" />
             <span>Πίνακας Ελέγχου</span>
           </Link>
-          <div className="flex justify-between items-start">
+          <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
             <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2">Αναλύσεις & Στατιστικά</h1>
-              <p className="text-gray-600">Εξελιγμένη ανάλυση για όλους τους ελαιώνες σας</p>
+              <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-2">Αναλύσεις & Στατιστικά</h1>
+              <p className="text-sm sm:text-base text-gray-600">Εξελιγμένη ανάλυση για όλους τους ελαιώνες σας</p>
             </div>
-            <ExportDropdown
-              options={exportOptions}
-              label="Εξαγωγή CSV"
-            />
+            <div className="w-full sm:w-auto">
+              <ExportDropdown
+                options={exportOptions}
+                label="Εξαγωγή"
+              />
+            </div>
           </div>
         </div>
 
         {/* Quick Stats Overview */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 sm:gap-4 mb-8">
           <StatsCard
             title="Ελαιώνες"
             value={summary.totalFarms}
@@ -328,20 +330,20 @@ export default function AnalyticsPage() {
           />
           <StatsCard
             title="Έσοδα"
-            value={`€${summary.totalHarvestValue.toLocaleString('el-GR')}`}
+            value={`€${summary.totalHarvestValue >= 1000 ? (summary.totalHarvestValue / 1000).toFixed(1) + 'k' : summary.totalHarvestValue.toLocaleString('el-GR')}`}
             icon={Euro}
             color="green"
             trend={summary.yieldTrend || undefined}
           />
           <StatsCard
             title="Έξοδα"
-            value={`€${summary.totalCosts.toLocaleString('el-GR')}`}
+            value={`€${summary.totalCosts >= 1000 ? (summary.totalCosts / 1000).toFixed(1) + 'k' : summary.totalCosts.toLocaleString('el-GR')}`}
             icon={TrendingUp}
             color="amber"
           />
           <StatsCard
-            title="Καθαρό Κέρδος"
-            value={`€${summary.netProfit.toLocaleString('el-GR')}`}
+            title="Κέρδος"
+            value={`€${Math.abs(summary.netProfit) >= 1000 ? (summary.netProfit / 1000).toFixed(1) + 'k' : summary.netProfit.toLocaleString('el-GR')}`}
             icon={Wallet}
             color={summary.netProfit >= 0 ? 'green' : 'red'}
           />
@@ -465,55 +467,50 @@ export default function AnalyticsPage() {
 
               <div className="space-y-1">
                 <p className="text-sm text-gray-500">Περιθώριο κέρδους</p>
-                <p className={`text-2xl font-bold ${
-                  efficiencyMetrics.profitMargin >= 40 ? 'text-green-600' :
-                  efficiencyMetrics.profitMargin >= 20 ? 'text-yellow-600' :
-                  'text-red-600'
-                }`}>
+                <p className={`text-2xl font-bold ${efficiencyMetrics.profitMargin >= 40 ? 'text-green-600' :
+                    efficiencyMetrics.profitMargin >= 20 ? 'text-yellow-600' :
+                      'text-red-600'
+                  }`}>
                   {efficiencyMetrics.profitMargin.toFixed(1)}%
                 </p>
               </div>
 
               <div className="space-y-1">
                 <p className="text-sm text-gray-500">Κόστος ανά κιλό</p>
-                <p className={`text-2xl font-bold ${
-                  efficiencyMetrics.costPerKg < 1.5 ? 'text-green-600' :
-                  efficiencyMetrics.costPerKg < 2.5 ? 'text-yellow-600' :
-                  'text-red-600'
-                }`}>
+                <p className={`text-2xl font-bold ${efficiencyMetrics.costPerKg < 1.5 ? 'text-green-600' :
+                    efficiencyMetrics.costPerKg < 2.5 ? 'text-yellow-600' :
+                      'text-red-600'
+                  }`}>
                   €{efficiencyMetrics.costPerKg.toFixed(2)}
                 </p>
               </div>
 
               <div className="space-y-1">
                 <p className="text-sm text-gray-500">Απόδοση ανά δέντρο</p>
-                <p className={`text-2xl font-bold ${
-                  efficiencyMetrics.yieldPerTree > 20 ? 'text-green-600' :
-                  efficiencyMetrics.yieldPerTree > 10 ? 'text-yellow-600' :
-                  'text-red-600'
-                }`}>
+                <p className={`text-2xl font-bold ${efficiencyMetrics.yieldPerTree > 20 ? 'text-green-600' :
+                    efficiencyMetrics.yieldPerTree > 10 ? 'text-yellow-600' :
+                      'text-red-600'
+                  }`}>
                   {efficiencyMetrics.yieldPerTree.toFixed(1)} <span className="text-base font-normal text-gray-600">kg</span>
                 </p>
               </div>
 
               <div className="space-y-1">
                 <p className="text-sm text-gray-500">Απόδοση ανά στρέμμα</p>
-                <p className={`text-2xl font-bold ${
-                  efficiencyMetrics.avgYieldPerStremma > 150 ? 'text-green-600' :
-                  efficiencyMetrics.avgYieldPerStremma > 100 ? 'text-yellow-600' :
-                  'text-red-600'
-                }`}>
+                <p className={`text-2xl font-bold ${efficiencyMetrics.avgYieldPerStremma > 150 ? 'text-green-600' :
+                    efficiencyMetrics.avgYieldPerStremma > 100 ? 'text-yellow-600' :
+                      'text-red-600'
+                  }`}>
                   {efficiencyMetrics.avgYieldPerStremma.toFixed(0)} <span className="text-base font-normal text-gray-600">kg</span>
                 </p>
               </div>
 
               <div className="space-y-1">
                 <p className="text-sm text-gray-500">ROI (Απόδοση Επένδυσης)</p>
-                <p className={`text-2xl font-bold ${
-                  efficiencyMetrics.roi > 30 ? 'text-green-600' :
-                  efficiencyMetrics.roi > 15 ? 'text-yellow-600' :
-                  'text-red-600'
-                }`}>
+                <p className={`text-2xl font-bold ${efficiencyMetrics.roi > 30 ? 'text-green-600' :
+                    efficiencyMetrics.roi > 15 ? 'text-yellow-600' :
+                      'text-red-600'
+                  }`}>
                   {efficiencyMetrics.roi.toFixed(1)}%
                 </p>
               </div>

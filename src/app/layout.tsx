@@ -78,25 +78,25 @@ export default function RootLayout({
           
           {/* Show app content when signed in */}
           <SignedIn>
-            <header className="bg-white border-b border-gray-200">
+            <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-16">
-                  <div className="flex items-center space-x-3">
-                    <svg className="w-8 h-8 text-olive-600" viewBox="0 0 24 24" fill="currentColor">
+                  <div className="flex items-center space-x-2 sm:space-x-3">
+                    <svg className="w-7 h-7 sm:w-8 sm:h-8 text-olive-600 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
                       <ellipse cx="12" cy="12" rx="5" ry="8" transform="rotate(-30 12 12)" />
                       <path d="M12 4 Q14 2 16 3" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
                     </svg>
-                    <h1 className="text-xl font-bold text-olive-800">ΕλαιοLog</h1>
+                    <h1 className="text-lg sm:text-xl font-bold text-olive-800 truncate">ΕλαιοLog</h1>
                   </div>
                   <UserButton
                     appearance={{
                       elements: {
-                        avatarBox: "w-10 h-10",
+                        avatarBox: "w-8 h-8 sm:w-10 sm:h-10",
                         userButtonPopoverCard: "shadow-lg",
                         userButtonPopoverActionButton: "text-olive-700 hover:bg-olive-50"
                       }
                     }}
-                    showName={true}
+                    showName={false} // Disable showName to save space on mobile
                   />
                 </div>
               </div>

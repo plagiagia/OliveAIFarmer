@@ -1,16 +1,16 @@
 'use client'
 
-import FarmEditModal from '@/components/farms/FarmEditModal'
-import FarmCalendar from '@/components/calendar/FarmCalendar'
 import CalendarActivityModal from '@/components/calendar/CalendarActivityModal'
+import FarmCalendar from '@/components/calendar/FarmCalendar'
+import FarmEditModal from '@/components/farms/FarmEditModal'
 import MapPreview from '@/components/map/MapPreview'
 import { parseCoordinates } from '@/lib/mapbox-utils'
 import { ACTIVITY_TYPE_COLORS, ACTIVITY_TYPE_ICONS, ActivityType } from '@/types/activity'
 import { format } from 'date-fns'
 import { el } from 'date-fns/locale'
-import { Activity, MapPin, Plus, BarChart3, Trophy, Filter, Sparkles } from 'lucide-react'
+import { Activity, BarChart3, Filter, MapPin, Plus, Sparkles, Trophy } from 'lucide-react'
 import Link from 'next/link'
-import { useEffect, useState, useCallback } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 interface Farm {
   id: string
@@ -48,7 +48,7 @@ export default function DashboardContent({ user, clerkUserId: _clerkUserId }: Da
     if (!user) {
       syncUserWithDatabase()
     }
-    
+
     // Check for success messages
     const urlParams = new URLSearchParams(window.location.search)
     if (urlParams.get('created') === 'true') {
@@ -59,7 +59,7 @@ export default function DashboardContent({ user, clerkUserId: _clerkUserId }: Da
       // Hide message after 5 seconds
       setTimeout(() => setShowSuccessMessage(false), 5000)
     }
-    
+
     if (urlParams.get('deleted') === 'true') {
       setShowDeleteMessage(true)
       // Remove the parameter from URL
@@ -75,7 +75,7 @@ export default function DashboardContent({ user, clerkUserId: _clerkUserId }: Da
       const response = await fetch('/api/sync-user', {
         method: 'POST',
       })
-      
+
       if (response.ok) {
         const data = await response.json()
         if (data.success) {
@@ -121,12 +121,12 @@ function OnboardingView({ user }: { user: User | null }) {
         <p className="text-xl text-gray-600 mb-8">
           Ας δημιουργήσουμε τον πρώτο σας ελαιώνα
         </p>
-        
+
         <div className="bg-white rounded-3xl shadow-lg p-8 max-w-2xl mx-auto">
           <h2 className="text-2xl font-semibold text-olive-700 mb-6">
             Ξεκινήστε τη διαχείριση του ελαιώνα σας
           </h2>
-          
+
           <div className="space-y-4 text-left mb-8">
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-olive-100 rounded-full flex items-center justify-center">
@@ -134,14 +134,14 @@ function OnboardingView({ user }: { user: User | null }) {
               </div>
               <span className="text-gray-700">Προσθήκη βασικών πληροφοριών ελαιώνα</span>
             </div>
-            
+
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-olive-100 rounded-full flex items-center justify-center">
                 <span className="text-olive-700 font-semibold">2</span>
               </div>
               <span className="text-gray-700">Προσθήκη δέντρων στον ελαιώνα</span>
             </div>
-            
+
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-olive-100 rounded-full flex items-center justify-center">
                 <span className="text-olive-700 font-semibold">3</span>
@@ -149,8 +149,8 @@ function OnboardingView({ user }: { user: User | null }) {
               <span className="text-gray-700">Ξεκίνημα καταγραφής δραστηριοτήτων</span>
             </div>
           </div>
-          
-          <button 
+
+          <button
             onClick={() => {
               window.location.href = '/dashboard/farms/new'
             }}
@@ -276,96 +276,96 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
         )}
 
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-olive-800">
+            <h1 className="text-2xl sm:text-3xl font-bold text-olive-800">
               Καλώς ήρθατε, {user.firstName}!
             </h1>
-            <p className="text-gray-600 mt-2">
+            <p className="text-gray-600 mt-1 sm:mt-2 text-sm sm:base">
               Διαχειριστείτε {user.farms.length === 1 ? 'τον ελαιώνα σας' : `τους ${user.farms.length} ελαιώνες σας`}
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
             <Link
               href="/dashboard/ai-geoponos"
-              className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white py-2 px-4 rounded-xl font-semibold transition-all duration-200 hover:shadow-lg flex items-center gap-2"
+              className="flex-1 sm:flex-none justify-center bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white py-2 px-3 sm:px-4 rounded-xl font-semibold text-sm transition-all duration-200 hover:shadow-lg flex items-center gap-2"
             >
               <Sparkles className="w-4 h-4" />
-              AI Γεωπόνος
+              <span className="whitespace-nowrap">AI Γεωπόνος</span>
             </Link>
             <Link
               href="/dashboard/analytics"
-              className="bg-white border border-gray-200 hover:border-olive-300 text-gray-700 hover:text-olive-700 py-2 px-4 rounded-xl font-medium transition-all duration-200 hover:shadow-md flex items-center gap-2"
+              className="flex-1 sm:flex-none justify-center bg-white border border-gray-200 hover:border-olive-300 text-gray-700 hover:text-olive-700 py-2 px-3 sm:px-4 rounded-xl font-medium text-sm transition-all duration-200 hover:shadow-md flex items-center gap-2"
             >
               <BarChart3 className="w-4 h-4" />
-              Αναλύσεις
+              <span className="whitespace-nowrap">Αναλύσεις</span>
             </Link>
             <button
               onClick={() => {
                 window.location.href = '/dashboard/farms/new'
               }}
-              className="bg-gradient-to-r from-olive-700 to-olive-600 hover:from-olive-800 hover:to-olive-700 text-white py-2 px-4 rounded-xl font-semibold transition-all duration-200 hover:shadow-lg flex items-center gap-2"
+              className="w-full sm:w-auto justify-center bg-gradient-to-r from-olive-700 to-olive-600 hover:from-olive-800 hover:to-olive-700 text-white py-2 px-3 sm:px-4 rounded-xl font-semibold text-sm transition-all duration-200 hover:shadow-lg flex items-center gap-2"
             >
               <Plus className="w-4 h-4" />
-              Νέος Ελαιώνας
+              <span className="whitespace-nowrap">Νέος Ελαιώνας</span>
             </button>
           </div>
         </div>
 
         {/* Stats Overview - Horizontal Row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white rounded-2xl p-5 shadow-sm">
+        <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-8">
+          <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-olive-100 rounded-xl flex items-center justify-center text-xl">
+              <div className="w-10 h-10 bg-olive-100 rounded-xl flex items-center justify-center text-xl flex-shrink-0">
                 🫒
               </div>
-              <div>
-                <div className="text-2xl font-bold text-gray-800">
+              <div className="min-w-0">
+                <div className="text-xl sm:text-2xl font-bold text-gray-800 truncate">
                   {user.farms.reduce((sum, farm) => sum + farm.treesCount, 0)}
                 </div>
-                <div className="text-sm text-gray-500">Δέντρα</div>
+                <div className="text-xs sm:text-sm text-gray-500 truncate">Δέντρα</div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl p-5 shadow-sm">
+          <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-xl">
+              <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-xl flex-shrink-0">
                 📊
               </div>
-              <div>
-                <div className="text-2xl font-bold text-gray-800">
+              <div className="min-w-0">
+                <div className="text-xl sm:text-2xl font-bold text-gray-800 truncate">
                   {user.farms.reduce((sum, farm) => sum + (farm.totalArea || 0), 0).toFixed(1)}
                 </div>
-                <div className="text-sm text-gray-500">Στρέμματα</div>
+                <div className="text-xs sm:text-sm text-gray-500 truncate">Στρέμματα</div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl p-5 shadow-sm">
+          <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+              <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
                 <Activity className="w-5 h-5 text-green-700" />
               </div>
-              <div>
-                <div className="text-2xl font-bold text-gray-800">
+              <div className="min-w-0">
+                <div className="text-xl sm:text-2xl font-bold text-gray-800 truncate">
                   {user.farms.reduce((sum, farm) => sum + farm.activitiesCount, 0)}
                 </div>
-                <div className="text-sm text-gray-500">Δραστηριότητες</div>
+                <div className="text-xs sm:text-sm text-gray-500 truncate">Δραστηριότητες</div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl p-5 shadow-sm">
+          <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
+              <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
                 <Trophy className="w-5 h-5 text-amber-700" />
               </div>
-              <div>
-                <div className="text-2xl font-bold text-gray-800">
+              <div className="min-w-0">
+                <div className="text-xl sm:text-2xl font-bold text-gray-800 truncate">
                   {user.farms.reduce((sum, farm) => sum + farm.harvestsCount, 0)}
                 </div>
-                <div className="text-sm text-gray-500">Συγκομιδές</div>
+                <div className="text-xs sm:text-sm text-gray-500 truncate">Συγκομιδές</div>
               </div>
             </div>
           </div>
@@ -387,11 +387,10 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
                 <div className="relative">
                   <button
                     onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-                    className={`p-2 rounded-lg transition-colors ${
-                      activityTypeFilter !== 'ALL'
+                    className={`p-2 rounded-lg transition-colors ${activityTypeFilter !== 'ALL'
                         ? 'bg-olive-100 text-olive-700'
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
+                      }`}
                     title="Φίλτρο δραστηριοτήτων"
                   >
                     <Filter className="w-4 h-4" />
@@ -401,9 +400,8 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-20">
                       <button
                         onClick={() => { setActivityTypeFilter('ALL'); setShowFilterDropdown(false) }}
-                        className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 ${
-                          activityTypeFilter === 'ALL' ? 'text-olive-700 font-medium' : 'text-gray-700'
-                        }`}
+                        className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 ${activityTypeFilter === 'ALL' ? 'text-olive-700 font-medium' : 'text-gray-700'
+                          }`}
                       >
                         Όλα
                       </button>
@@ -411,20 +409,19 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
                         <button
                           key={type}
                           onClick={() => { setActivityTypeFilter(type as ActivityType); setShowFilterDropdown(false) }}
-                          className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 ${
-                            activityTypeFilter === type ? 'text-olive-700 font-medium' : 'text-gray-700'
-                          }`}
+                          className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 ${activityTypeFilter === type ? 'text-olive-700 font-medium' : 'text-gray-700'
+                            }`}
                         >
                           <span>{icon}</span>
                           <span className={`px-2 py-0.5 rounded text-xs ${ACTIVITY_TYPE_COLORS[type as ActivityType]}`}>
                             {type === 'WATERING' ? 'Πότισμα' :
-                             type === 'PRUNING' ? 'Κλάδεμα' :
-                             type === 'FERTILIZING' ? 'Λίπανση' :
-                             type === 'PEST_CONTROL' ? 'Ψεκασμός' :
-                             type === 'SOIL_WORK' ? 'Εδαφοκαλλιέργεια' :
-                             type === 'HARVESTING' ? 'Συγκομιδή' :
-                             type === 'MAINTENANCE' ? 'Συντήρηση' :
-                             type === 'INSPECTION' ? 'Επιθεώρηση' : 'Άλλο'}
+                              type === 'PRUNING' ? 'Κλάδεμα' :
+                                type === 'FERTILIZING' ? 'Λίπανση' :
+                                  type === 'PEST_CONTROL' ? 'Ψεκασμός' :
+                                    type === 'SOIL_WORK' ? 'Εδαφοκαλλιέργεια' :
+                                      type === 'HARVESTING' ? 'Συγκομιδή' :
+                                        type === 'MAINTENANCE' ? 'Συντήρηση' :
+                                          type === 'INSPECTION' ? 'Επιθεώρηση' : 'Άλλο'}
                           </span>
                         </button>
                       ))}
@@ -492,7 +489,7 @@ function FarmCard({ farm, onEdit: _onEdit }: { farm: Farm; onEdit: (farm: Farm |
   const coordinates = farm.coordinates ? parseCoordinates(farm.coordinates) : null
 
   return (
-    <div 
+    <div
       className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden cursor-pointer group"
       onClick={handleFarmClick}
     >
@@ -520,7 +517,7 @@ function FarmCard({ farm, onEdit: _onEdit }: { farm: Farm; onEdit: (farm: Farm |
         <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-olive-700 transition-colors">
           {farm.name}
         </h3>
-        
+
         <div className="flex items-center text-gray-600 mb-4">
           <MapPin className="w-4 h-4 mr-2" />
           <span className="text-sm">{farm.location}</span>
@@ -554,7 +551,7 @@ function FarmCard({ farm, onEdit: _onEdit }: { farm: Farm; onEdit: (farm: Farm |
               new Date().getTime() - new Date(farm.lastActivityDate).getTime() <= 7 * 24 * 60 * 60 * 1000
                 ? 'text-green-600 bg-green-50 -mx-2 px-2 py-1 rounded-md'
                 : 'text-gray-500'
-            }`}>
+              }`}>
               <Activity className="w-3 h-3 mr-1" />
               <span>
                 Τελευταία δραστηριότητα: {format(new Date(farm.lastActivityDate), 'dd/MM/yyyy', { locale: el })}
