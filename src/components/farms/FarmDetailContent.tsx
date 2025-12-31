@@ -75,7 +75,10 @@ export default function FarmDetailContent({ farm, user }: FarmDetailContentProps
 
         {/* Navigation Tabs */}
         <div className="bg-white border-b border-gray-200 sticky top-16 z-10 shadow-sm sm:shadow-none">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative group">
+            {/* Right scroll indicator hint for mobile */}
+            <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-white via-white/80 to-transparent pointer-events-none z-20 sm:hidden" />
+
             <div className="flex space-x-4 sm:space-x-8 overflow-x-auto scrollbar-hide py-1 sm:py-0">
               {tabs.map((tab) => {
                 const Icon = tab.icon
@@ -85,8 +88,8 @@ export default function FarmDetailContent({ farm, user }: FarmDetailContentProps
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id as 'overview' | 'activities' | 'harvests' | 'grove-health' | 'ai-geoponos')}
                     className={`flex items-center space-x-2 py-3 sm:py-4 px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap transition-colors ${activeTab === tab.id
-                        ? 'border-green-500 text-green-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      ? 'border-green-500 text-green-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                       }`}
                   >
                     <Icon className="w-4 h-4 flex-shrink-0" />
