@@ -27,6 +27,7 @@ interface Farm {
   name: string
   location: string
   coordinates: string | null
+  treeCount: number | null
 }
 
 interface AISuggestion {
@@ -142,6 +143,43 @@ export default function CalendarActivityModal({
   const deselectAllFarms = () => {
     setSelectedFarms([])
   }
+
+  // Calculate cost distribution preview
+  const getCostPreview = (): { farmId: string; farmName: string; treeCount: number; cost: number }[] => {
+    if (!cost || selectedFarms.length <= 1) return []
+
+    const selectedFarmData = farms.filter(f => selectedFarms.includes(f.id))
+    const totalCost = parseFloat(cost)
+    if (isNaN(totalCost) || totalCost <= 0) return []
+
+    const totalTrees = selectedFarmData.reduce((sum, farm) => sum + (farm.treeCount || 0), 0)
+
+    if (totalTrees > 0) {
+      // Distribute by tree count
+      return selectedFarmData.map(farm => {
+        const farmTrees = farm.treeCount || 0
+        const proportion = farmTrees / totalTrees
+        const farmCost = Math.round(totalCost * proportion * 100) / 100
+        return {
+          farmId: farm.id,
+          farmName: farm.name,
+          treeCount: farmTrees,
+          cost: farmCost
+        }
+      })
+    } else {
+      // Equal distribution if no tree counts
+      const equalCost = Math.round((totalCost / selectedFarmData.length) * 100) / 100
+      return selectedFarmData.map(farm => ({
+        farmId: farm.id,
+        farmName: farm.name,
+        treeCount: 0,
+        cost: equalCost
+      }))
+    }
+  }
+
+  const costPreview = getCostPreview()
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {}
@@ -344,7 +382,7 @@ export default function CalendarActivityModal({
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       <Euro className="w-4 h-4 inline mr-1" />
-                      Κόστος (€)
+                      {selectedFarms.length > 1 ? 'Συνολικό Κόστος (€)' : 'Κόστος (€)'}
                     </label>
                     <input
                       type="number"
@@ -359,6 +397,11 @@ export default function CalendarActivityModal({
                       disabled={isSubmitting}
                     />
                     {errors.cost && <p className="mt-1 text-sm text-red-600">{errors.cost}</p>}
+                    {selectedFarms.length > 1 && (
+                      <p className="mt-1 text-xs text-gray-500">
+                        Το κόστος θα κατανεμηθεί ανάλογα με τον αριθμό δέντρων
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -462,6 +505,42 @@ export default function CalendarActivityModal({
                     {selectedFarms.length} από {farms.length} επιλεγμένοι
                   </p>
                 </div>
+
+                {/* Cost Preview */}
+                {costPreview.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Euro className="w-4 h-4 text-olive-600" />
+                      <label className="block text-sm font-medium text-gray-700">
+                        Κατανομή Κόστους
+                      </label>
+                    </div>
+                    <div className="border border-olive-200 rounded-xl p-3 bg-olive-50/50 space-y-2">
+                      {costPreview.map((item) => (
+                        <div
+                          key={item.farmId}
+                          className="flex items-center justify-between text-sm"
+                        >
+                          <div className="flex-1 min-w-0">
+                            <span className="font-medium text-gray-800 truncate block">
+                              {item.farmName}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {item.treeCount > 0 ? `${item.treeCount} δέντρα` : 'Χωρίς δέντρα'}
+                            </span>
+                          </div>
+                          <span className="font-semibold text-olive-700 ml-2">
+                            €{item.cost.toFixed(2)}
+                          </span>
+                        </div>
+                      ))}
+                      <div className="border-t border-olive-200 pt-2 mt-2 flex items-center justify-between text-sm font-medium">
+                        <span className="text-gray-700">Σύνολο</span>
+                        <span className="text-olive-800">€{parseFloat(cost).toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* AI Suggestions */}
                 <div>

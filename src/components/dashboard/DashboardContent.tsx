@@ -476,7 +476,7 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
           isOpen={showActivityModal}
           onClose={() => { setShowActivityModal(false); setSelectedDate(null) }}
           selectedDate={selectedDate}
-          farms={user.farms.map(f => ({ id: f.id, name: f.name, location: f.location, coordinates: f.coordinates }))}
+          farms={user.farms.map(f => ({ id: f.id, name: f.name, location: f.location, coordinates: f.coordinates, treeCount: f.treesCount }))}
           onSuccess={handleActivityCreated}
         />
       )}
