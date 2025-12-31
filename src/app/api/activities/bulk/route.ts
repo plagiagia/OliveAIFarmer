@@ -76,7 +76,7 @@ export async function POST(request: Request) {
     }
 
     // Calculate cost distribution by tree count when multiple farms selected
-    let costPerFarm: Map<string, number | null> = new Map()
+    const costPerFarm: Map<string, number | null> = new Map()
 
     if (cost && farms.length > 1) {
       // Calculate total trees across all selected farms
