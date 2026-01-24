@@ -7,6 +7,7 @@ import { formatCoordinates } from '@/lib/mapbox-utils'
 import { ArrowLeft, Loader2, MapPin, Save } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import OliveIcon from '@/components/ui/OliveIcon'
 
 interface FarmCreationFormProps {
   userId: string
@@ -129,7 +130,7 @@ export default function FarmCreationForm({ userId: _userId }: FarmCreationFormPr
               <ArrowLeft className="w-5 h-5 mr-2" />
               <span className="font-medium">Επιστροφή</span>
             </button>
-            <div className="text-3xl">🫒</div>
+            <OliveIcon size="lg" className="text-olive-600" />
             <div className="ml-3">
               <h1 className="text-2xl font-bold text-gray-800">Νέος Ελαιώνας</h1>
               <p className="text-gray-600 text-sm">Προσθέστε τον ελαιώνα σας στον χάρτη</p>

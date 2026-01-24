@@ -1,5 +1,6 @@
 'use client'
 
+import OliveIcon from '@/components/ui/OliveIcon'
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react'
 
 interface YearOverYearData {
@@ -32,7 +33,7 @@ export function YearOverYearComparison({ data, title = 'Σύγκριση Ετώ�
     {
       label: 'Παραγωγή',
       change: data.yieldChange,
-      icon: '🫒'
+      icon: 'olive' // Special case for olive icon
     },
     {
       label: 'Έσοδα',
@@ -89,7 +90,13 @@ export function YearOverYearComparison({ data, title = 'Σύγκριση Ετώ�
               className={`p-4 rounded-xl ${colorClass} transition-all duration-200`}
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-2xl">{metric.icon}</span>
+                <div className="flex items-center">
+                  {metric.icon === 'olive' ? (
+                    <OliveIcon size="lg" className="text-current" />
+                  ) : (
+                    <span className="text-2xl">{metric.icon}</span>
+                  )}
+                </div>
                 <div className={colorClass}>
                   {getTrendIcon(metric.change, metric.inverse)}
                 </div>

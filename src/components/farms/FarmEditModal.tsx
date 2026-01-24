@@ -2,6 +2,7 @@
 
 import LocationAutocomplete from '@/components/map/LocationAutocomplete'
 import MapboxMap from '@/components/map/MapboxMap'
+import OliveIcon from '@/components/ui/OliveIcon'
 import { convertFromStremmata, convertToStremmata, type AreaUnit } from '@/lib/area-conversions'
 import { formatCoordinates, parseCoordinates } from '@/lib/mapbox-utils'
 import { AlertTriangle, Loader2, MapPin, Save, Trash2, X } from 'lucide-react'
@@ -145,7 +146,7 @@ export default function FarmEditModal({ farm, onClose, onSuccess }: FarmEditModa
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gray-50 rounded-t-xl">
           <div className="flex items-center space-x-3">
-            <div className="text-2xl">🫒</div>
+            <OliveIcon size="md" className="text-olive-600" />
             <div>
               <h3 className="text-xl font-bold text-gray-900">Επεξεργασία Ελαιώνα</h3>
               <p className="text-sm text-gray-600">Ενημερώστε τις πληροφορίες του ελαιώνα σας</p>

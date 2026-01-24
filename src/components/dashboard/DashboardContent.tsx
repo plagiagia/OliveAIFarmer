@@ -4,6 +4,7 @@ import CalendarActivityModal from '@/components/calendar/CalendarActivityModal'
 import FarmCalendar from '@/components/calendar/FarmCalendar'
 import FarmEditModal from '@/components/farms/FarmEditModal'
 import MapPreview from '@/components/map/MapPreview'
+import OliveIcon from '@/components/ui/OliveIcon'
 import { parseCoordinates } from '@/lib/mapbox-utils'
 import { ACTIVITY_TYPE_COLORS, ACTIVITY_TYPE_ICONS, ActivityType } from '@/types/activity'
 import { format } from 'date-fns'
@@ -94,7 +95,9 @@ export default function DashboardContent({ user, clerkUserId: _clerkUserId }: Da
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="text-center">
-          <div className="text-6xl mb-6">🫒</div>
+          <div className="mb-6 flex justify-center">
+            <OliveIcon size="2xl" className="text-olive-600" />
+          </div>
           <p className="text-xl text-gray-600">Φόρτωση του προφίλ σας...</p>
         </div>
       </div>
@@ -114,7 +117,9 @@ function OnboardingView({ user }: { user: User | null }) {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="text-center">
-        <div className="text-6xl mb-6">🫒</div>
+        <div className="mb-6 flex justify-center">
+          <OliveIcon size="2xl" className="text-olive-600" />
+        </div>
         <h1 className="text-4xl font-bold text-olive-800 mb-4">
           Καλώς ήρθατε{user?.firstName ? ` ${user.firstName}` : ''} στο ΕλαιοLog!
         </h1>
@@ -316,8 +321,8 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
         <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-8">
           <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-olive-100 rounded-xl flex items-center justify-center text-xl flex-shrink-0">
-                🫒
+              <div className="w-10 h-10 bg-olive-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                <OliveIcon size="md" className="text-olive-600" />
               </div>
               <div className="min-w-0">
                 <div className="text-xl sm:text-2xl font-bold text-gray-800 truncate">

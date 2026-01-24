@@ -1,6 +1,7 @@
 'use client'
 
 import { BarChart3, Cloud, Smartphone, Sprout } from 'lucide-react'
+import OliveIcon from '../ui/OliveIcon'
 
 export default function InfoPanel() {
   const benefits = [
@@ -33,7 +34,9 @@ export default function InfoPanel() {
       <div className="relative z-10">
         {/* Brand */}
         <div className="text-center lg:text-left mb-12">
-          <div className="text-7xl mb-6 animate-float">🫒</div>
+          <div className="mb-6 animate-float flex justify-center lg:justify-start">
+            <OliveIcon size="2xl" className="text-white" />
+          </div>
           <h1 className="text-4xl lg:text-5xl font-bold mb-6">
             ΕλαιοLog
           </h1>
