@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getWeatherHistory, getWeatherStats, getWeatherForDate } from '@/lib/db'
+import { getWeatherHistory, getWeatherStats, getWeatherForDate, prisma } from '@/lib/db'
 import { auth } from '@clerk/nextjs/server'
 
 export async function GET(request: NextRequest) {
@@ -20,6 +20,22 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         { error: 'farmId is required' },
         { status: 400 }
+      )
+    }
+
+    // Verify the farm belongs to the current user (prevents cross-tenant reads).
+    const farm = await prisma.farm.findFirst({
+      where: {
+        id: farmId,
+        user: { clerkId: userId }
+      },
+      select: { id: true }
+    })
+
+    if (!farm) {
+      return NextResponse.json(
+        { error: 'Farm not found or access denied' },
+        { status: 404 }
       )
     }
 

@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getWeatherIntelligence } from '@/lib/weather'
-import { saveWeatherRecord } from '@/lib/db'
+import { prisma, saveWeatherRecord } from '@/lib/db'
+import { auth } from '@clerk/nextjs/server'
 
 // Weather data is public - no auth required
-// The widget only shows on authenticated farm pages anyway
+// If `farmId` is provided, we only save to the DB when the caller is authenticated
+// and owns the farm. This prevents unauthenticated/cross-tenant writes.
 export async function GET(request: NextRequest) {
   try {
     // Get coordinates and optional farmId from query params
@@ -46,9 +48,29 @@ export async function GET(request: NextRequest) {
     // Opportunistically save weather data if farmId is provided
     if (farmId && weatherIntelligence.weather.current) {
       try {
+        const { userId } = await auth()
+        if (!userId) {
+          // Unauthenticated callers can still fetch weather, but may not write farm data.
+          return NextResponse.json(weatherIntelligence)
+        }
+
+        // Verify the user owns the farm before saving.
+        const farm = await prisma.farm.findFirst({
+          where: {
+            id: farmId,
+            user: { clerkId: userId }
+          },
+          select: { id: true }
+        })
+
+        if (!farm) {
+          // Don't leak farm existence; just skip saving.
+          return NextResponse.json(weatherIntelligence)
+        }
+
         const current = weatherIntelligence.weather.current
         await saveWeatherRecord({
-          farmId,
+          farmId: farm.id,
           date: new Date(),
           tempHigh: current.temperature, // Current temp as high for now
           tempLow: current.temperature,  // Will be updated by cron with proper min/max

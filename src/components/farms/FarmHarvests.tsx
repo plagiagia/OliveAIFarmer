@@ -86,16 +86,14 @@ export default function FarmHarvests({ farm }: FarmHarvestsProps) {
     }
     
     try {
-      // Complete all harvests for this year
-      const promises = harvestsToComplete.map((harvest: any) =>
-        fetch(`/api/harvests/complete`, {
+      // Complete all harvests for this year (backend completes all collections for the farm/year)
+      const responses = [
+        await fetch(`/api/harvests/complete`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ harvestId: harvest.id })
+          body: JSON.stringify({ harvestId: harvestsToComplete[0]?.id })
         })
-      )
-
-      const responses = await Promise.all(promises)
+      ]
       
       if (responses.every(r => r.ok)) {
         // Auto-collapse the completed year for a cleaner interface

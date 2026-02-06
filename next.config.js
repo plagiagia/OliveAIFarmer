@@ -32,13 +32,14 @@ const withPWA = require('@ducanh2912/next-pwa').default({
         },
       },
       {
-        urlPattern: /\/api\/.*/i,
+        urlPattern: /\/api\/weather(?:\?.*)?$/i,
         handler: 'NetworkFirst',
+        method: 'GET',
         options: {
-          cacheName: 'api-cache',
+          cacheName: 'weather-api-cache',
           expiration: {
-            maxEntries: 100,
-            maxAgeSeconds: 60 * 60, // 1 hour
+            maxEntries: 60,
+            maxAgeSeconds: 60 * 15, // 15 minutes
           },
           networkTimeoutSeconds: 10,
         },

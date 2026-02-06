@@ -61,29 +61,21 @@ async function completeHarvest(request: NextRequest) {
     const actualStartDate = allDates.length > 0 ? new Date(Math.min(...allDates.map((d: Date) => d.getTime()))) : existingHarvest.startDate
     const actualEndDate = allDates.length > 0 ? new Date(Math.max(...allDates.map((d: Date) => d.getTime()))) : new Date()
 
-    // Update the specific harvest to mark as completed
-    const updatedHarvest = await prisma.harvest.update({
-      where: { id: harvestId },
-      data: {
-        completed: true,
-        // Update the harvest's own dates if they're not already set properly
-        startDate: existingHarvest.startDate || actualStartDate,
-        endDate: actualEndDate
-      }
-    })
-
-    // Update all other harvests from the same year with the calculated date range
-    // This ensures the displayed date range is consistent across all collections
+    // Complete the harvest season by marking all collections in the same farm/year as completed
+    // and setting a consistent endDate across them.
     await prisma.harvest.updateMany({
       where: {
         farmId: existingHarvest.farmId,
         year: existingHarvest.year,
-        id: { not: harvestId } // Don't update the one we just updated
       },
       data: {
-        // Only update start/end dates for proper range calculation
-        // We don't mark others as completed here
+        completed: true,
+        endDate: actualEndDate
       }
+    })
+
+    const updatedHarvest = await prisma.harvest.findUnique({
+      where: { id: harvestId }
     })
 
     console.log(`✅ Harvest completed: ${existingHarvest.year} for harvest ID: ${harvestId}`)
@@ -91,7 +83,7 @@ async function completeHarvest(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      harvest: updatedHarvest,
+      harvest: updatedHarvest || null,
       dateRange: {
         startDate: actualStartDate,
         endDate: actualEndDate

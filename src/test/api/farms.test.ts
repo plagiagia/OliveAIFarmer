@@ -82,7 +82,7 @@ describe('POST /api/farms/create', () => {
 
     const request = new NextRequest('http://localhost/api/farms/create', {
       method: 'POST',
-      body: JSON.stringify({ name: 'Test Farm', location: 'Athens' }),
+      body: JSON.stringify({ name: 'Test Farm', location: 'Athens', treeCount: '1' }),
     })
 
     const response = await POST(request)
