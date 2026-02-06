@@ -1,322 +1,199 @@
-# ΕλαιοLog - Digital Olive Farm Management
+# OliveLog (ΕλαιοLog)
 
-**A modern, Greek-language web application for olive farmers to manage their groves digitally.**
+A Greek-language web application for managing olive groves: farms, trees, activities, harvests, analytics, mapping, exports, and optional AI/Weather/Satellite insights.
 
 ![Next.js](https://img.shields.io/badge/Next.js-14.2.25-black?style=flat-square&logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue?style=flat-square&logo=typescript)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.3-38B2AC?style=flat-square&logo=tailwind-css)
 ![Prisma](https://img.shields.io/badge/Prisma-5.22-2D3748?style=flat-square&logo=prisma)
-![Neon](https://img.shields.io/badge/Neon-PostgreSQL-00D9FF?style=flat-square)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-00D9FF?style=flat-square&logo=postgresql)
 ![Mapbox](https://img.shields.io/badge/Mapbox-GL-000000?style=flat-square&logo=mapbox)
+
+## Contents
+
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Getting Started](#getting-started)
+- [Environment Variables](#environment-variables)
+- [Database](#database)
+- [Cron Jobs](#cron-jobs)
+- [Project Structure](#project-structure)
+- [Scripts](#scripts)
+- [Testing](#testing)
+- [Deployment](#deployment)
 
 ## Features
 
-### User Authentication
-- **Clerk Authentication**: Secure sign-up/login with automatic redirect
-- **Automatic User Sync**: Users synced to database automatically
-- **Session Management**: Persistent login across sessions
-- **Protected Routes**: Farm ownership verification on all operations
+- Authentication via Clerk
+- Farm management (create/edit/delete, location + coordinates)
+- Activity logging (with calendar view) and basic cost tracking
+- Harvest tracking (collections, yield + pricing)
+- Analytics dashboard (farms, activities, harvest performance)
+- Mapbox-powered workflows (satellite view, autocomplete, previews)
+- Export (CSV + PDF)
+- Progressive Web App (offline fallback + caching)
+- Optional integrations:
+  - OpenWeatherMap: weather intelligence + history
+  - Copernicus Data Space: satellite indices (NDVI/NDMI/etc.)
+  - OpenAI: “AI Γεωπόνος” insights
 
-### Farm Management
-- **Farm Creation**: Comprehensive form with interactive Mapbox integration
-- **Farm Detail Pages**: Tabbed interface with overview, trees, activities, and harvests
-- **Farm Editing**: Full edit modal with location autocomplete and map selection
-- **Farm Deletion**: Secure deletion with confirmation
-- **Olive Tree Management**: Add, edit, and remove individual trees with variety tracking
-- **Activity Tracking**: Log farming activities (watering, pruning, fertilizing, pest control, etc.)
-- **Harvest Records**: Track harvests with yield, pricing, and quality data
-- **Greek Units**: All measurements in stremmata
+## Tech Stack
 
-### Interactive Mapping
-- **Mapbox Integration**: Satellite imagery with interactive controls
-- **Location Autocomplete**: Real-time search with Greek place names
-- **Click-to-Select**: Precise coordinate extraction from map interactions
-- **Map Previews**: Satellite map previews in dashboard cards
-- **Greece-Focused**: Bounds restricted to Greece with Greek language support
+- Next.js (App Router), React, TypeScript
+- Tailwind CSS
+- Prisma + PostgreSQL (Neon or any Postgres)
+- Clerk (auth)
+- Mapbox GL
+- Vercel Blob (uploads), Vercel Cron (scheduled jobs)
+- Vitest + Testing Library
 
-### Analytics Dashboard
-- **Farm Overview**: Comprehensive statistics and visual insights
-- **Activity Charts**: Visualize farming activities over time
-- **Harvest Charts**: Track production and yields across seasons
-- **Farm Comparison**: Compare performance across multiple farms
-- **Monthly Activity Trends**: See activity patterns by month
-
-### Export & Reporting
-- **PDF Reports**: Generate detailed farm reports with @react-pdf/renderer
-- **CSV Export**: Export data to CSV with PapaParse
-- **Data Portability**: Export activities, harvests, and farm data
-
-### Olive Variety Knowledge Base
-- **Greek Varieties**: Comprehensive database of olive varieties (Koroneiki, Kalamata, etc.)
-- **Care Guidelines**: Variety-specific care instructions
-- **Monthly Task Calendar**: Seasonal task recommendations per variety
-- **Risk Factors**: Disease and pest resistance information
-- **Smart Recommendations**: Context-aware suggestions based on farm and variety
-
-### Progressive Web App
-- **Offline Support**: Works offline with service worker caching
-- **Installable**: Add to home screen on mobile devices
-- **Offline Indicator**: Visual feedback when offline
-
-### User Experience
-- **Greek Language**: Complete Greek localization
-- **Traditional Units**: Stremmata for land area
-- **Accessibility**: ARIA labels, keyboard navigation
-- **Mobile-First**: Touch-friendly interface for field use
-- **Photo Upload**: Attach images to activities and harvests via Vercel Blob
-
----
-
-## Technology Stack
-
-### Frontend
-- **Next.js 14.2.25**: React framework with App Router
-- **TypeScript 5.3**: Full type safety
-- **Tailwind CSS 3.3**: Utility-first styling
-- **Lucide React**: Icon system
-- **React Map GL 7.1.7**: Mapbox integration
-- **Recharts 3.6**: Charts and data visualization
-- **date-fns 4.1**: Date manipulation
-
-### Backend
-- **Next.js API Routes**: Serverless API endpoints
-- **Clerk**: Authentication and user management
-- **Prisma 5.22**: Type-safe database ORM
-- **Neon PostgreSQL**: Serverless database
-
-### Export & Documents
-- **@react-pdf/renderer**: PDF generation
-- **PapaParse**: CSV parsing and generation
-- **Vercel Blob**: File storage for uploads
-
-### PWA & Offline
-- **@ducanh2912/next-pwa**: Progressive Web App support
-- **Service Workers**: Offline caching
-
-### Testing
-- **Vitest 4.0**: Test runner
-- **Testing Library**: React component testing
-- **jsdom**: DOM environment for tests
-
-### Mapping & Location
-- **Mapbox GL JS**: Interactive maps
-- **Mapbox Geocoding**: Location search and autocomplete
-
----
-
-## Quick Start
+## Getting Started
 
 ### Prerequisites
-- Node.js 18+
-- npm or yarn
-- Mapbox account (for mapping features)
 
-### Installation
+- Node.js `>= 18`
+- A PostgreSQL database (`DATABASE_URL`)
+- API keys for the integrations you want to enable (Clerk / Mapbox / etc.)
 
-1. **Clone the repository**
+### Setup
+
 ```bash
-git clone https://github.com/plagiagia/OliveAIFarmer.git
-cd OliveAIFarmer
-```
-
-2. **Install dependencies**
-```bash
+# Install dependencies
 npm install
-```
 
-3. **Set up environment variables**
-```bash
+# Create local environment file
 cp .env.example .env.local
-```
 
-4. **Configure your environment**
-```env
-# Clerk Authentication
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
-CLERK_SECRET_KEY=your_clerk_secret_key
-
-# Database
-DATABASE_URL=your_neon_postgresql_url
-
-# Mapbox (for mapping features)
-NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN=your_mapbox_access_token
-
-# Optional: Clerk URLs
-NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
-NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
-```
-
-5. **Set up the database**
-```bash
+# Generate Prisma client
 npm run db:generate
-npm run db:push
-npm run db:seed  # Optional: seed with sample data
-```
 
-6. **Start the development server**
-```bash
+# Apply migrations (recommended)
+npm run db:migrate
+
+# Optional: seed example data
+npm run db:seed
+
+# Start dev server
 npm run dev
 ```
 
-Visit `http://localhost:3000` to see the application.
+Open `http://localhost:3000`.
 
----
+## Environment Variables
+
+Copy `.env.example` to `.env.local` and fill the values.
+
+| Variable | Required | Purpose |
+|---|---:|---|
+| `DATABASE_URL` | yes | PostgreSQL connection (Prisma) |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | yes | Clerk auth (client) |
+| `CLERK_SECRET_KEY` | yes | Clerk auth (server) |
+| `NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN` | yes | Maps + geocoding |
+| `BLOB_READ_WRITE_TOKEN` | no* | Photo uploads (required if using uploads) |
+| `OPENWEATHER_API_KEY` | no | Weather intelligence + cron weather history |
+| `CRON_SECRET` | prod | Protects `/api/cron/*` endpoints in production |
+| `OPENAI_API_KEY` | no | AI insights (“AI Γεωπόνος”) |
+| `COPERNICUS_CLIENT_ID` | no | Satellite data |
+| `COPERNICUS_CLIENT_SECRET` | no | Satellite data |
+
+Optional Clerk route overrides:
+
+- `NEXT_PUBLIC_CLERK_SIGN_IN_URL` (default: `/sign-in`)
+- `NEXT_PUBLIC_CLERK_SIGN_UP_URL` (default: `/sign-up`)
+
+## Database
+
+Local development:
+
+- `npm run db:migrate` (recommended) applies migrations with Prisma Migrate
+- `npm run db:push` pushes schema directly (useful for quick prototyping)
+
+Production:
+
+- `npm run db:deploy` applies existing migrations (`prisma migrate deploy`)
+
+Note: `npm run build` does **not** mutate your database.
+
+## Cron Jobs
+
+This repo includes Vercel cron schedules in `vercel.json`:
+
+- Weather job: `GET /api/cron/weather` (daily at `06:00`)
+- Satellite job: `GET /api/cron/satellite` (weekly on Sunday at `07:00`)
+
+In production, both endpoints require:
+
+- Header `Authorization: Bearer $CRON_SECRET`
 
 ## Project Structure
 
 ```
 src/
-├── app/                          # Next.js App Router
-│   ├── api/                      # API routes
-│   │   ├── activities/           # Activity CRUD
-│   │   ├── analytics/            # Analytics endpoints
-│   │   ├── export/               # Export functionality
-│   │   ├── farms/                # Farm management
-│   │   ├── harvests/             # Harvest operations
-│   │   ├── sync-user/            # User synchronization
-│   │   ├── upload/               # File uploads
-│   │   └── varieties/            # Olive variety data
-│   ├── dashboard/                # Dashboard pages
-│   │   ├── analytics/            # Analytics page
-│   │   └── farms/                # Farm management pages
-│   └── offline/                  # Offline fallback page
-├── components/
-│   ├── activities/               # Activity components
-│   ├── analytics/                # Chart components
-│   ├── auth/                     # Authentication components
-│   ├── dashboard/                # Dashboard components
-│   ├── export/                   # Export buttons and reports
-│   ├── farms/                    # Farm management components
-│   ├── map/                      # Mapbox components
-│   ├── trees/                    # Tree management
-│   ├── ui/                       # Reusable UI components
-│   └── upload/                   # Photo upload components
-├── hooks/                        # Custom React hooks
-│   └── useOnlineStatus.ts        # Online/offline detection
-├── lib/                          # Utility libraries
-│   ├── export/                   # CSV and PDF utilities
-│   ├── area-conversions.ts       # Area unit conversions
-│   ├── db.ts                     # Database client
-│   ├── errors.ts                 # Error handling
-│   ├── mapbox-utils.ts           # Map utilities
-│   └── utils.ts                  # General utilities
-├── test/                         # Test files
-│   └── api/                      # API tests
-└── types/                        # TypeScript types
-    ├── activity.ts               # Activity types
-    └── index.ts                  # Shared types
+├── app/
+│   ├── api/                 # Route handlers (server)
+│   │   ├── activities/
+│   │   ├── analytics/
+│   │   ├── cron/
+│   │   ├── export/
+│   │   ├── farms/
+│   │   ├── harvests/
+│   │   ├── insights/
+│   │   ├── satellite/
+│   │   ├── sync-user/
+│   │   ├── upload/
+│   │   └── weather/
+│   ├── dashboard/           # App pages
+│   └── offline/             # Offline fallback page
+├── components/              # UI + feature components
+├── hooks/                   # Custom hooks
+├── lib/                     # Server/client utilities
+├── test/                    # Tests
+└── types/                   # TypeScript types
 
 prisma/
-├── schema.prisma                 # Database schema
+├── migrations/
+├── schema.prisma
 └── scripts/
-    ├── seed.ts                   # Database seeding
-    ├── seed-varieties.ts         # Variety knowledge base
-    └── migrate-to-stremmata.ts   # Migration utilities
 ```
 
----
-
-## Database Schema
-
-### Core Models
-
-```prisma
-model User {
-  id        String   @id
-  clerkId   String   @unique
-  email     String   @unique
-  firstName String
-  lastName  String
-  farms     Farm[]
-}
-
-model Farm {
-  id           String   @id
-  name         String
-  location     String
-  coordinates  String?
-  totalArea    Float?   // In stremmata
-  treeCount    Int?     // Number of olive trees
-  oliveVariety String?  // Primary olive variety
-  activities   Activity[]
-  harvests     Harvest[]
-}
-```
-
-### Additional Models
-- **SmartRecommendation**: Context-aware AI farming suggestions
-- **WeatherRecord**: Historical weather data per farm
-
-See `prisma/schema.prisma` for the complete schema.
-
----
-
-## Available Scripts
+## Scripts
 
 ```bash
-# Development
-npm run dev              # Start development server
-npm run build            # Build for production
-npm run start            # Start production server
+# Dev / build
+npm run dev
+npm run build
+npm run start
 
 # Database
-npm run db:generate      # Generate Prisma client
-npm run db:push          # Push schema to database
-npm run db:migrate       # Run migrations
-npm run db:studio        # Open Prisma Studio
-npm run db:seed          # Seed database
+npm run db:generate
+npm run db:migrate
+npm run db:deploy
+npm run db:push
+npm run db:studio
+npm run db:seed
 
-# Testing
-npm run test             # Run tests in watch mode
-npm run test:run         # Run tests once
-npm run test:coverage    # Run tests with coverage
-
-# Code Quality
-npm run lint             # Run ESLint
-npm run type-check       # TypeScript type checking
+# Quality / testing
+npm run lint
+npm run type-check
+npm run test
+npm run test:run
+npm run test:coverage
 ```
 
----
+## Testing
 
-## UI/UX Design
+```bash
+npm run test:run
+```
 
-### Design Principles
-- **Farmer-First**: Designed for Greek olive farmers
-- **Accessibility**: WCAG 2.1 AA compliant
-- **Mobile-First**: Touch-friendly for field use
-- **Greek Language**: Complete localization
+## Deployment
 
-### Color Palette
-- **Primary**: Green tones (#22c55e, #16a34a)
-- **Secondary**: Earth tones
-- **Accent**: Emerald for actions
+Vercel is the easiest path (Next.js + cron + Blob integration). At minimum:
 
----
-
-## Contributing
-
-We welcome contributions! Please:
-- Follow TypeScript best practices
-- Maintain Greek language consistency
-- Write tests for new features
-- Update documentation
+1. Configure the environment variables from `.env.example`.
+2. Ensure migrations are applied (`npm run db:deploy`) during deploy.
+3. Configure `CRON_SECRET` so cron endpoints are protected.
 
 ---
 
-## License
-
-MIT License - see [LICENSE](LICENSE) for details.
-
----
-
-## Support
-
-- **Issues**: Open an issue on GitHub
-- **Documentation**: See `SETUP.md` for detailed setup
-- **Troubleshooting**: See `TROUBLESHOOTING.md`
-
----
-
-**Made with care for Greek olive farmers**
-
-_"Digitizing traditional olive farming while respecting cultural heritage"_
+Support: open a GitHub issue with steps to reproduce + logs (server + browser console).
