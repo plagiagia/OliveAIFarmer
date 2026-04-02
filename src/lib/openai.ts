@@ -11,6 +11,8 @@ export const openai = OPENAI_API_KEY
   : null
 
 export const AI_MODEL = 'gpt-4o-mini'
+export const FARM_INSIGHTS_PROMPT_VERSION = 'farm-v1.1'
+export const DASHBOARD_INSIGHTS_PROMPT_VERSION = 'dashboard-v1.1'
 
 // Type definitions for AI Insights
 export interface FarmContext {
@@ -76,6 +78,19 @@ export interface AIInsight {
 
 export interface AIInsightsResponse {
   insights: AIInsight[]
+  meta: AIResponseMeta
+}
+
+export interface AIResponseMeta {
+  model: string
+  promptVersion: string
+  requestId: string | null
+  generatedAt: string
+  usage: {
+    promptTokens: number
+    completionTokens: number
+    totalTokens: number
+  } | null
 }
 
 const AI_INSIGHT_TYPES = new Set<AIInsight['type']>([
@@ -144,6 +159,7 @@ export interface DashboardAIResponse {
     urgentActions: number
     opportunitiesCount: number
   }
+  meta: AIResponseMeta
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -350,7 +366,24 @@ export async function generateInsights(context: FarmContext): Promise<AIInsights
     throw new Error('No valid insights generated from OpenAI response')
   }
 
-  return { insights: validatedInsights.slice(0, 8) }
+  const meta: AIResponseMeta = {
+    model: response.model || AI_MODEL,
+    promptVersion: FARM_INSIGHTS_PROMPT_VERSION,
+    requestId: response.id || null,
+    generatedAt: new Date().toISOString(),
+    usage: response.usage
+      ? {
+          promptTokens: response.usage.prompt_tokens,
+          completionTokens: response.usage.completion_tokens,
+          totalTokens: response.usage.total_tokens
+        }
+      : null
+  }
+
+  return {
+    insights: validatedInsights.slice(0, 8),
+    meta
+  }
 }
 
 // Build dashboard system prompt
@@ -462,8 +495,23 @@ export async function generateDashboardInsights(
     throw new Error('No valid dashboard insights generated from OpenAI response')
   }
 
+  const meta: AIResponseMeta = {
+    model: response.model || AI_MODEL,
+    promptVersion: DASHBOARD_INSIGHTS_PROMPT_VERSION,
+    requestId: response.id || null,
+    generatedAt: new Date().toISOString(),
+    usage: response.usage
+      ? {
+          promptTokens: response.usage.prompt_tokens,
+          completionTokens: response.usage.completion_tokens,
+          totalTokens: response.usage.total_tokens
+        }
+      : null
+  }
+
   return {
     insights: insights.slice(0, 10),
-    portfolioSummary: validateDashboardSummary(parsed.portfolioSummary)
+    portfolioSummary: validateDashboardSummary(parsed.portfolioSummary),
+    meta
   }
 }

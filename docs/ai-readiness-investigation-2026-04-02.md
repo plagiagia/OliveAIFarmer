@@ -138,3 +138,8 @@ You have a solid AI product foundation and strong domain fit. To be **commercial
   - `/api/insights/generate` limited to 10 requests/hour per user
   - `/api/insights/dashboard` limited to 6 requests/hour per user
   - `429` responses now include `Retry-After` and `retryAfterSeconds`
+- Added AI telemetry/provenance persistence and logging:
+  - prompt version constants for farm and dashboard prompts
+  - OpenAI model/requestId/token usage captured as `meta`
+  - metadata persisted on each recommendation in `triggerConditions.aiMeta`
+  - structured server logs for each AI generation request

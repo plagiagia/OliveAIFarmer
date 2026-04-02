@@ -207,6 +207,16 @@ export async function POST(request: NextRequest) {
 
     // Generate insights using OpenAI
     const aiResponse = await generateInsights(farmContext)
+    const aiMeta = aiResponse.meta
+
+    console.info('AI insight generation (farm)', {
+      farmId: farm.id,
+      userId,
+      model: aiMeta.model,
+      promptVersion: aiMeta.promptVersion,
+      requestId: aiMeta.requestId,
+      totalTokens: aiMeta.usage?.totalTokens ?? null
+    })
 
     // Delete old AI insights for this farm (keep only manual/rule-based ones)
     await prisma.smartRecommendation.deleteMany({
@@ -231,6 +241,13 @@ export async function POST(request: NextRequest) {
             farmId: farm.id,
             weatherBased: insight.type === 'WEATHER_ALERT',
             seasonBased: insight.type === 'SEASONAL_TIP',
+            triggerConditions: {
+              aiMeta: {
+                ...aiMeta,
+                scope: 'farm',
+                farmId: farm.id
+              }
+            },
             validFrom: new Date(),
             validUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // Valid for 7 days
           }

@@ -135,6 +135,16 @@ export async function POST() {
 
     // Generate insights using OpenAI
     const aiResponse = await generateDashboardInsights(portfolioContext)
+    const aiMeta = aiResponse.meta
+
+    console.info('AI insight generation (dashboard)', {
+      userId,
+      farmCount: user.farms.length,
+      model: aiMeta.model,
+      promptVersion: aiMeta.promptVersion,
+      requestId: aiMeta.requestId,
+      totalTokens: aiMeta.usage?.totalTokens ?? null
+    })
 
     // Get valid farm IDs
     const validFarmIds = new Set(user.farms.map(f => f.id))
@@ -159,6 +169,13 @@ export async function POST() {
             farmId: farmId, // Validated farm ID or null for portfolio-level insights
             weatherBased: false,
             seasonBased: true,
+            triggerConditions: {
+              aiMeta: {
+                ...aiMeta,
+                scope: 'dashboard',
+                farmId
+              }
+            },
             validFrom: new Date(),
             validUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
           }
