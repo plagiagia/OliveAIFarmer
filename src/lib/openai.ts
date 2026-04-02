@@ -78,6 +78,22 @@ export interface AIInsightsResponse {
   insights: AIInsight[]
 }
 
+const AI_INSIGHT_TYPES = new Set<AIInsight['type']>([
+  'TASK_REMINDER',
+  'WEATHER_ALERT',
+  'CARE_SUGGESTION',
+  'OPTIMIZATION',
+  'RISK_WARNING',
+  'SEASONAL_TIP'
+])
+
+const AI_URGENCY_LEVELS = new Set<AIInsight['urgency']>([
+  'LOW',
+  'MEDIUM',
+  'HIGH',
+  'CRITICAL'
+])
+
 // Dashboard portfolio context
 export interface DashboardPortfolioContext {
   totalFarms: number
@@ -127,6 +143,89 @@ export interface DashboardAIResponse {
     overallHealth: 'EXCELLENT' | 'GOOD' | 'FAIR' | 'POOR'
     urgentActions: number
     opportunitiesCount: number
+  }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
+}
+
+function toValidInsightType(value: unknown): AIInsight['type'] | null {
+  return typeof value === 'string' && AI_INSIGHT_TYPES.has(value as AIInsight['type'])
+    ? value as AIInsight['type']
+    : null
+}
+
+function toValidUrgency(value: unknown): AIInsight['urgency'] | null {
+  return typeof value === 'string' && AI_URGENCY_LEVELS.has(value as AIInsight['urgency'])
+    ? value as AIInsight['urgency']
+    : null
+}
+
+function toTrimmedString(value: unknown, maxLength: number): string | null {
+  if (typeof value !== 'string') return null
+  const trimmed = value.trim()
+  if (!trimmed) return null
+  return trimmed.length > maxLength ? trimmed.slice(0, maxLength) : trimmed
+}
+
+function toBoolean(value: unknown, fallback = false): boolean {
+  return typeof value === 'boolean' ? value : fallback
+}
+
+function validateAIInsight(input: unknown): AIInsight | null {
+  if (!isRecord(input)) return null
+
+  const type = toValidInsightType(input.type)
+  const urgency = toValidUrgency(input.urgency)
+  const title = toTrimmedString(input.title, 120)
+  const message = toTrimmedString(input.message, 1200)
+  const reasoning = toTrimmedString(input.reasoning, 500)
+  const actionRequired = toBoolean(input.actionRequired, false)
+
+  if (!type || !urgency || !title || !message || !reasoning) return null
+
+  return {
+    type,
+    title,
+    message,
+    urgency,
+    actionRequired,
+    reasoning
+  }
+}
+
+function validateDashboardSummary(input: unknown): DashboardAIResponse['portfolioSummary'] | undefined {
+  if (!isRecord(input)) return undefined
+
+  const health = input.overallHealth
+  if (health !== 'EXCELLENT' && health !== 'GOOD' && health !== 'FAIR' && health !== 'POOR') {
+    return undefined
+  }
+
+  const urgentActions = typeof input.urgentActions === 'number' ? Math.max(0, Math.round(input.urgentActions)) : 0
+  const opportunitiesCount = typeof input.opportunitiesCount === 'number' ? Math.max(0, Math.round(input.opportunitiesCount)) : 0
+
+  return {
+    overallHealth: health,
+    urgentActions,
+    opportunitiesCount
+  }
+}
+
+function validateDashboardInsight(input: unknown): DashboardAIInsight | null {
+  const base = validateAIInsight(input)
+  if (!base || !isRecord(input)) return null
+
+  const farmId = typeof input.farmId === 'string' && input.farmId.trim()
+    ? input.farmId.trim()
+    : null
+  const farmName = typeof input.farmName === 'string' ? input.farmName.trim() : undefined
+
+  return {
+    ...base,
+    farmId,
+    farmName: farmName || undefined
   }
 }
 
@@ -238,14 +337,20 @@ export async function generateInsights(context: FarmContext): Promise<AIInsights
     throw new Error('No response from OpenAI')
   }
 
-  const parsed = JSON.parse(content) as AIInsightsResponse
-
-  // Validate the response structure
-  if (!parsed.insights || !Array.isArray(parsed.insights)) {
+  const parsed = JSON.parse(content) as unknown
+  if (!isRecord(parsed) || !Array.isArray(parsed.insights)) {
     throw new Error('Invalid response structure from OpenAI')
   }
 
-  return parsed
+  const validatedInsights = parsed.insights
+    .map(validateAIInsight)
+    .filter((insight): insight is AIInsight => insight !== null)
+
+  if (validatedInsights.length === 0) {
+    throw new Error('No valid insights generated from OpenAI response')
+  }
+
+  return { insights: validatedInsights.slice(0, 8) }
 }
 
 // Build dashboard system prompt
@@ -344,12 +449,21 @@ export async function generateDashboardInsights(
     throw new Error('No response from OpenAI')
   }
 
-  const parsed = JSON.parse(content) as DashboardAIResponse
-
-  // Validate the response structure
-  if (!parsed.insights || !Array.isArray(parsed.insights)) {
+  const parsed = JSON.parse(content) as unknown
+  if (!isRecord(parsed) || !Array.isArray(parsed.insights)) {
     throw new Error('Invalid response structure from OpenAI')
   }
 
-  return parsed
+  const insights = parsed.insights
+    .map(validateDashboardInsight)
+    .filter((insight): insight is DashboardAIInsight => insight !== null)
+
+  if (insights.length === 0) {
+    throw new Error('No valid dashboard insights generated from OpenAI response')
+  }
+
+  return {
+    insights: insights.slice(0, 10),
+    portfolioSummary: validateDashboardSummary(parsed.portfolioSummary)
+  }
 }

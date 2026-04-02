@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/db'
-import { generateDashboardInsights, getCurrentSeason } from '@/lib/openai'
+import { DashboardAIInsight, generateDashboardInsights, getCurrentSeason } from '@/lib/openai'
 import { auth } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 
@@ -125,17 +125,17 @@ export async function POST() {
     // Save insights to database for each farm mentioned
     // Validate farmId before saving - set to null if invalid
     const savedInsights = await Promise.all(
-      aiResponse.insights.map((insight: any) => {
+      aiResponse.insights.map((insight: DashboardAIInsight) => {
         const farmId = insight.farmId && validFarmIds.has(insight.farmId)
           ? insight.farmId
           : null
 
         return prisma.smartRecommendation.create({
           data: {
-            type: insight.type as any,
+            type: insight.type,
             title: insight.title,
             message: insight.message,
-            urgency: insight.urgency as any,
+            urgency: insight.urgency,
             actionRequired: insight.actionRequired,
             reasoning: insight.reasoning,
             source: 'AI_GENERATED',
