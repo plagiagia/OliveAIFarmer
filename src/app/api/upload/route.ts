@@ -4,6 +4,26 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export const dynamic = 'force-dynamic'
 
+const ALLOWED_CONTEXTS = new Set(['activity', 'tree', 'farm', 'profile', 'cover'])
+const ALLOWED_FILE_TYPES: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/heic': 'heic'
+}
+
+function isUserBlobUrl(url: string, userId: string): boolean {
+  try {
+    const parsed = new URL(url)
+    const isBlobHost = parsed.hostname.endsWith('.public.blob.vercel-storage.com')
+    const userPrefix = `/${userId}/`
+
+    return isBlobHost && parsed.pathname.startsWith(userPrefix)
+  } catch {
+    return false
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { userId } = await auth()
@@ -21,9 +41,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
     }
 
+    if (!context || !ALLOWED_CONTEXTS.has(context)) {
+      return NextResponse.json({
+        error: 'Μη έγκυρο context μεταφόρτωσης.'
+      }, { status: 400 })
+    }
+
+    if (!contextId) {
+      return NextResponse.json({
+        error: 'Το contextId είναι υποχρεωτικό.'
+      }, { status: 400 })
+    }
+
     // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/heic']
-    if (!allowedTypes.includes(file.type)) {
+    const extension = ALLOWED_FILE_TYPES[file.type]
+    if (!extension) {
       return NextResponse.json({
         error: 'Μη έγκυρος τύπος αρχείου. Επιτρέπονται μόνο JPEG, PNG, WebP ή HEIC.'
       }, { status: 400 })
@@ -39,7 +71,6 @@ export async function POST(request: NextRequest) {
 
     // Generate unique filename
     const timestamp = Date.now()
-    const extension = file.name.split('.').pop() || 'jpg'
     const filename = `${userId}/${context}/${contextId}/${timestamp}.${extension}`
 
     // Upload to Vercel Blob
@@ -75,7 +106,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Verify the URL belongs to this user
-    if (!url.includes(userId)) {
+    if (!isUserBlobUrl(url, userId)) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 })
     }
 
