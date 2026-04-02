@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/db'
-import { generateDashboardInsights, getCurrentSeason } from '@/lib/openai'
+import { DashboardAIInsight, generateDashboardInsights, getCurrentSeason } from '@/lib/openai'
+import { checkRateLimit } from '@/lib/rate-limit'
 import { auth } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 
@@ -22,6 +23,22 @@ export async function POST() {
     const { userId } = await auth()
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const rateLimit = checkRateLimit(`ai:dashboard:${userId}`, 6, 60 * 60 * 1000)
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        {
+          error: 'Έγιναν πάρα πολλά αιτήματα στρατηγικής AI. Προσπαθήστε ξανά αργότερα.',
+          retryAfterSeconds: rateLimit.retryAfterSeconds
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(rateLimit.retryAfterSeconds)
+          }
+        }
+      )
     }
 
     // Get user with all farms and related data
@@ -118,6 +135,16 @@ export async function POST() {
 
     // Generate insights using OpenAI
     const aiResponse = await generateDashboardInsights(portfolioContext)
+    const aiMeta = aiResponse.meta
+
+    console.info('AI insight generation (dashboard)', {
+      userId,
+      farmCount: user.farms.length,
+      model: aiMeta.model,
+      promptVersion: aiMeta.promptVersion,
+      requestId: aiMeta.requestId,
+      totalTokens: aiMeta.usage?.totalTokens ?? null
+    })
 
     // Get valid farm IDs
     const validFarmIds = new Set(user.farms.map(f => f.id))
@@ -125,23 +152,30 @@ export async function POST() {
     // Save insights to database for each farm mentioned
     // Validate farmId before saving - set to null if invalid
     const savedInsights = await Promise.all(
-      aiResponse.insights.map((insight: any) => {
+      aiResponse.insights.map((insight: DashboardAIInsight) => {
         const farmId = insight.farmId && validFarmIds.has(insight.farmId)
           ? insight.farmId
           : null
 
         return prisma.smartRecommendation.create({
           data: {
-            type: insight.type as any,
+            type: insight.type,
             title: insight.title,
             message: insight.message,
-            urgency: insight.urgency as any,
+            urgency: insight.urgency,
             actionRequired: insight.actionRequired,
             reasoning: insight.reasoning,
             source: 'AI_GENERATED',
             farmId: farmId, // Validated farm ID or null for portfolio-level insights
             weatherBased: false,
             seasonBased: true,
+            triggerConditions: {
+              aiMeta: {
+                ...aiMeta,
+                scope: 'dashboard',
+                farmId
+              }
+            },
             validFrom: new Date(),
             validUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
           }
