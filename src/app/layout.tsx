@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { OfflineIndicator } from '@/components/ui/OfflineIndicator'
+import OliveIcon from '@/components/ui/OliveIcon'
 
 const inter = Inter({ 
   subsets: ['latin', 'latin-ext'],
@@ -82,10 +83,9 @@ export default function RootLayout({
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-16">
                   <div className="flex items-center space-x-2 sm:space-x-3">
-                    <svg className="w-7 h-7 sm:w-8 sm:h-8 text-olive-600 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
-                      <ellipse cx="12" cy="12" rx="5" ry="8" transform="rotate(-30 12 12)" />
-                      <path d="M12 4 Q14 2 16 3" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-                    </svg>
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-olive-100 to-olive-50 border border-olive-200/70 shadow-sm flex items-center justify-center flex-shrink-0">
+                      <OliveIcon size="sm" className="text-olive-700" />
+                    </div>
                     <h1 className="text-lg sm:text-xl font-bold text-olive-800 truncate">ΕλαιοLog</h1>
                   </div>
                   <UserButton
