@@ -134,3 +134,7 @@ You have a solid AI product foundation and strong domain fit. To be **commercial
   - filtered/limited valid insight count for farm and dashboard generations
 - Added dashboard portfolio summary validation with safe numeric normalization.
 - Updated `src/app/api/insights/dashboard/route.ts` to consume typed `DashboardAIInsight` objects instead of `any` for AI mapping and persistence.
+- Added per-user in-memory throttling for AI generation endpoints:
+  - `/api/insights/generate` limited to 10 requests/hour per user
+  - `/api/insights/dashboard` limited to 6 requests/hour per user
+  - `429` responses now include `Retry-After` and `retryAfterSeconds`

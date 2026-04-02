@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/db'
 import { DashboardAIInsight, generateDashboardInsights, getCurrentSeason } from '@/lib/openai'
+import { checkRateLimit } from '@/lib/rate-limit'
 import { auth } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 
@@ -22,6 +23,22 @@ export async function POST() {
     const { userId } = await auth()
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const rateLimit = checkRateLimit(`ai:dashboard:${userId}`, 6, 60 * 60 * 1000)
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        {
+          error: 'Έγιναν πάρα πολλά αιτήματα στρατηγικής AI. Προσπαθήστε ξανά αργότερα.',
+          retryAfterSeconds: rateLimit.retryAfterSeconds
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(rateLimit.retryAfterSeconds)
+          }
+        }
+      )
     }
 
     // Get user with all farms and related data

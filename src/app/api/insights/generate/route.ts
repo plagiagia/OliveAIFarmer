@@ -1,4 +1,5 @@
 import { getWeatherHistory, prisma } from '@/lib/db'
+import { checkRateLimit } from '@/lib/rate-limit'
 import {
   AIInsight,
   FarmContext,
@@ -35,6 +36,22 @@ export async function POST(request: NextRequest) {
     const { userId } = await auth()
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const rateLimit = checkRateLimit(`ai:generate:${userId}`, 10, 60 * 60 * 1000)
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        {
+          error: 'Έγιναν πάρα πολλά αιτήματα AI. Προσπαθήστε ξανά αργότερα.',
+          retryAfterSeconds: rateLimit.retryAfterSeconds
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(rateLimit.retryAfterSeconds)
+          }
+        }
+      )
     }
 
     const body = await request.json()
