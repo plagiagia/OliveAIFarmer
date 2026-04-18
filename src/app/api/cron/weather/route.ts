@@ -10,11 +10,20 @@ const OPENWEATHER_BASE_URL = 'https://api.openweathermap.org/data/2.5'
 // This endpoint should only be called by Vercel's cron system
 export async function GET(request: NextRequest) {
   try {
-    // Verify the request is from Vercel Cron
-    const authHeader = request.headers.get('authorization')
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      // In development, allow without auth
-      if (process.env.NODE_ENV === 'production') {
+    // Verify the request is from Vercel Cron.
+    // Require CRON_SECRET in all environments. To run a cron locally without a secret,
+    // explicitly set ALLOW_INSECURE_CRON=1 (never set this in production).
+    const cronSecret = process.env.CRON_SECRET
+    const allowInsecure =
+      process.env.NODE_ENV !== 'production' && process.env.ALLOW_INSECURE_CRON === '1'
+
+    if (!allowInsecure) {
+      if (!cronSecret) {
+        console.error('CRON_SECRET is not configured')
+        return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 })
+      }
+      const authHeader = request.headers.get('authorization')
+      if (authHeader !== `Bearer ${cronSecret}`) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
       }
     }

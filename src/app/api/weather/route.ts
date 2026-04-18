@@ -2,12 +2,32 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getWeatherIntelligence } from '@/lib/weather'
 import { prisma, saveWeatherRecord } from '@/lib/db'
 import { auth } from '@clerk/nextjs/server'
+import { checkRateLimit } from '@/lib/rate-limit'
 
-// Weather data is public - no auth required
-// If `farmId` is provided, we only save to the DB when the caller is authenticated
-// and owns the farm. This prevents unauthenticated/cross-tenant writes.
+// Weather endpoint requires authentication and is rate-limited to prevent
+// abuse of the upstream paid OpenWeatherMap quota.
 export async function GET(request: NextRequest) {
   try {
+    const { userId } = await auth()
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // 60 requests per minute per user.
+    const rateLimit = checkRateLimit(`weather:${userId}`, 60, 60_000)
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        {
+          error: 'Πάρα πολλά αιτήματα. Δοκιμάστε ξανά σύντομα.',
+          retryAfterSeconds: rateLimit.retryAfterSeconds
+        },
+        {
+          status: 429,
+          headers: { 'Retry-After': String(rateLimit.retryAfterSeconds) }
+        }
+      )
+    }
+
     // Get coordinates and optional farmId from query params
     const searchParams = request.nextUrl.searchParams
     const lat = searchParams.get('lat')
@@ -48,12 +68,6 @@ export async function GET(request: NextRequest) {
     // Opportunistically save weather data if farmId is provided
     if (farmId && weatherIntelligence.weather.current) {
       try {
-        const { userId } = await auth()
-        if (!userId) {
-          // Unauthenticated callers can still fetch weather, but may not write farm data.
-          return NextResponse.json(weatherIntelligence)
-        }
-
         // Verify the user owns the farm before saving.
         const farm = await prisma.farm.findFirst({
           where: {
