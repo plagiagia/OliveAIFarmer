@@ -1,4 +1,11 @@
 import OpenAI from 'openai'
+import {
+  aiInsightsResponseSchema,
+  dashboardResponseSchema,
+  type AIInsightParsed,
+  type DashboardAIInsightParsed,
+} from '@/lib/ai/schemas'
+import { withRetry } from '@/lib/ai/retry'
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 
@@ -10,9 +17,13 @@ export const openai = OPENAI_API_KEY
   ? new OpenAI({ apiKey: OPENAI_API_KEY })
   : null
 
-export const AI_MODEL = 'gpt-4o-mini'
-export const FARM_INSIGHTS_PROMPT_VERSION = 'farm-v1.1'
-export const DASHBOARD_INSIGHTS_PROMPT_VERSION = 'dashboard-v1.1'
+// Model is overridable per-environment so we can A/B without redeploy.
+export const AI_MODEL = process.env.OPENAI_MODEL ?? 'gpt-4o-mini'
+export const AI_VISION_MODEL = process.env.OPENAI_VISION_MODEL ?? 'gpt-4o'
+export const FARM_INSIGHTS_PROMPT_VERSION = 'farm-v2.0'
+export const DASHBOARD_INSIGHTS_PROMPT_VERSION = 'dashboard-v2.0'
+export const CHAT_PROMPT_VERSION = 'chat-v1.0'
+export const DIAGNOSE_PROMPT_VERSION = 'diagnose-v1.0'
 
 // Type definitions for AI Insights
 export interface FarmContext {
@@ -74,6 +85,7 @@ export interface AIInsight {
   urgency: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
   actionRequired: boolean
   reasoning: string
+  confidence?: number
 }
 
 export interface AIInsightsResponse {
@@ -92,22 +104,6 @@ export interface AIResponseMeta {
     totalTokens: number
   } | null
 }
-
-const AI_INSIGHT_TYPES = new Set<AIInsight['type']>([
-  'TASK_REMINDER',
-  'WEATHER_ALERT',
-  'CARE_SUGGESTION',
-  'OPTIMIZATION',
-  'RISK_WARNING',
-  'SEASONAL_TIP'
-])
-
-const AI_URGENCY_LEVELS = new Set<AIInsight['urgency']>([
-  'LOW',
-  'MEDIUM',
-  'HIGH',
-  'CRITICAL'
-])
 
 // Dashboard portfolio context
 export interface DashboardPortfolioContext {
@@ -165,85 +161,8 @@ export interface DashboardAIResponse {
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
 }
-
-function toValidInsightType(value: unknown): AIInsight['type'] | null {
-  return typeof value === 'string' && AI_INSIGHT_TYPES.has(value as AIInsight['type'])
-    ? value as AIInsight['type']
-    : null
-}
-
-function toValidUrgency(value: unknown): AIInsight['urgency'] | null {
-  return typeof value === 'string' && AI_URGENCY_LEVELS.has(value as AIInsight['urgency'])
-    ? value as AIInsight['urgency']
-    : null
-}
-
-function toTrimmedString(value: unknown, maxLength: number): string | null {
-  if (typeof value !== 'string') return null
-  const trimmed = value.trim()
-  if (!trimmed) return null
-  return trimmed.length > maxLength ? trimmed.slice(0, maxLength) : trimmed
-}
-
-function toBoolean(value: unknown, fallback = false): boolean {
-  return typeof value === 'boolean' ? value : fallback
-}
-
-function validateAIInsight(input: unknown): AIInsight | null {
-  if (!isRecord(input)) return null
-
-  const type = toValidInsightType(input.type)
-  const urgency = toValidUrgency(input.urgency)
-  const title = toTrimmedString(input.title, 120)
-  const message = toTrimmedString(input.message, 1200)
-  const reasoning = toTrimmedString(input.reasoning, 500)
-  const actionRequired = toBoolean(input.actionRequired, false)
-
-  if (!type || !urgency || !title || !message || !reasoning) return null
-
-  return {
-    type,
-    title,
-    message,
-    urgency,
-    actionRequired,
-    reasoning
-  }
-}
-
-function validateDashboardSummary(input: unknown): DashboardAIResponse['portfolioSummary'] | undefined {
-  if (!isRecord(input)) return undefined
-
-  const health = input.overallHealth
-  if (health !== 'EXCELLENT' && health !== 'GOOD' && health !== 'FAIR' && health !== 'POOR') {
-    return undefined
-  }
-
-  const urgentActions = typeof input.urgentActions === 'number' ? Math.max(0, Math.round(input.urgentActions)) : 0
-  const opportunitiesCount = typeof input.opportunitiesCount === 'number' ? Math.max(0, Math.round(input.opportunitiesCount)) : 0
-
-  return {
-    overallHealth: health,
-    urgentActions,
-    opportunitiesCount
-  }
-}
-
-function validateDashboardInsight(input: unknown): DashboardAIInsight | null {
-  const base = validateAIInsight(input)
-  if (!base || !isRecord(input)) return null
-
-  const farmId = typeof input.farmId === 'string' && input.farmId.trim()
-    ? input.farmId.trim()
-    : null
-  const farmName = typeof input.farmName === 'string' ? input.farmName.trim() : undefined
-
-  return {
-    ...base,
-    farmId,
-    farmName: farmName || undefined
-  }
-}
+// Suppress unused warning — kept exported in case future callers need it.
+void isRecord
 
 // Get current season in Greek
 export function getCurrentSeason(): string {
@@ -254,10 +173,44 @@ export function getCurrentSeason(): string {
   return 'Χειμώνας'
 }
 
-// Build the system prompt for the AI
-export function buildSystemPrompt(context: FarmContext): string {
-  return `Είσαι έμπειρος Έλληνας γεωπόνος εξειδικευμένος στην ελαιοκαλλιέργεια.
-Αναλύεις τα δεδομένα του ελαιώνα και παρέχεις επαγγελματικές συμβουλές.
+/**
+ * Static system prompt — kept identical across requests so OpenAI's
+ * automatic prompt caching can kick in (saves ~50% on input tokens
+ * for the stable instructional preamble).
+ *
+ * All dynamic context is sent as the user message via
+ * `buildFarmContextMessage`.
+ */
+export const FARM_SYSTEM_PROMPT = `Είσαι έμπειρος Έλληνας γεωπόνος εξειδικευμένος στην ελαιοκαλλιέργεια.
+Αναλύεις δεδομένα ελαιώνα που σου παρέχονται και δίνεις επαγγελματικές, εξατομικευμένες συμβουλές.
+
+ΑΥΣΤΗΡΟΙ ΚΑΝΟΝΕΣ:
+1. Χρησιμοποίησε ΑΠΟΚΛΕΙΣΤΙΚΑ τα δεδομένα στο "CONTEXT" του χρήστη. Μην εφευρίσκεις ποικιλίες, τιμές, ή συμβάντα που δεν αναφέρονται.
+2. Αν λείπουν δεδομένα για μια σύσταση, πες "Δεν υπάρχουν αρκετά δεδομένα" αντί να μαντέψεις.
+3. Για συμβουλές φυτοπροστασίας: ΜΗΝ προτείνεις δοσολογίες ή συγκεκριμένα δραστικά (π.χ. ονόματα φυτοφαρμάκων). Πρότεινε ΜΟΝΟ γενικές κατευθύνσεις και υπενθύμιση συμβουλής αδειοδοτημένου γεωπόνου.
+4. Δώσε 3-5 συμβουλές, στα Ελληνικά, συγκεκριμένες και πρακτικές.
+5. Σε κάθε σύσταση δώσε confidence 0..1: 1 = ξεκάθαρο από τα δεδομένα, 0.3 = αβέβαιο.
+
+Απάντησε ΜΟΝΟ σε JSON με την δομή:
+{
+  "insights": [
+    {
+      "type": "TASK_REMINDER|WEATHER_ALERT|CARE_SUGGESTION|OPTIMIZATION|RISK_WARNING|SEASONAL_TIP",
+      "title": "σύντομος τίτλος",
+      "message": "αναλυτική συμβουλή 2-3 προτάσεις",
+      "urgency": "LOW|MEDIUM|HIGH|CRITICAL",
+      "actionRequired": true|false,
+      "reasoning": "γιατί δίνεις αυτή τη συμβουλή",
+      "confidence": 0.0..1.0
+    }
+  ]
+}`
+
+/**
+ * Build the dynamic user message — contains only the variable farm data.
+ */
+export function buildFarmContextMessage(context: FarmContext): string {
+  return `CONTEXT:
 
 ΣΤΟΙΧΕΙΑ ΕΛΑΙΩΝΑ:
 - Όνομα: ${context.name}
@@ -304,29 +257,12 @@ ${context.satelliteData ? `ΔΟΡΥΦΟΡΙΚΑ ΔΕΔΟΜΕΝΑ (Copernicus Sen
     context.satelliteData.ndviTrend === 'declining' ? 'Πτώση ↓' :
     context.satelliteData.ndviTrend === 'stable' ? 'Σταθερή' : 'Μη διαθέσιμο'}
 - Τελευταία ενημέρωση: ${context.satelliteData.lastUpdated ? new Date(context.satelliteData.lastUpdated).toLocaleDateString('el-GR') : 'Μη διαθέσιμο'}
-` : ''}
-ΟΔΗΓΙΕΣ:
-1. Δώσε 3-5 εξατομικευμένες συμβουλές βασισμένες ΑΠΟΚΛΕΙΣΤΙΚΑ στα παραπάνω δεδομένα
-2. Λάβε υπόψη την τοποθεσία, την ποικιλία, και την ηλικία των δέντρων
-3. Σχολίασε τις πρόσφατες δραστηριότητες - τι λείπει ή τι πρέπει να επαναληφθεί
-4. Βασίσου στις καιρικές συνθήκες για συστάσεις άρδευσης και φυτοπροστασίας
-5. Σύγκρινε με προηγούμενες συγκομιδές για βελτιστοποίηση απόδοσης
-6. ΑΝ υπάρχουν δορυφορικά δεδομένα, αξιολόγησε την υγεία της βλάστησης (NDVI) και την υγρασία (NDMI) - προειδοποίησε για στρες ή πτωτικές τάσεις
-7. Να είσαι συγκεκριμένος και πρακτικός - όχι γενικές συμβουλές
+` : ''}`
+}
 
-Απάντησε ΜΟΝΟ σε JSON format με την ακόλουθη δομή:
-{
-  "insights": [
-    {
-      "type": "TASK_REMINDER|WEATHER_ALERT|CARE_SUGGESTION|OPTIMIZATION|RISK_WARNING|SEASONAL_TIP",
-      "title": "Σύντομος τίτλος στα Ελληνικά",
-      "message": "Αναλυτική συμβουλή 2-3 προτάσεις στα Ελληνικά",
-      "urgency": "LOW|MEDIUM|HIGH|CRITICAL",
-      "actionRequired": true/false,
-      "reasoning": "Γιατί δίνεις αυτή τη συμβουλή (1 πρόταση)"
-    }
-  ]
-}`
+// Backwards-compatible wrapper retained so existing imports don't break.
+export function buildSystemPrompt(context: FarmContext): string {
+  return `${FARM_SYSTEM_PROMPT}\n\n${buildFarmContextMessage(context)}`
 }
 
 // Generate insights using OpenAI
@@ -335,36 +271,41 @@ export async function generateInsights(context: FarmContext): Promise<AIInsights
     throw new Error('OpenAI API key is not configured')
   }
 
-  const systemPrompt = buildSystemPrompt(context)
+  const userPayload = buildFarmContextMessage(context)
 
-  const response = await openai.chat.completions.create({
-    model: AI_MODEL,
-    messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: 'Ανάλυσε τα δεδομένα του ελαιώνα και δώσε τις συμβουλές σου.' }
-    ],
-    response_format: { type: 'json_object' },
-    temperature: 0.7,
-    max_tokens: 2000
-  })
+  const response = await withRetry(() =>
+    openai.chat.completions.create({
+      model: AI_MODEL,
+      messages: [
+        // Static system prompt — eligible for OpenAI prompt caching.
+        { role: 'system', content: FARM_SYSTEM_PROMPT },
+        // Dynamic per-request context.
+        { role: 'user', content: userPayload },
+      ],
+      response_format: { type: 'json_object' },
+      temperature: 0.7,
+      max_tokens: 2000,
+    }),
+    { onRetry: (n, err) => console.warn(`[ai] retry ${n} for generateInsights`, err) }
+  )
 
   const content = response.choices[0].message.content
   if (!content) {
     throw new Error('No response from OpenAI')
   }
 
-  const parsed = JSON.parse(content) as unknown
-  if (!isRecord(parsed) || !Array.isArray(parsed.insights)) {
-    throw new Error('Invalid response structure from OpenAI')
-  }
-
-  const validatedInsights = parsed.insights
-    .map(validateAIInsight)
-    .filter((insight): insight is AIInsight => insight !== null)
-
-  if (validatedInsights.length === 0) {
-    throw new Error('No valid insights generated from OpenAI response')
-  }
+  const json: unknown = JSON.parse(content)
+  // Strict Zod parse — surfaces schema regressions instead of silently filtering.
+  const validated = aiInsightsResponseSchema.parse(json)
+  const validatedInsights: AIInsight[] = validated.insights.map((i: AIInsightParsed) => ({
+    type: i.type,
+    title: i.title,
+    message: i.message,
+    urgency: i.urgency,
+    actionRequired: i.actionRequired,
+    reasoning: i.reasoning,
+    confidence: i.confidence,
+  }))
 
   const meta: AIResponseMeta = {
     model: response.model || AI_MODEL,
@@ -386,71 +327,70 @@ export async function generateInsights(context: FarmContext): Promise<AIInsights
   }
 }
 
-// Build dashboard system prompt
-export function buildDashboardPrompt(context: DashboardPortfolioContext): string {
-  return `Είσαι έμπειρος Έλληνας γεωπόνος και αγροτικός σύμβουλος εξειδικευμένος στην ελαιοκαλλιέργεια.
+// Static dashboard system prompt — eligible for OpenAI prompt caching.
+export const DASHBOARD_SYSTEM_PROMPT = `Είσαι έμπειρος Έλληνας γεωπόνος και στρατηγικός αγροτικός σύμβουλος.
+Λαμβάνεις ολόκληρο το χαρτοφυλάκιο ελαιώνων του χρήστη και δίνεις στρατηγικές συμβουλές για το σύνολο.
 
-Αναλύεις ΟΛΟ το χαρτοφυλάκιο ελαιώνων του ${context.userName} και παρέχεις στρατηγικές συμβουλές.
+ΑΥΣΤΗΡΟΙ ΚΑΝΟΝΕΣ:
+1. Χρησιμοποίησε ΑΠΟΚΛΕΙΣΤΙΚΑ τα δεδομένα στο "CONTEXT". Μην εφευρίσκεις στοιχεία.
+2. Όταν αναφέρεσαι σε συγκεκριμένο ελαιώνα, χρησιμοποίησε ΥΠΟΧΡΕΩΤΙΚΑ το ακριβές farmId από το context.
+3. Για συμβουλές φυτοπροστασίας μην προτείνεις δοσολογίες ή ονόματα δραστικών — μόνο γενικές οδηγίες και υπενθύμιση συμβουλής αδειοδοτημένου γεωπόνου.
+4. Δώσε 5-8 στρατηγικές συμβουλές, στα Ελληνικά.
+5. Προτεραιοποίησε CRITICAL/HIGH urgency για επείγουσες δράσεις.
+6. Σε κάθε σύσταση δώσε confidence 0..1.
 
-ΧΑΡΤΟΦΥΛΑΚΙΟ ΕΛΑΙΩΝΩΝ:
+Απάντησε ΜΟΝΟ σε JSON:
+{
+  "insights": [
+    {
+      "type": "TASK_REMINDER|WEATHER_ALERT|CARE_SUGGESTION|OPTIMIZATION|RISK_WARNING|SEASONAL_TIP",
+      "title": "σύντομος τίτλος",
+      "message": "αναλυτική στρατηγική σύσταση",
+      "urgency": "LOW|MEDIUM|HIGH|CRITICAL",
+      "actionRequired": true|false,
+      "reasoning": "γιατί είναι σημαντικό στρατηγικά",
+      "confidence": 0.0..1.0,
+      "farmId": "<farm-id ή null>",
+      "farmName": "<όνομα ελαιώνα ή 'Όλοι'>"
+    }
+  ],
+  "portfolioSummary": {
+    "overallHealth": "EXCELLENT|GOOD|FAIR|POOR",
+    "urgentActions": <int>,
+    "opportunitiesCount": <int>
+  }
+}`
+
+// Build dynamic dashboard context message
+export function buildDashboardContextMessage(context: DashboardPortfolioContext): string {
+  return `CONTEXT:
+
+ΧΑΡΤΟΦΥΛΑΚΙΟ (${context.userName}):
 - Συνολικοί Ελαιώνες: ${context.totalFarms}
 - Συνολικά Δέντρα: ${context.totalTrees}
 - Συνολική Έκταση: ${context.totalArea.toFixed(1)} στρέμματα
 
 ΛΕΠΤΟΜΕΡΕΙΕΣ ΕΛΑΙΩΝΩΝ:
 ${context.farms.map((farm, idx) => `
-${idx + 1}. ${farm.name}
+${idx + 1}. ${farm.name} (farmId: ${farm.id})
    - Τοποθεσία: ${farm.location}
    - Ποικιλία: ${farm.variety}
    - Δέντρα: ${farm.treeCount} (ηλικία: ${farm.treeAge ? `${farm.treeAge} έτη` : 'άγνωστη'})
    - Έκταση: ${farm.totalArea || 0} στρέμματα
    ${farm.satelliteHealth ? `- Υγεία (NDVI): ${farm.satelliteHealth.ndvi?.toFixed(3) || 'N/A'} (${farm.satelliteHealth.stressLevel || 'N/A'}) - Τάση: ${farm.satelliteHealth.trend || 'N/A'}` : ''}
    ${farm.lastHarvest ? `- Τελευταία Συγκομιδή: ${farm.lastHarvest.year} (${farm.lastHarvest.yieldPerTree?.toFixed(1) || 'N/A'} kg/δέντρο)` : ''}
-   ${farm.harvestTrend ? `- Τάση Απόδοσης: ${farm.harvestTrend === 'improving' ? '⬆️ Βελτίωση' : farm.harvestTrend === 'declining' ? '⬇️ Πτώση' : '➡️ Σταθερή'}` : ''}
+   ${farm.harvestTrend ? `- Τάση Απόδοσης: ${farm.harvestTrend === 'improving' ? 'Βελτίωση' : farm.harvestTrend === 'declining' ? 'Πτώση' : 'Σταθερή'}` : ''}
    - Πρόσφατες Δραστηριότητες: ${farm.recentActivities.length > 0 ? farm.recentActivities.slice(0, 3).map(a => `${a.type} (${a.date})`).join(', ') : 'Καμία'}
 `).join('\n')}
 
 ΤΡΕΧΟΥΣΑ ΠΕΡΙΟΔΟΣ:
 - Μήνας: ${new Date().toLocaleDateString('el-GR', { month: 'long' })}
-- Εποχή: ${context.currentSeason}
+- Εποχή: ${context.currentSeason}`
+}
 
-ΡΟΛΟΣ ΣΟΥ - Σκέψου σαν στρατηγικός αγροτικός σύμβουλος:
-
-1. **Προτεραιοποίηση**: Ποιος ελαιώνας χρειάζεται ΑΜΕΣΗ προσοχή;
-2. **Σύγκριση**: Ποιος ελαιώνας πηγαίνει καλύτερα; Γιατί?
-3. **Μεταφορά Γνώσης**: Μπορούν οι πρακτικές από τον καλύτερο ελαιώνα να εφαρμοστούν αλλού?
-4. **Βελτιστοποίηση Πόρων**: Πού να επενδύσει χρόνο/χρήμα για το μέγιστο όφελος?
-5. **Διαχείριση Κινδύνου**: Υπάρχουν κοινοί κίνδυνοι σε πολλούς ελαιώνες?
-6. **Στρατηγικός Προγραμματισμός**: Τι πρέπει να γίνει αυτό το μήνα σε ΟΛΟΥΣ τους ελαιώνες?
-
-ΟΔΗΓΙΕΣ:
-1. Δώσε 5-8 στρατηγικές συμβουλές που αφορούν το ΣΥΝΟΛΟ του χαρτοφυλακίου
-2. Αναφέρου σε συγκεκριμένους ελαιώνες με το όνομά τους
-3. Βάλε σε προτεραιότητα τις επείγουσες δράσεις (CRITICAL/HIGH urgency)
-4. Σύγκρινε απόδοση μεταξύ ελαιώνων και πρότεινε βελτιώσεις
-5. Για κάθε σύσταση, προσδιόρισε αν αφορά συγκεκριμένο ελαιώνα ή ΟΛΟΥΣ
-6. Σκέψου την οικονομική απόδοση και τη βέλτιστη κατανομή πόρων
-
-Απάντησε ΜΟΝΟ σε JSON format:
-{
-  "insights": [
-    {
-      "type": "TASK_REMINDER|WEATHER_ALERT|CARE_SUGGESTION|OPTIMIZATION|RISK_WARNING|SEASONAL_TIP",
-      "title": "Σύντομος τίτλος",
-      "message": "Αναλυτική στρατηγική σύσταση 2-4 προτάσεις",
-      "urgency": "LOW|MEDIUM|HIGH|CRITICAL",
-      "actionRequired": true/false,
-      "reasoning": "Γιατί είναι σημαντικό αυτό στρατηγικά",
-      "farmId": "farm-id ή null αν αφορά όλους",
-      "farmName": "Όνομα ελαιώνα ή 'Όλοι οι ελαιώνες'"
-    }
-  ],
-  "portfolioSummary": {
-    "overallHealth": "EXCELLENT|GOOD|FAIR|POOR",
-    "urgentActions": <αριθμός κρίσιμων δράσεων>,
-    "opportunitiesCount": <αριθμός ευκαιριών βελτίωσης>
-  }
-}`
+// Backwards-compatible wrapper retained
+export function buildDashboardPrompt(context: DashboardPortfolioContext): string {
+  return `${DASHBOARD_SYSTEM_PROMPT}\n\n${buildDashboardContextMessage(context)}`
 }
 
 // Generate dashboard insights using OpenAI
@@ -461,39 +401,40 @@ export async function generateDashboardInsights(
     throw new Error('OpenAI API key is not configured')
   }
 
-  const systemPrompt = buildDashboardPrompt(context)
+  const userPayload = buildDashboardContextMessage(context)
 
-  const response = await openai.chat.completions.create({
-    model: AI_MODEL,
-    messages: [
-      { role: 'system', content: systemPrompt },
-      {
-        role: 'user',
-        content: 'Ανάλυσε το χαρτοφυλάκιο ελαιώνων και δώσε τις στρατηγικές σου συμβουλές.'
-      }
-    ],
-    response_format: { type: 'json_object' },
-    temperature: 0.7,
-    max_tokens: 3000
-  })
+  const response = await withRetry(() =>
+    openai.chat.completions.create({
+      model: AI_MODEL,
+      messages: [
+        { role: 'system', content: DASHBOARD_SYSTEM_PROMPT },
+        { role: 'user', content: userPayload },
+      ],
+      response_format: { type: 'json_object' },
+      temperature: 0.7,
+      max_tokens: 3000,
+    }),
+    { onRetry: (n, err) => console.warn(`[ai] retry ${n} for generateDashboardInsights`, err) }
+  )
 
   const content = response.choices[0].message.content
   if (!content) {
     throw new Error('No response from OpenAI')
   }
 
-  const parsed = JSON.parse(content) as unknown
-  if (!isRecord(parsed) || !Array.isArray(parsed.insights)) {
-    throw new Error('Invalid response structure from OpenAI')
-  }
-
-  const insights = parsed.insights
-    .map(validateDashboardInsight)
-    .filter((insight): insight is DashboardAIInsight => insight !== null)
-
-  if (insights.length === 0) {
-    throw new Error('No valid dashboard insights generated from OpenAI response')
-  }
+  const json: unknown = JSON.parse(content)
+  const validated = dashboardResponseSchema.parse(json)
+  const insights: DashboardAIInsight[] = validated.insights.map((i: DashboardAIInsightParsed) => ({
+    type: i.type,
+    title: i.title,
+    message: i.message,
+    urgency: i.urgency,
+    actionRequired: i.actionRequired,
+    reasoning: i.reasoning,
+    confidence: i.confidence,
+    farmId: i.farmId ?? null,
+    farmName: i.farmName,
+  }))
 
   const meta: AIResponseMeta = {
     model: response.model || AI_MODEL,
@@ -511,7 +452,141 @@ export async function generateDashboardInsights(
 
   return {
     insights: insights.slice(0, 10),
-    portfolioSummary: validateDashboardSummary(parsed.portfolioSummary),
+    portfolioSummary: validated.portfolioSummary,
     meta
   }
+}
+
+// ============================================================
+// Conversational chat (streaming)
+// ============================================================
+
+import { leafDiagnosisSchema, type LeafDiagnosis } from '@/lib/ai/schemas'
+
+export const CHAT_SYSTEM_PROMPT = `Είσαι ψηφιακός βοηθός γεωπόνος εξειδικευμένος στην ελληνική ελαιοκαλλιέργεια.
+Απαντάς σύντομα, στα Ελληνικά, με βάση τα δεδομένα του ελαιώνα του χρήστη όταν είναι διαθέσιμα.
+
+ΚΑΝΟΝΕΣ:
+1. Αν λείπει πληροφορία, ζήτα την αντί να μαντέψεις.
+2. Μην προτείνεις δοσολογίες ή ονόματα φυτοφαρμάκων· συμβούλεψε για συμβατότητα με αδειοδοτημένο γεωπόνο.
+3. Σε επείγουσες καταστάσεις (έντονο στρες δέντρων, παρασιτική προσβολή σε εξέλιξη) πες ξεκάθαρα ότι χρειάζεται φυσική επίσκεψη.
+4. Κράτα τις απαντήσεις 2-5 προτάσεις, εκτός αν ζητηθεί λεπτομερής εξήγηση.`
+
+export interface ChatMessage {
+  role: 'user' | 'assistant'
+  content: string
+}
+
+/**
+ * Stream a chat completion. Returns the underlying OpenAI Stream so the
+ * route handler can pipe into a Server-Sent-Events response.
+ */
+export async function streamChat(
+  messages: ChatMessage[],
+  farmContextMessage?: string
+) {
+  if (!openai) throw new Error('OpenAI API key is not configured')
+
+  const sysMessages = [
+    { role: 'system' as const, content: CHAT_SYSTEM_PROMPT },
+    ...(farmContextMessage
+      ? [{ role: 'system' as const, content: `CONTEXT (read-only):\n${farmContextMessage}` }]
+      : []),
+  ]
+
+  return openai.chat.completions.create({
+    model: AI_MODEL,
+    stream: true,
+    stream_options: { include_usage: true },
+    messages: [
+      ...sysMessages,
+      ...messages.map((m) => ({ role: m.role, content: m.content })),
+    ],
+    temperature: 0.6,
+    max_tokens: 600,
+  })
+}
+
+// ============================================================
+// Multimodal leaf-photo diagnosis
+// ============================================================
+
+export const DIAGNOSE_SYSTEM_PROMPT = `Είσαι ψηφιακός γεωπόνος που αναλύει φωτογραφίες φύλλων και κλαδιών ελιάς.
+Από την εικόνα και τυχόν σημειώσεις του χρήστη, προτείνεις πιθανές διαγνώσεις.
+
+ΚΑΝΟΝΕΣ:
+1. Δεν είσαι ντετερμινιστικός - δίνεις πιθανότητες (confidence 0..1).
+2. Αν η εικόνα είναι ασαφής, χαμηλής ποιότητας ή δεν δείχνει φύλλα ελιάς, πες το ξεκάθαρα και confidence ≤ 0.3.
+3. Μην προτείνεις δοσολογίες ή ονόματα φυτοφαρμάκων.
+4. Πάντα πρόσθεσε disclaimer ότι η οπτική διάγνωση από φωτογραφία δεν αντικαθιστά εξέταση από αδειοδοτημένο γεωπόνο.
+
+Απάντησε ΜΟΝΟ σε JSON:
+{
+  "diagnosis": "συνοπτική διάγνωση (π.χ. Πιθανό κυκλοκόνιο)",
+  "confidence": 0.0..1.0,
+  "symptoms": ["παρατηρούμενα συμπτώματα"],
+  "likelyCauses": ["πιθανές αιτίες"],
+  "recommendedActions": ["τι να κάνει ο παραγωγός (γενικά)"],
+  "urgency": "LOW|MEDIUM|HIGH|CRITICAL",
+  "disclaimer": "σύντομο disclaimer"
+}`
+
+export interface LeafDiagnosisResult {
+  diagnosis: LeafDiagnosis
+  meta: AIResponseMeta
+}
+
+/**
+ * Run a vision-model diagnosis on a leaf/branch photo URL.
+ * Caller must verify the URL belongs to the user's farm before invoking.
+ */
+export async function diagnoseLeafImage(
+  imageUrl: string,
+  notes?: string
+): Promise<LeafDiagnosisResult> {
+  if (!openai) throw new Error('OpenAI API key is not configured')
+
+  const response = await withRetry(() =>
+    openai.chat.completions.create({
+      model: AI_VISION_MODEL,
+      response_format: { type: 'json_object' },
+      messages: [
+        { role: 'system', content: DIAGNOSE_SYSTEM_PROMPT },
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: notes ? `Σημειώσεις παραγωγού: ${notes}` : 'Δες την παρακάτω εικόνα.',
+            },
+            { type: 'image_url', image_url: { url: imageUrl, detail: 'auto' } },
+          ],
+        },
+      ],
+      temperature: 0.2,
+      max_tokens: 800,
+    })
+  )
+
+  const content = response.choices[0].message.content
+  if (!content) throw new Error('No response from OpenAI vision')
+
+  const json: unknown = JSON.parse(content)
+  const diagnosis = leafDiagnosisSchema.parse(json)
+
+  const meta: AIResponseMeta = {
+    model: response.model || AI_VISION_MODEL,
+    promptVersion: DIAGNOSE_PROMPT_VERSION,
+    requestId: response.id || null,
+    generatedAt: new Date().toISOString(),
+    usage: response.usage
+      ? {
+          promptTokens: response.usage.prompt_tokens,
+          completionTokens: response.usage.completion_tokens,
+          totalTokens: response.usage.total_tokens,
+        }
+      : null,
+  }
+
+  return { diagnosis, meta }
 }

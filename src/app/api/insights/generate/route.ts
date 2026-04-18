@@ -4,25 +4,19 @@ import {
   AIInsight,
   FarmContext,
   generateInsights,
-  getCurrentSeason
+  getCurrentSeason,
+  AI_MODEL,
+  FARM_INSIGHTS_PROMPT_VERSION,
 } from '@/lib/openai'
+import { contextHash } from '@/lib/ai/hash'
+import { recordAIUsage, checkMonthlyBudget } from '@/lib/ai/usage'
+import { ruleBasedInsights } from '@/lib/ai/fallback'
+import { farmIdBodySchema } from '@/lib/ai/schemas'
+import { ACTIVITY_TYPE_LABELS } from '@/types/activity'
 import { auth } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
 
 export const dynamic = 'force-dynamic'
-
-// Activity type translation for context
-const ACTIVITY_TYPE_GREEK: Record<string, string> = {
-  WATERING: 'Πότισμα',
-  PRUNING: 'Κλάδεμα',
-  FERTILIZING: 'Λίπανση',
-  PEST_CONTROL: 'Φυτοπροστασία',
-  SOIL_WORK: 'Εργασίες εδάφους',
-  HARVESTING: 'Συγκομιδή',
-  MAINTENANCE: 'Συντήρηση',
-  INSPECTION: 'Επιθεώρηση',
-  OTHER: 'Άλλο'
-}
 
 // Type for weather record
 interface WeatherRecord {
@@ -57,12 +51,24 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { farmId } = body
-
-    if (!farmId) {
+    const parseResult = farmIdBodySchema.safeParse(body)
+    if (!parseResult.success) {
       return NextResponse.json(
-        { error: 'Farm ID is required' },
+        { error: 'Farm ID is required', details: parseResult.error.issues },
         { status: 400 }
+      )
+    }
+    const { farmId } = parseResult.data
+
+    // Monthly token budget guard.
+    const budget = await checkMonthlyBudget(userId)
+    if (!budget.withinBudget) {
+      return NextResponse.json(
+        {
+          error: 'Έχετε φτάσει το μηνιαίο όριο χρήσης AI. Δοκιμάστε ξανά τον επόμενο μήνα.',
+          budget,
+        },
+        { status: 429 }
       )
     }
 
@@ -161,7 +167,7 @@ export async function POST(request: NextRequest) {
         notes: string | null
         completed: boolean
       }) => ({
-        type: ACTIVITY_TYPE_GREEK[a.type] || a.type,
+        type: ACTIVITY_TYPE_LABELS[a.type as keyof typeof ACTIVITY_TYPE_LABELS] || a.type,
         date: a.date.toLocaleDateString('el-GR'),
         title: a.title,
         notes: a.notes || undefined,
@@ -207,30 +213,85 @@ export async function POST(request: NextRequest) {
       })() : undefined
     }
 
-    // Generate insights using OpenAI
-    const aiResponse = await generateInsights(farmContext)
-    const aiMeta = aiResponse.meta
+    // 24h context-hash cache: if the same farm context produced an
+    // active AI batch within the last 24h, return that instead of
+    // re-spending tokens.
+    const hashKey = contextHash(farmContext, 'farm')
+    const recentSame = await prisma.smartRecommendation.findMany({
+      where: {
+        farmId: farm.id,
+        source: 'AI_GENERATED',
+        isArchived: false,
+        contextHash: hashKey,
+        createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+      },
+      orderBy: { createdAt: 'desc' },
+    })
+    if (recentSame.length > 0) {
+      return NextResponse.json({
+        success: true,
+        cached: true,
+        message: `Επιστροφή προηγούμενων προτάσεων (cache 24h)`,
+        insights: recentSame,
+      })
+    }
+
+    // Generate insights using OpenAI; fall back to rule-based engine on failure.
+    let aiInsights: AIInsight[]
+    let aiMeta: Awaited<ReturnType<typeof generateInsights>>['meta']
+    let usedFallback = false
+    try {
+      const aiResponse = await generateInsights(farmContext)
+      aiInsights = aiResponse.insights
+      aiMeta = aiResponse.meta
+    } catch (aiErr) {
+      console.error('[ai] generateInsights failed, falling back to rule-based', aiErr)
+      aiInsights = ruleBasedInsights(farmContext)
+      usedFallback = true
+      aiMeta = {
+        model: 'rule-based',
+        promptVersion: 'fallback-v1.0',
+        requestId: null,
+        generatedAt: new Date().toISOString(),
+        usage: null,
+      }
+    }
+
+    if (!usedFallback && aiMeta.usage) {
+      void recordAIUsage({
+        userId,
+        endpoint: 'insights/generate',
+        model: aiMeta.model || AI_MODEL,
+        promptTokens: aiMeta.usage.promptTokens,
+        completionTokens: aiMeta.usage.completionTokens,
+        totalTokens: aiMeta.usage.totalTokens,
+      })
+    }
 
     console.info('AI insight generation (farm)', {
       farmId: farm.id,
       userId,
       model: aiMeta.model,
-      promptVersion: aiMeta.promptVersion,
+      promptVersion: aiMeta.promptVersion ?? FARM_INSIGHTS_PROMPT_VERSION,
       requestId: aiMeta.requestId,
-      totalTokens: aiMeta.usage?.totalTokens ?? null
+      totalTokens: aiMeta.usage?.totalTokens ?? null,
+      usedFallback,
     })
 
-    // Delete old AI insights for this farm (keep only manual/rule-based ones)
-    await prisma.smartRecommendation.deleteMany({
+    // Soft-archive prior AI insights for this farm (preserve history,
+    // including isActioned status, but hide from the active list).
+    await prisma.smartRecommendation.updateMany({
       where: {
         farmId: farm.id,
-        source: 'AI_GENERATED'
-      }
+        source: 'AI_GENERATED',
+        isArchived: false,
+      },
+      data: { isArchived: true },
     })
 
     // Save new insights to database
     const savedInsights = await Promise.all(
-      aiResponse.insights.map((insight: AIInsight) =>
+      aiInsights.map((insight: AIInsight) =>
         prisma.smartRecommendation.create({
           data: {
             type: insight.type as 'TASK_REMINDER' | 'WEATHER_ALERT' | 'CARE_SUGGESTION' | 'OPTIMIZATION' | 'RISK_WARNING' | 'SEASONAL_TIP',
@@ -239,15 +300,18 @@ export async function POST(request: NextRequest) {
             urgency: insight.urgency as 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL',
             actionRequired: insight.actionRequired,
             reasoning: insight.reasoning,
-            source: 'AI_GENERATED',
+            source: usedFallback ? 'RULE_BASED' : 'AI_GENERATED',
             farmId: farm.id,
             weatherBased: insight.type === 'WEATHER_ALERT',
             seasonBased: insight.type === 'SEASONAL_TIP',
+            contextHash: hashKey,
             triggerConditions: {
               aiMeta: {
                 ...aiMeta,
                 scope: 'farm',
-                farmId: farm.id
+                farmId: farm.id,
+                confidence: insight.confidence ?? null,
+                usedFallback,
               }
             },
             validFrom: new Date(),
@@ -257,12 +321,13 @@ export async function POST(request: NextRequest) {
       )
     )
 
-    console.log(`Generated ${savedInsights.length} AI insights for farm: ${farm.name}`)
+    console.log(`Generated ${savedInsights.length} AI insights for farm: ${farm.name} (fallback=${usedFallback})`)
 
     return NextResponse.json({
       success: true,
       message: `Δημιουργήθηκαν ${savedInsights.length} προτάσεις`,
-      insights: savedInsights
+      insights: savedInsights,
+      usedFallback,
     })
   } catch (error) {
     console.error('Error generating insights:', error)

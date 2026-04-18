@@ -32,10 +32,11 @@ export async function GET(
       )
     }
 
-    // Get all insights for this farm
+    // Get all active (non-archived) insights for this farm
     const insights = await prisma.smartRecommendation.findMany({
       where: {
         farmId,
+        isArchived: false,
         OR: [
           { validUntil: null },
           { validUntil: { gte: new Date() } }

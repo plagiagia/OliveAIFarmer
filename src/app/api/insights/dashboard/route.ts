@@ -1,23 +1,17 @@
 import { prisma } from '@/lib/db'
-import { DashboardAIInsight, generateDashboardInsights, getCurrentSeason } from '@/lib/openai'
+import {
+  DashboardAIInsight,
+  generateDashboardInsights,
+  getCurrentSeason,
+  AI_MODEL,
+} from '@/lib/openai'
 import { checkRateLimit } from '@/lib/rate-limit'
+import { recordAIUsage, checkMonthlyBudget } from '@/lib/ai/usage'
+import { ACTIVITY_TYPE_LABELS } from '@/types/activity'
 import { auth } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 
 export const dynamic = 'force-dynamic'
-
-// Activity type translation
-const ACTIVITY_TYPE_GREEK: Record<string, string> = {
-  WATERING: 'Πότισμα',
-  PRUNING: 'Κλάδεμα',
-  FERTILIZING: 'Λίπανση',
-  PEST_CONTROL: 'Φυτοπροστασία',
-  SOIL_WORK: 'Εργασίες εδάφους',
-  HARVESTING: 'Συγκομιδή',
-  MAINTENANCE: 'Συντήρηση',
-  INSPECTION: 'Επιθεώρηση',
-  OTHER: 'Άλλο'
-}
 
 // POST - Generate dashboard-level AI insights for all farms
 export async function POST() {
@@ -40,6 +34,15 @@ export async function POST() {
             'Retry-After': String(rateLimit.retryAfterSeconds)
           }
         }
+      )
+    }
+
+    // Monthly token budget guard.
+    const budget = await checkMonthlyBudget(userId)
+    if (!budget.withinBudget) {
+      return NextResponse.json(
+        { error: 'Έχετε φτάσει το μηνιαίο όριο χρήσης AI. Δοκιμάστε ξανά τον επόμενο μήνα.', budget },
+        { status: 429 }
       )
     }
 
@@ -97,7 +100,7 @@ export async function POST() {
 
         // Recent activity summary
         recentActivities: farm.activities.slice(0, 5).map(a => ({
-          type: ACTIVITY_TYPE_GREEK[a.type] || a.type,
+          type: ACTIVITY_TYPE_LABELS[a.type as keyof typeof ACTIVITY_TYPE_LABELS] || a.type,
           title: a.title,
           date: a.date.toLocaleDateString('el-GR'),
           completed: a.completed
@@ -139,6 +142,17 @@ export async function POST() {
     const aiResponse = await generateDashboardInsights(portfolioContext)
     const aiMeta = aiResponse.meta
 
+    if (aiMeta.usage) {
+      void recordAIUsage({
+        userId,
+        endpoint: 'insights/dashboard',
+        model: aiMeta.model || AI_MODEL,
+        promptTokens: aiMeta.usage.promptTokens,
+        completionTokens: aiMeta.usage.completionTokens,
+        totalTokens: aiMeta.usage.totalTokens,
+      })
+    }
+
     console.info('AI insight generation (dashboard)', {
       userId,
       farmCount: user.farms.length,
@@ -146,6 +160,21 @@ export async function POST() {
       promptVersion: aiMeta.promptVersion,
       requestId: aiMeta.requestId,
       totalTokens: aiMeta.usage?.totalTokens ?? null
+    })
+
+    // Soft-archive prior dashboard-scope AI insights (those with no
+    // farmId or with a farmId belonging to this user) so the active
+    // list reflects the latest run.
+    await prisma.smartRecommendation.updateMany({
+      where: {
+        OR: [
+          { farmId: null },
+          { farmId: { in: user.farms.map(f => f.id) } },
+        ],
+        source: 'AI_GENERATED',
+        isArchived: false,
+      },
+      data: { isArchived: true },
     })
 
     // Get valid farm IDs

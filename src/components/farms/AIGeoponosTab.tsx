@@ -8,7 +8,6 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronUp,
-  Clock,
   CloudRain,
   Leaf,
   Lightbulb,
@@ -18,59 +17,25 @@ import {
   X
 } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
+import { URGENCY_CONFIG, type Urgency } from '@/lib/ui/urgency'
 
 interface Insight {
   id: string
   type: string
   title: string
   message: string
-  urgency: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
+  urgency: Urgency
   actionRequired: boolean
   reasoning?: string
   isRead: boolean
   isActioned: boolean
   createdAt: string
   source: string
+  triggerConditions?: { aiMeta?: { confidence?: number | null } } | null
 }
 
 interface AIGeoponosTabProps {
   farmId: string
-}
-
-// Urgency colors and icons
-const URGENCY_CONFIG = {
-  CRITICAL: {
-    bg: 'bg-red-50',
-    border: 'border-red-200',
-    badge: 'bg-red-100 text-red-800',
-    icon: AlertTriangle,
-    iconColor: 'text-red-600',
-    label: 'Κρίσιμο'
-  },
-  HIGH: {
-    bg: 'bg-orange-50',
-    border: 'border-orange-200',
-    badge: 'bg-orange-100 text-orange-800',
-    icon: AlertTriangle,
-    iconColor: 'text-orange-600',
-    label: 'Υψηλή'
-  },
-  MEDIUM: {
-    bg: 'bg-yellow-50',
-    border: 'border-yellow-200',
-    badge: 'bg-yellow-100 text-yellow-800',
-    icon: Clock,
-    iconColor: 'text-yellow-600',
-    label: 'Μέτρια'
-  },
-  LOW: {
-    bg: 'bg-blue-50',
-    border: 'border-blue-200',
-    badge: 'bg-blue-100 text-blue-800',
-    icon: Lightbulb,
-    iconColor: 'text-blue-600',
-    label: 'Χαμηλή'
-  }
 }
 
 // Type icons
@@ -296,6 +261,14 @@ export default function AIGeoponosTab({ farmId }: AIGeoponosTabProps) {
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
+                      {typeof insight.triggerConditions?.aiMeta?.confidence === 'number' && (
+                        <span
+                          className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700"
+                          title="Επίπεδο βεβαιότητας του AI"
+                        >
+                          {Math.round(insight.triggerConditions.aiMeta.confidence * 100)}%
+                        </span>
+                      )}
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${urgencyConfig.badge}`}>
                         {urgencyConfig.label}
                       </span>

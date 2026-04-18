@@ -11,6 +11,7 @@ import {
   Eye,
   ArrowLeft
 } from 'lucide-react'
+import { URGENCY_CONFIG, type Urgency } from '@/lib/ui/urgency'
 
 interface Farm {
   id: string
@@ -22,7 +23,7 @@ interface Farm {
 }
 
 interface DashboardAIGeoponosProps {
-  user: any
+  user: { id?: string; clerkId?: string; email?: string } | null
   farms: Farm[]
 }
 
@@ -63,13 +64,8 @@ export default function DashboardAIGeoponos({ farms }: DashboardAIGeoponosProps)
     }
   }
 
-  // Urgency config
-  const urgencyConfig: any = {
-    CRITICAL: { bg: 'bg-red-50', border: 'border-red-300', badge: 'bg-red-100 text-red-800', label: 'Κρίσιμο' },
-    HIGH: { bg: 'bg-orange-50', border: 'border-orange-300', badge: 'bg-orange-100 text-orange-800', label: 'Υψηλή' },
-    MEDIUM: { bg: 'bg-yellow-50', border: 'border-yellow-300', badge: 'bg-yellow-100 text-yellow-800', label: 'Μέτρια' },
-    LOW: { bg: 'bg-blue-50', border: 'border-blue-300', badge: 'bg-blue-100 text-blue-800', label: 'Χαμηλή' }
-  }
+  // Centralized urgency config (see src/lib/ui/urgency.ts).
+  const urgencyConfig = URGENCY_CONFIG
 
   return (
     <div className="space-y-6">
@@ -169,7 +165,7 @@ export default function DashboardAIGeoponos({ farms }: DashboardAIGeoponosProps)
         <div className="space-y-4">
           <h3 className="font-bold text-gray-900 text-lg">Στρατηγικές Συστάσεις</h3>
           {insights.map((insight: any) => {
-            const config = urgencyConfig[insight.urgency]
+            const config = urgencyConfig[insight.urgency as Urgency]
             return (
               <div
                 key={insight.id}

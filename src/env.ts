@@ -44,6 +44,13 @@ const serverSchema = z.object({
 
   // OpenAI (AI Geoponos)
   OPENAI_API_KEY: requiredInProd(z.string().min(1)),
+  OPENAI_MODEL: z.string().optional(),
+  OPENAI_VISION_MODEL: z.string().optional(),
+  OPENAI_MONTHLY_TOKEN_BUDGET: z.coerce.number().int().positive().optional(),
+
+  // Upstash REST (optional distributed rate limiter; falls back to in-memory).
+  UPSTASH_REDIS_REST_URL: z.string().url().optional(),
+  UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
 
   // Copernicus (satellite)
   COPERNICUS_CLIENT_ID: requiredInProd(z.string().min(1)),
@@ -70,6 +77,11 @@ const parsed = merged.safeParse({
   OPENWEATHER_API_KEY: process.env.OPENWEATHER_API_KEY,
   CRON_SECRET: process.env.CRON_SECRET,
   OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+  OPENAI_MODEL: process.env.OPENAI_MODEL,
+  OPENAI_VISION_MODEL: process.env.OPENAI_VISION_MODEL,
+  OPENAI_MONTHLY_TOKEN_BUDGET: process.env.OPENAI_MONTHLY_TOKEN_BUDGET,
+  UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
+  UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
   COPERNICUS_CLIENT_ID: process.env.COPERNICUS_CLIENT_ID,
   COPERNICUS_CLIENT_SECRET: process.env.COPERNICUS_CLIENT_SECRET,
   ALLOW_INSECURE_CRON: process.env.ALLOW_INSECURE_CRON,

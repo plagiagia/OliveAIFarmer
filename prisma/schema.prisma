@@ -34,7 +34,10 @@ model Farm {
   id          String   @id @default(cuid())
   name        String   // e.g., "Ελαιώνας Μεσσηνίας"
   location    String   // e.g., "Καλαμάτα, Μεσσηνία"
-  coordinates String?  // GPS coordinates (optional)
+  coordinates String?  // Legacy free-text coordinates (kept for backward compat)
+  latitude    Float?   // Structured latitude in decimal degrees
+  longitude   Float?   // Structured longitude in decimal degrees
+  polygon     Json?    // Optional GeoJSON polygon for parcel geometry / per-zone NDVI
   totalArea   Float?   // Total farm area in stremmata (στρέμματα)
   treeCount   Int?     // Number of olive trees in the farm
   oliveVariety String? // Primary olive variety (e.g., "Κορωνέικη", "Καλαμών")
@@ -170,9 +173,13 @@ model SmartRecommendation {
   weatherBased    Boolean @default(false)
   seasonBased     Boolean @default(false)
 
+  // Caching: hash of the input context that produced this insight (24h dedup)
+  contextHash     String?
+
   // Tracking
   isRead          Boolean @default(false)
   isActioned      Boolean @default(false)
+  isArchived      Boolean @default(false)  // Soft-delete on regeneration
   readAt          DateTime?
   actionedAt      DateTime?
 
@@ -185,7 +192,25 @@ model SmartRecommendation {
   @@index([farmId])
   @@index([farmId, validUntil])
   @@index([farmId, isRead])
+  @@index([farmId, isArchived])
+  @@index([contextHash])
   @@map("smart_recommendations")
+}
+
+// Token usage / cost ledger for OpenAI calls.
+// Used for the per-user monthly budget cap and basic auditing.
+model AIUsage {
+  id               String   @id @default(cuid())
+  userId           String   // Clerk user id (string), no FK so we can log even if user lookup fails
+  endpoint         String   // e.g., "insights/generate", "insights/dashboard", "chat", "diagnose"
+  model            String
+  promptTokens     Int      @default(0)
+  completionTokens Int      @default(0)
+  totalTokens      Int      @default(0)
+  createdAt        DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@map("ai_usage")
 }
 
 // ===== ENUMS FOR RECOMMENDATIONS =====
