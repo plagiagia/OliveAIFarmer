@@ -3,6 +3,8 @@ import { fetchWeatherData, generateAlerts, generateIrrigationRecommendation } fr
 import { auth } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 
+export const dynamic = 'force-dynamic'
+
 interface Suggestion {
   type: 'warning' | 'info' | 'success'
   icon: 'wind' | 'rain' | 'water' | 'temperature' | 'activity'

@@ -2,6 +2,8 @@ import { prisma } from '@/lib/db'
 import { auth } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
 
+export const dynamic = 'force-dynamic'
+
 export async function PATCH(request: NextRequest) {
   try {
     const { userId } = await auth()

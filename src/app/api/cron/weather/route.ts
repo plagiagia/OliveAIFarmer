@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAllFarmsWithCoordinates, saveWeatherRecord } from '@/lib/db'
 import { parseCoordinates } from '@/lib/mapbox-utils'
 
+export const dynamic = 'force-dynamic'
+
 // OpenWeatherMap API
 const OPENWEATHER_API_KEY = process.env.OPENWEATHER_API_KEY
 const OPENWEATHER_BASE_URL = 'https://api.openweathermap.org/data/2.5'

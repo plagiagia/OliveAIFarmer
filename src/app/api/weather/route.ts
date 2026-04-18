@@ -4,6 +4,8 @@ import { prisma, saveWeatherRecord } from '@/lib/db'
 import { auth } from '@clerk/nextjs/server'
 import { checkRateLimit } from '@/lib/rate-limit'
 
+export const dynamic = 'force-dynamic'
+
 // Weather endpoint requires authentication and is rate-limited to prevent
 // abuse of the upstream paid OpenWeatherMap quota.
 export async function GET(request: NextRequest) {

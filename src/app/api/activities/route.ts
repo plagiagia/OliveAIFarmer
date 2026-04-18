@@ -2,6 +2,8 @@ import { prisma } from '@/lib/db'
 import { auth } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 
+export const dynamic = 'force-dynamic'
+
 // GET /api/activities?farmId=...
 export async function GET(request: Request) {
   try {

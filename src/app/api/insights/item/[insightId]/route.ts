@@ -2,6 +2,8 @@ import { prisma } from '@/lib/db'
 import { auth } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
 
+export const dynamic = 'force-dynamic'
+
 // PATCH - Update insight status (read/actioned)
 export async function PATCH(
   request: NextRequest,

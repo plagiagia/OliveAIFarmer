@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAllFarmsForSatellite, saveSatelliteRecord } from '@/lib/db'
 import { parseCoordinates } from '@/lib/mapbox-utils'
+
+export const dynamic = 'force-dynamic'
 import {
   fetchAllSatelliteData,
   calculateHealthMetrics,

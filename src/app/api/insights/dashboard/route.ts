@@ -4,6 +4,8 @@ import { checkRateLimit } from '@/lib/rate-limit'
 import { auth } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 
+export const dynamic = 'force-dynamic'
+
 // Activity type translation
 const ACTIVITY_TYPE_GREEK: Record<string, string> = {
   WATERING: 'Πότισμα',

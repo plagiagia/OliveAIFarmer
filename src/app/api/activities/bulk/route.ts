@@ -3,6 +3,8 @@ import { fetchWeatherData } from '@/lib/weather'
 import { auth } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 
+export const dynamic = 'force-dynamic'
+
 // Helper to parse coordinates
 function parseCoordinates(coordString: string): { lat: number; lng: number } | null {
   try {

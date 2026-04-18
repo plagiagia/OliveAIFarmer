@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getWeatherHistory, getWeatherStats, getWeatherForDate, prisma } from '@/lib/db'
 import { auth } from '@clerk/nextjs/server'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     // This endpoint requires authentication

@@ -9,6 +9,8 @@ import {
 import { auth } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
 
+export const dynamic = 'force-dynamic'
+
 // Activity type translation for context
 const ACTIVITY_TYPE_GREEK: Record<string, string> = {
   WATERING: 'Πότισμα',
