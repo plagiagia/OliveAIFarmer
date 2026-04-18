@@ -32,19 +32,19 @@ single workspace — with optional integrations for **weather**, **satellite ind
 
 ## ✨ Features
 
-| Domain | Capabilities |
-| --- | --- |
-| 🔐 **Authentication** | Clerk‑based sign‑in, sign‑up and user sync |
-| 🌳 **Farm management** | Create, edit, geolocate and visualise olive groves |
-| 📅 **Activities** | Logging, calendar view, cost tracking |
-| 🧺 **Harvests** | Yield, pricing and historical performance |
-| 📊 **Analytics** | Charts, heatmaps, year‑over‑year comparisons, recommendations |
-| 🗺️ **Mapping** | Mapbox satellite view, autocomplete, location previews |
-| 📦 **Exports** | CSV and PDF reports |
-| 📲 **PWA** | Installable, offline fallback, asset caching |
-| ☀️ **Weather** *(opt.)* | OpenWeatherMap forecasts and daily history cron |
-| 🛰️ **Satellite** *(opt.)* | Copernicus NDVI / NDMI indices, weekly cron |
-| 🤖 **AI Γεωπόνος** *(opt.)* | OpenAI‑powered insights and recommendations |
+| Domain                      | Capabilities                                                  |
+| --------------------------- | ------------------------------------------------------------- |
+| 🔐 **Authentication**       | Clerk‑based sign‑in, sign‑up and user sync                    |
+| 🌳 **Farm management**      | Create, edit, geolocate and visualise olive groves            |
+| 📅 **Activities**           | Logging, calendar view, cost tracking                         |
+| 🧺 **Harvests**             | Yield, pricing and historical performance                     |
+| 📊 **Analytics**            | Charts, heatmaps, year‑over‑year comparisons, recommendations |
+| 🗺️ **Mapping**              | Mapbox satellite view, autocomplete, location previews        |
+| 📦 **Exports**              | CSV and PDF reports                                           |
+| 📲 **PWA**                  | Installable, offline fallback, asset caching                  |
+| ☀️ **Weather** _(opt.)_     | OpenWeatherMap forecasts and daily history cron               |
+| 🛰️ **Satellite** _(opt.)_   | Copernicus NDVI / NDMI indices, weekly cron                   |
+| 🤖 **AI Γεωπόνος** _(opt.)_ | OpenAI‑powered insights and recommendations                   |
 
 ---
 
@@ -101,18 +101,18 @@ The app will be available at **http://localhost:3000**.
 
 Copy `.env.example` to `.env.local` and fill the values.
 
-| Variable | Required | Purpose |
-| --- | :---: | --- |
-| `DATABASE_URL` | ✅ | PostgreSQL connection (Prisma) |
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | ✅ | Clerk auth (client) |
-| `CLERK_SECRET_KEY` | ✅ | Clerk auth (server) |
-| `NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN` | ✅ | Maps + geocoding |
-| `BLOB_READ_WRITE_TOKEN` | ⚠️ | Photo uploads (required if uploads are used) |
-| `CRON_SECRET` | 🛡️ prod | Protects `/api/cron/*` endpoints in production |
-| `OPENWEATHER_API_KEY` | optional | Weather intelligence + cron weather history |
-| `OPENAI_API_KEY` | optional | AI insights (AI Γεωπόνος) |
-| `COPERNICUS_CLIENT_ID` | optional | Satellite data |
-| `COPERNICUS_CLIENT_SECRET` | optional | Satellite data |
+| Variable                            | Required | Purpose                                        |
+| ----------------------------------- | :------: | ---------------------------------------------- |
+| `DATABASE_URL`                      |    ✅    | PostgreSQL connection (Prisma)                 |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` |    ✅    | Clerk auth (client)                            |
+| `CLERK_SECRET_KEY`                  |    ✅    | Clerk auth (server)                            |
+| `NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN`   |    ✅    | Maps + geocoding                               |
+| `BLOB_READ_WRITE_TOKEN`             |    ⚠️    | Photo uploads (required if uploads are used)   |
+| `CRON_SECRET`                       | 🛡️ prod  | Protects `/api/cron/*` endpoints in production |
+| `OPENWEATHER_API_KEY`               | optional | Weather intelligence + cron weather history    |
+| `OPENAI_API_KEY`                    | optional | AI insights (AI Γεωπόνος)                      |
+| `COPERNICUS_CLIENT_ID`              | optional | Satellite data                                 |
+| `COPERNICUS_CLIENT_SECRET`          | optional | Satellite data                                 |
 
 **Optional Clerk overrides**
 
@@ -123,12 +123,12 @@ Copy `.env.example` to `.env.local` and fill the values.
 
 ## 🗄️ Database
 
-| Environment | Command | Description |
-| --- | --- | --- |
+| Environment | Command              | Description                             |
+| ----------- | -------------------- | --------------------------------------- |
 | Development | `npm run db:migrate` | Create + apply migrations (recommended) |
-| Development | `npm run db:push` | Push schema directly (prototyping) |
-| Production | `npm run db:deploy` | Apply existing migrations only |
-| Tooling | `npm run db:studio` | Open Prisma Studio |
+| Development | `npm run db:push`    | Push schema directly (prototyping)      |
+| Production  | `npm run db:deploy`  | Apply existing migrations only          |
+| Tooling     | `npm run db:studio`  | Open Prisma Studio                      |
 
 > ℹ️ `npm run build` does **not** mutate your database.
 
@@ -138,10 +138,10 @@ Copy `.env.example` to `.env.local` and fill the values.
 
 Defined in [vercel.json](vercel.json):
 
-| Endpoint | Schedule | Purpose |
-| --- | --- | --- |
-| `GET /api/cron/weather` | Daily · `06:00` | Persists daily weather history |
-| `GET /api/cron/satellite` | Weekly · Sun `07:00` | Refreshes satellite indices |
+| Endpoint                  | Schedule             | Purpose                        |
+| ------------------------- | -------------------- | ------------------------------ |
+| `GET /api/cron/weather`   | Daily · `06:00`      | Persists daily weather history |
+| `GET /api/cron/satellite` | Weekly · Sun `07:00` | Refreshes satellite indices    |
 
 In production both endpoints require:
 
@@ -178,22 +178,22 @@ prisma/
 
 ## 📜 Scripts
 
-| Category | Command | Description |
-| --- | --- | --- |
-| **Dev** | `npm run dev` | Start Next.js dev server |
-| | `npm run build` | Generate Prisma client + production build |
-| | `npm run start` | Start the production server |
-| **DB** | `npm run db:generate` | Generate Prisma client |
-| | `npm run db:migrate` | Create + apply migrations (dev) |
-| | `npm run db:deploy` | Apply migrations (prod) |
-| | `npm run db:push` | Push schema without migration files |
-| | `npm run db:studio` | Open Prisma Studio |
-| | `npm run db:seed` | Seed example data |
-| **Quality** | `npm run lint` | Run ESLint |
-| | `npm run type-check` | TypeScript type check |
-| | `npm run test` | Vitest in watch mode |
-| | `npm run test:run` | Vitest one‑shot |
-| | `npm run test:coverage` | Vitest with coverage report |
+| Category    | Command                 | Description                               |
+| ----------- | ----------------------- | ----------------------------------------- |
+| **Dev**     | `npm run dev`           | Start Next.js dev server                  |
+|             | `npm run build`         | Generate Prisma client + production build |
+|             | `npm run start`         | Start the production server               |
+| **DB**      | `npm run db:generate`   | Generate Prisma client                    |
+|             | `npm run db:migrate`    | Create + apply migrations (dev)           |
+|             | `npm run db:deploy`     | Apply migrations (prod)                   |
+|             | `npm run db:push`       | Push schema without migration files       |
+|             | `npm run db:studio`     | Open Prisma Studio                        |
+|             | `npm run db:seed`       | Seed example data                         |
+| **Quality** | `npm run lint`          | Run ESLint                                |
+|             | `npm run type-check`    | TypeScript type check                     |
+|             | `npm run test`          | Vitest in watch mode                      |
+|             | `npm run test:run`      | Vitest one‑shot                           |
+|             | `npm run test:coverage` | Vitest with coverage report               |
 
 ---
 
@@ -319,18 +319,18 @@ Open `http://localhost:3000`.
 
 Copy `.env.example` to `.env.local` and fill the values.
 
-| Variable | Required | Purpose |
-|---|---:|---|
-| `DATABASE_URL` | yes | PostgreSQL connection (Prisma) |
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | yes | Clerk auth (client) |
-| `CLERK_SECRET_KEY` | yes | Clerk auth (server) |
-| `NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN` | yes | Maps + geocoding |
-| `BLOB_READ_WRITE_TOKEN` | no* | Photo uploads (required if using uploads) |
-| `OPENWEATHER_API_KEY` | no | Weather intelligence + cron weather history |
-| `CRON_SECRET` | prod | Protects `/api/cron/*` endpoints in production |
-| `OPENAI_API_KEY` | no | AI insights (“AI Γεωπόνος”) |
-| `COPERNICUS_CLIENT_ID` | no | Satellite data |
-| `COPERNICUS_CLIENT_SECRET` | no | Satellite data |
+| Variable                            | Required | Purpose                                        |
+| ----------------------------------- | -------: | ---------------------------------------------- |
+| `DATABASE_URL`                      |      yes | PostgreSQL connection (Prisma)                 |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` |      yes | Clerk auth (client)                            |
+| `CLERK_SECRET_KEY`                  |      yes | Clerk auth (server)                            |
+| `NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN`   |      yes | Maps + geocoding                               |
+| `BLOB_READ_WRITE_TOKEN`             |     no\* | Photo uploads (required if using uploads)      |
+| `OPENWEATHER_API_KEY`               |       no | Weather intelligence + cron weather history    |
+| `CRON_SECRET`                       |     prod | Protects `/api/cron/*` endpoints in production |
+| `OPENAI_API_KEY`                    |       no | AI insights (“AI Γεωπόνος”)                    |
+| `COPERNICUS_CLIENT_ID`              |       no | Satellite data                                 |
+| `COPERNICUS_CLIENT_SECRET`          |       no | Satellite data                                 |
 
 Optional Clerk route overrides:
 
