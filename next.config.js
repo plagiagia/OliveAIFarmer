@@ -73,7 +73,14 @@ const withPWA = require('@ducanh2912/next-pwa').default({
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ['lh3.googleusercontent.com', 'images.clerk.dev'],
+    // `domains` is deprecated; use `remotePatterns` to whitelist exact hosts.
+    remotePatterns: [
+      { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
+      { protocol: 'https', hostname: 'images.clerk.dev' },
+      { protocol: 'https', hostname: 'img.clerk.com' },
+      // Vercel Blob storage (where uploaded photos live).
+      { protocol: 'https', hostname: '**.public.blob.vercel-storage.com' },
+    ],
   },
   env: {
     NEXT_PUBLIC_APP_NAME: 'OliveLog',

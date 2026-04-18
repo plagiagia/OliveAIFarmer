@@ -60,6 +60,7 @@ model Farm {
   // Satellite data (Copernicus)
   satelliteData SatelliteData[]
 
+  @@index([userId])
   @@map("farms")
 }
 
@@ -84,6 +85,8 @@ model Activity {
   farmId String
   farm   Farm   @relation(fields: [farmId], references: [id], onDelete: Cascade)
 
+  @@index([farmId])
+  @@index([farmId, date])
   @@map("activities")
 }
 
@@ -118,6 +121,9 @@ model Harvest {
   farmId String
   farm   Farm   @relation(fields: [farmId], references: [id], onDelete: Cascade)
 
+  @@unique([farmId, year])
+  @@index([farmId])
+  @@index([farmId, year])
   @@map("harvests")
 }
 
@@ -176,6 +182,9 @@ model SmartRecommendation {
   // Relations
   farm            Farm? @relation(fields: [farmId], references: [id], onDelete: Cascade)
 
+  @@index([farmId])
+  @@index([farmId, validUntil])
+  @@index([farmId, isRead])
   @@map("smart_recommendations")
 }
 

@@ -10,28 +10,6 @@ export const db = prisma
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
 
-// Test database connection
-export async function testDatabaseConnection() {
-  try {
-    await prisma.$connect()
-    console.log('Database connected successfully!')
-
-    // Test a simple query
-    await prisma.$queryRaw`SELECT version()`
-    console.log('Database query test successful!')
-
-    return { success: true, message: 'Database connection successful!' }
-  } catch (error) {
-    console.error('Database connection failed:', error)
-    return {
-      success: false,
-      message: `Database connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-    }
-  } finally {
-    await prisma.$disconnect()
-  }
-}
-
 // Create a user from Clerk data
 export async function createUser(clerkUser: {
   id: string
