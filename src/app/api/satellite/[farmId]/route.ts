@@ -243,21 +243,30 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const healthMetrics = calculateHealthMetrics(indices)
 
-    // Store the data
-    const savedData = await prisma.satelliteData.create({
-      data: {
-        farmId: farm.id,
-        date: indices.date,
-        ndvi: indices.ndvi,
-        ndmi: indices.ndmi,
-        evi: indices.evi,
-        soilMoisture: indices.soilMoisture,
-        cloudCoverage: indices.cloudCoverage,
-        healthScore: healthMetrics.healthScore,
-        stressLevel: healthMetrics.stressLevel,
-        source: SatelliteSource.SENTINEL_2,
-        resolution: 10
-      }
+    // Store the data — upsert to avoid unique constraint errors on retry
+    const satelliteRecord = {
+      farmId: farm.id,
+      date: indices.date,
+      ndvi: indices.ndvi,
+      ndmi: indices.ndmi,
+      evi: indices.evi,
+      soilMoisture: indices.soilMoisture,
+      cloudCoverage: indices.cloudCoverage,
+      healthScore: healthMetrics.healthScore,
+      stressLevel: healthMetrics.stressLevel,
+      source: SatelliteSource.SENTINEL_2,
+      resolution: 10
+    }
+    const savedData = await prisma.satelliteData.upsert({
+      where: {
+        farmId_date_source: {
+          farmId: farm.id,
+          date: indices.date,
+          source: SatelliteSource.SENTINEL_2
+        }
+      },
+      update: satelliteRecord,
+      create: satelliteRecord
     })
 
     return NextResponse.json({
