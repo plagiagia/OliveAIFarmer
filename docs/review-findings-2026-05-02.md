@@ -4,11 +4,12 @@ This document consolidates the local code review plus the Vercel/Neon checks so 
 
 ## Current Status
 
-- Latest committed fix: `9350997 Remove AI image upload feature`.
-- Current workspace fix: harvest model/migration drift resolved locally; production migration has not been applied yet.
-- Vercel production deployment for that commit is `READY` and aliased to `olive-ai-farmer.vercel.app`.
-- No Neon schema/data changes were made during the AI image removal.
-- All checks after the removal passed locally: `type-check`, `test:run`, `lint`, and `build`.
+- Latest committed fixes:
+	- `9350997 Remove AI image upload feature`.
+	- `35c3eed Fix harvest collection model`.
+- Vercel production deployment for `35c3eed` is `READY` and aliased to `olive-ai-farmer.vercel.app`.
+- No Neon production schema/data changes were made during either fix.
+- All checks after the harvest fix passed locally: `db:generate`, targeted harvest test, `type-check`, `test:run`, `lint`, and `build`.
 
 ## Fixed
 
@@ -31,7 +32,7 @@ Follow-up outside the repo:
 
 ### Harvest Model And Migration Drift
 
-Status: fixed in workspace.
+Status: fixed in repo and deployed app code.
 
 The app now treats `Harvest` as a collection row, and the UI/API group those rows by farm/year as a harvest season.
 
@@ -46,7 +47,7 @@ Production note:
 
 - Neon currently has one harvest row, no duplicate farm/year groups, and no farm/year unique constraint.
 - The migration SQL was tested successfully on temporary Neon branch `br-icy-sky-a92abxef`, then that branch was deleted.
-- The production database still needs the normal migration reconciliation/deploy flow before this workspace fix is live there.
+- The production database still needs the normal migration reconciliation/deploy flow before the new supporting indexes are applied there.
 
 ## Remaining Findings
 
