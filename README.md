@@ -56,7 +56,6 @@ single workspace — with optional integrations for **weather**, **satellite ind
 - **Auth** — Clerk
 - **Maps** — Mapbox GL, react‑map‑gl, Mapbox Geocoder
 - **Charts** — Recharts
-- **Storage** — Vercel Blob (photo uploads)
 - **Scheduling** — Vercel Cron
 - **AI** — OpenAI SDK
 - **Testing** — Vitest, Testing Library, jsdom
@@ -107,7 +106,6 @@ Copy `.env.example` to `.env.local` and fill the values.
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` |    ✅    | Clerk auth (client)                            |
 | `CLERK_SECRET_KEY`                  |    ✅    | Clerk auth (server)                            |
 | `NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN`   |    ✅    | Maps + geocoding                               |
-| `BLOB_READ_WRITE_TOKEN`             |    ⚠️    | Photo uploads (required if uploads are used)   |
 | `CRON_SECRET`                       | 🛡️ prod  | Protects `/api/cron/*` endpoints in production |
 | `OPENWEATHER_API_KEY`               | optional | Weather intelligence + cron weather history    |
 | `OPENAI_API_KEY`                    | optional | AI insights (AI Γεωπόνος)                      |
@@ -280,7 +278,7 @@ A Greek-language web application for managing olive groves: farms, trees, activi
 - Prisma + PostgreSQL (Neon or any Postgres)
 - Clerk (auth)
 - Mapbox GL
-- Vercel Blob (uploads), Vercel Cron (scheduled jobs)
+- Vercel Cron (scheduled jobs)
 - Vitest + Testing Library
 
 ## Getting Started
@@ -325,7 +323,6 @@ Copy `.env.example` to `.env.local` and fill the values.
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` |      yes | Clerk auth (client)                            |
 | `CLERK_SECRET_KEY`                  |      yes | Clerk auth (server)                            |
 | `NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN`   |      yes | Maps + geocoding                               |
-| `BLOB_READ_WRITE_TOKEN`             |     no\* | Photo uploads (required if using uploads)      |
 | `OPENWEATHER_API_KEY`               |       no | Weather intelligence + cron weather history    |
 | `CRON_SECRET`                       |     prod | Protects `/api/cron/*` endpoints in production |
 | `OPENAI_API_KEY`                    |       no | AI insights (“AI Γεωπόνος”)                    |
@@ -376,7 +373,6 @@ src/
 │   │   ├── insights/
 │   │   ├── satellite/
 │   │   ├── sync-user/
-│   │   ├── upload/
 │   │   └── weather/
 │   ├── dashboard/           # App pages
 │   └── offline/             # Offline fallback page
@@ -424,7 +420,7 @@ npm run test:run
 
 ## Deployment
 
-Vercel is the easiest path (Next.js + cron + Blob integration). At minimum:
+Vercel is the easiest path (Next.js + cron integration). At minimum:
 
 1. Configure the environment variables from `.env.example`.
 2. Ensure migrations are applied (`npm run db:deploy`) during deploy.

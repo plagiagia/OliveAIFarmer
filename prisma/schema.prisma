@@ -202,7 +202,7 @@ model SmartRecommendation {
 model AIUsage {
   id               String   @id @default(cuid())
   userId           String   // Clerk user id (string), no FK so we can log even if user lookup fails
-  endpoint         String   // e.g., "insights/generate", "insights/dashboard", "chat", "diagnose"
+  endpoint         String   // e.g., "insights/generate", "insights/dashboard", "chat"
   model            String
   promptTokens     Int      @default(0)
   completionTokens Int      @default(0)

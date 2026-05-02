@@ -78,8 +78,6 @@ const nextConfig = {
       { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
       { protocol: 'https', hostname: 'images.clerk.dev' },
       { protocol: 'https', hostname: 'img.clerk.com' },
-      // Vercel Blob storage (where uploaded photos live).
-      { protocol: 'https', hostname: '**.public.blob.vercel-storage.com' },
     ],
   },
   env: {

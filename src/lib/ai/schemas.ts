@@ -3,7 +3,7 @@
  *
  * Used in two places:
  *   1. To validate raw OpenAI JSON output before persisting.
- *   2. To validate inbound API request bodies (chat, diagnose, etc.).
+ *   2. To validate inbound API request bodies (chat, etc.).
  *
  * Keeping schemas here means a prompt regression that produces an
  * unexpected shape *fails loudly* instead of being silently filtered.
@@ -71,20 +71,3 @@ export const chatRequestSchema = z.object({
     .min(1)
     .max(20),
 })
-
-export const diagnoseRequestSchema = z.object({
-  farmId: z.string().trim().min(1),
-  imageUrl: z.string().url(),
-  notes: z.string().trim().max(500).optional(),
-})
-
-export const leafDiagnosisSchema = z.object({
-  diagnosis: z.string().trim().min(1).max(200),
-  confidence: z.number().min(0).max(1),
-  symptoms: z.array(z.string().trim().min(1).max(200)).max(8),
-  likelyCauses: z.array(z.string().trim().min(1).max(200)).max(5),
-  recommendedActions: z.array(z.string().trim().min(1).max(300)).max(8),
-  urgency: urgencySchema,
-  disclaimer: z.string().trim().min(1).max(500),
-})
-export type LeafDiagnosis = z.infer<typeof leafDiagnosisSchema>

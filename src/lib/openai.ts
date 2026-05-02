@@ -19,11 +19,9 @@ export const openai = OPENAI_API_KEY
 
 // Model is overridable per-environment so we can A/B without redeploy.
 export const AI_MODEL = process.env.OPENAI_MODEL ?? 'gpt-4o-mini'
-export const AI_VISION_MODEL = process.env.OPENAI_VISION_MODEL ?? 'gpt-4o'
 export const FARM_INSIGHTS_PROMPT_VERSION = 'farm-v2.0'
 export const DASHBOARD_INSIGHTS_PROMPT_VERSION = 'dashboard-v2.0'
 export const CHAT_PROMPT_VERSION = 'chat-v1.0'
-export const DIAGNOSE_PROMPT_VERSION = 'diagnose-v1.0'
 
 // Type definitions for AI Insights
 export interface FarmContext {
@@ -461,8 +459,6 @@ export async function generateDashboardInsights(
 // Conversational chat (streaming)
 // ============================================================
 
-import { leafDiagnosisSchema, type LeafDiagnosis } from '@/lib/ai/schemas'
-
 export const CHAT_SYSTEM_PROMPT = `Είσαι ψηφιακός βοηθός γεωπόνος εξειδικευμένος στην ελληνική ελαιοκαλλιέργεια.
 Απαντάς σύντομα, στα Ελληνικά, με βάση τα δεδομένα του ελαιώνα του χρήστη όταν είναι διαθέσιμα.
 
@@ -505,88 +501,4 @@ export async function streamChat(
     temperature: 0.6,
     max_tokens: 600,
   })
-}
-
-// ============================================================
-// Multimodal leaf-photo diagnosis
-// ============================================================
-
-export const DIAGNOSE_SYSTEM_PROMPT = `Είσαι ψηφιακός γεωπόνος που αναλύει φωτογραφίες φύλλων και κλαδιών ελιάς.
-Από την εικόνα και τυχόν σημειώσεις του χρήστη, προτείνεις πιθανές διαγνώσεις.
-
-ΚΑΝΟΝΕΣ:
-1. Δεν είσαι ντετερμινιστικός - δίνεις πιθανότητες (confidence 0..1).
-2. Αν η εικόνα είναι ασαφής, χαμηλής ποιότητας ή δεν δείχνει φύλλα ελιάς, πες το ξεκάθαρα και confidence ≤ 0.3.
-3. Μην προτείνεις δοσολογίες ή ονόματα φυτοφαρμάκων.
-4. Πάντα πρόσθεσε disclaimer ότι η οπτική διάγνωση από φωτογραφία δεν αντικαθιστά εξέταση από αδειοδοτημένο γεωπόνο.
-
-Απάντησε ΜΟΝΟ σε JSON:
-{
-  "diagnosis": "συνοπτική διάγνωση (π.χ. Πιθανό κυκλοκόνιο)",
-  "confidence": 0.0..1.0,
-  "symptoms": ["παρατηρούμενα συμπτώματα"],
-  "likelyCauses": ["πιθανές αιτίες"],
-  "recommendedActions": ["τι να κάνει ο παραγωγός (γενικά)"],
-  "urgency": "LOW|MEDIUM|HIGH|CRITICAL",
-  "disclaimer": "σύντομο disclaimer"
-}`
-
-export interface LeafDiagnosisResult {
-  diagnosis: LeafDiagnosis
-  meta: AIResponseMeta
-}
-
-/**
- * Run a vision-model diagnosis on a leaf/branch photo URL.
- * Caller must verify the URL belongs to the user's farm before invoking.
- */
-export async function diagnoseLeafImage(
-  imageUrl: string,
-  notes?: string
-): Promise<LeafDiagnosisResult> {
-  if (!openai) throw new Error('OpenAI API key is not configured')
-
-  const response = await withRetry(() =>
-    openai.chat.completions.create({
-      model: AI_VISION_MODEL,
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: DIAGNOSE_SYSTEM_PROMPT },
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'text',
-              text: notes ? `Σημειώσεις παραγωγού: ${notes}` : 'Δες την παρακάτω εικόνα.',
-            },
-            { type: 'image_url', image_url: { url: imageUrl, detail: 'auto' } },
-          ],
-        },
-      ],
-      temperature: 0.2,
-      max_tokens: 800,
-    })
-  )
-
-  const content = response.choices[0].message.content
-  if (!content) throw new Error('No response from OpenAI vision')
-
-  const json: unknown = JSON.parse(content)
-  const diagnosis = leafDiagnosisSchema.parse(json)
-
-  const meta: AIResponseMeta = {
-    model: response.model || AI_VISION_MODEL,
-    promptVersion: DIAGNOSE_PROMPT_VERSION,
-    requestId: response.id || null,
-    generatedAt: new Date().toISOString(),
-    usage: response.usage
-      ? {
-          promptTokens: response.usage.prompt_tokens,
-          completionTokens: response.usage.completion_tokens,
-          totalTokens: response.usage.total_tokens,
-        }
-      : null,
-  }
-
-  return { diagnosis, meta }
 }

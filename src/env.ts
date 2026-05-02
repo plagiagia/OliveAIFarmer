@@ -33,9 +33,6 @@ const serverSchema = z.object({
   // Clerk
   CLERK_SECRET_KEY: requiredInProd(z.string().min(1)),
 
-  // Vercel Blob (uploads)
-  BLOB_READ_WRITE_TOKEN: requiredInProd(z.string().min(1)),
-
   // OpenWeatherMap
   OPENWEATHER_API_KEY: requiredInProd(z.string().min(1)),
 
@@ -45,7 +42,6 @@ const serverSchema = z.object({
   // OpenAI (AI Geoponos)
   OPENAI_API_KEY: requiredInProd(z.string().min(1)),
   OPENAI_MODEL: z.string().optional(),
-  OPENAI_VISION_MODEL: z.string().optional(),
   OPENAI_MONTHLY_TOKEN_BUDGET: z.coerce.number().int().positive().optional(),
 
   // Upstash REST (optional distributed rate limiter; falls back to in-memory).
@@ -73,12 +69,10 @@ const parsed = merged.safeParse({
   NODE_ENV: process.env.NODE_ENV,
   DATABASE_URL: process.env.DATABASE_URL,
   CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
-  BLOB_READ_WRITE_TOKEN: process.env.BLOB_READ_WRITE_TOKEN,
   OPENWEATHER_API_KEY: process.env.OPENWEATHER_API_KEY,
   CRON_SECRET: process.env.CRON_SECRET,
   OPENAI_API_KEY: process.env.OPENAI_API_KEY,
   OPENAI_MODEL: process.env.OPENAI_MODEL,
-  OPENAI_VISION_MODEL: process.env.OPENAI_VISION_MODEL,
   OPENAI_MONTHLY_TOKEN_BUDGET: process.env.OPENAI_MONTHLY_TOKEN_BUDGET,
   UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
   UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
