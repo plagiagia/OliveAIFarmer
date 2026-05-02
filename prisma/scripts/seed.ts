@@ -28,6 +28,8 @@ async function main() {
       name: 'Ελαιώνας Μεσσηνίας',
       location: 'Καλαμάτα, Μεσσηνία',
       coordinates: '37.0421,22.1121',
+      latitude: 37.0421,
+      longitude: 22.1121,
       totalArea: 52, // 5.2 hectares = 52 stremmata
       treeCount: 150,
       oliveVariety: 'Κορωνέικη',

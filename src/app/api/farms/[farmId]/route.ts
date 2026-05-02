@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db'
+import { formatCoordinates, parseCoordinates } from '@/lib/mapbox-utils'
 import { auth } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
 
@@ -63,7 +64,52 @@ export async function PUT(
 
     const { farmId } = await params
     const body = await request.json()
-    const { name, location, coordinates, totalArea, treeCount, treeAge, oliveVariety, description } = body
+    const {
+      name,
+      location,
+      coordinates,
+      latitude,
+      longitude,
+      totalArea,
+      treeCount,
+      treeAge,
+      oliveVariety,
+      description
+    } = body
+
+    const parsedLatitude = typeof latitude === 'number'
+      ? latitude
+      : typeof latitude === 'string' && latitude.trim() !== ''
+        ? parseFloat(latitude)
+        : null
+    const parsedLongitude = typeof longitude === 'number'
+      ? longitude
+      : typeof longitude === 'string' && longitude.trim() !== ''
+        ? parseFloat(longitude)
+        : null
+    const legacyCoordinates = typeof coordinates === 'string' && coordinates.trim() !== ''
+      ? coordinates.trim()
+      : null
+
+    let latitudeValue: number | null = null
+    let longitudeValue: number | null = null
+
+    if (Number.isFinite(parsedLatitude) && Number.isFinite(parsedLongitude)) {
+      latitudeValue = parsedLatitude
+      longitudeValue = parsedLongitude
+    } else if (legacyCoordinates) {
+      const parsed = parseCoordinates(legacyCoordinates)
+      if (parsed) {
+        latitudeValue = parsed.lat
+        longitudeValue = parsed.lng
+      }
+    }
+
+    const coordinatesValue = legacyCoordinates || (
+      latitudeValue != null && longitudeValue != null
+        ? formatCoordinates(longitudeValue, latitudeValue)
+        : null
+    )
 
     // Validate required fields
     if (!name?.trim() || !location?.trim()) {
@@ -104,7 +150,9 @@ export async function PUT(
       data: {
         name: name.trim(),
         location: location.trim(),
-        coordinates: coordinates || null,
+        coordinates: coordinatesValue,
+        latitude: latitudeValue,
+        longitude: longitudeValue,
         totalArea: totalArea ? parseFloat(totalArea) : null,
         treeCount: treeCount !== null && treeCount !== undefined ? parseInt(treeCount) : null,
         oliveVariety: oliveVariety?.trim() || null,

@@ -16,6 +16,14 @@ interface RouteContext {
   params: Promise<{ farmId: string }>
 }
 
+function getFarmCoordinates(farm: { latitude: number | null; longitude: number | null; coordinates: string | null }) {
+  if (farm.latitude != null && farm.longitude != null) {
+    return { lat: farm.latitude, lon: farm.longitude }
+  }
+
+  return parseCoordinates(farm.coordinates || '')
+}
+
 /**
  * GET /api/satellite/[farmId]
  *
@@ -55,7 +63,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
     }
 
     // Check if farm has coordinates
-    const coords = parseCoordinates(farm.coordinates || '')
+    const coords = getFarmCoordinates(farm)
     if (!coords) {
       return NextResponse.json({
         error: 'Farm coordinates not set',
@@ -206,7 +214,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Farm not found' }, { status: 404 })
     }
 
-    const coords = parseCoordinates(farm.coordinates || '')
+    const coords = getFarmCoordinates(farm)
     if (!coords) {
       return NextResponse.json({
         error: 'Farm coordinates not set'

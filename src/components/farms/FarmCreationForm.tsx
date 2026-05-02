@@ -64,6 +64,8 @@ export default function FarmCreationForm({ userId: _userId }: FarmCreationFormPr
           name: formData.name,
           location: formData.location,
           coordinates,
+          latitude: formData.latitude,
+          longitude: formData.longitude,
           totalArea: areaInStremmata,
           treeCount: formData.treeCount ? parseInt(formData.treeCount) : null,
           treeAge: formData.treeAge ? parseInt(formData.treeAge) : null,

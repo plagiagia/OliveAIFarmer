@@ -57,9 +57,9 @@ export async function GET(request: NextRequest) {
     // Process each farm (with rate limiting consideration)
     for (const farm of farms) {
       try {
-        if (!farm.coordinates) continue
-
-        const coords = parseCoordinates(farm.coordinates)
+        const coords = (farm.latitude != null && farm.longitude != null)
+          ? { lat: farm.latitude, lng: farm.longitude }
+          : (farm.coordinates ? parseCoordinates(farm.coordinates) : null)
         if (!coords) {
           results.errors.push(`${farm.name}: Invalid coordinates`)
           results.failedCount++

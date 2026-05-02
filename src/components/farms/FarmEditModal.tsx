@@ -21,11 +21,13 @@ interface FarmEditModalProps {
 }
 
 export default function FarmEditModal({ farm, onClose, onSuccess }: FarmEditModalProps) {
+  const parsedFarmCoordinates = parseCoordinates(farm.coordinates || '')
+
   const [formData, setFormData] = useState({
     name: farm.name || '',
     location: farm.location || '',
-    longitude: parseCoordinates(farm.coordinates)?.lng || null as number | null,
-    latitude: parseCoordinates(farm.coordinates)?.lat || null as number | null,
+    longitude: farm.longitude ?? parsedFarmCoordinates?.lng ?? null as number | null,
+    latitude: farm.latitude ?? parsedFarmCoordinates?.lat ?? null as number | null,
     totalArea: farm.totalArea ? convertFromStremmata(farm.totalArea, 'στρέμματα').toString() : '',
     areaUnit: 'στρέμματα' as AreaUnit,
     treeCount: farm.treeCount?.toString() || '',
@@ -64,6 +66,8 @@ export default function FarmEditModal({ farm, onClose, onSuccess }: FarmEditModa
           name: formData.name,
           location: formData.location,
           coordinates,
+          latitude: formData.latitude,
+          longitude: formData.longitude,
           totalArea: areaInStremmata,
           treeCount: formData.treeCount ? parseInt(formData.treeCount) : null,
           treeAge: formData.treeAge ? parseInt(formData.treeAge) : null,

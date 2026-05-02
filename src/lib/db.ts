@@ -250,12 +250,22 @@ export async function getAllFarmsWithCoordinates() {
   try {
     const farms = await prisma.farm.findMany({
       where: {
-        coordinates: { not: null }
+        OR: [
+          {
+            latitude: { not: null },
+            longitude: { not: null }
+          },
+          {
+            coordinates: { not: null }
+          }
+        ]
       },
       select: {
         id: true,
         name: true,
-        coordinates: true
+        coordinates: true,
+        latitude: true,
+        longitude: true
       }
     })
 
@@ -372,12 +382,22 @@ export async function getAllFarmsForSatellite() {
   try {
     const farms = await prisma.farm.findMany({
       where: {
-        coordinates: { not: null }
+        OR: [
+          {
+            latitude: { not: null },
+            longitude: { not: null }
+          },
+          {
+            coordinates: { not: null }
+          }
+        ]
       },
       select: {
         id: true,
         name: true,
         coordinates: true,
+        latitude: true,
+        longitude: true,
         totalArea: true
       }
     })
