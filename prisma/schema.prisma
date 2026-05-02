@@ -124,9 +124,10 @@ model Harvest {
   farmId String
   farm   Farm   @relation(fields: [farmId], references: [id], onDelete: Cascade)
 
-  @@unique([farmId, year])
   @@index([farmId])
   @@index([farmId, year])
+  @@index([farmId, year, completed])
+  @@index([farmId, collectionDate])
   @@map("harvests")
 }
 

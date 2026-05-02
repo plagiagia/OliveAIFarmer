@@ -69,18 +69,17 @@ export async function POST(request: NextRequest) {
       totalYieldKg = totalYieldKg * 1000
     }
 
-    // WORKAROUND: Since collectionDate exists in schema but Prisma client doesn't recognize it
-    // We use startDate to store the collection date for daily entries
-    console.log('🔍 Date handling:', { startDate, collectionDate, receivedFromFrontend: !!collectionDate })
+    const collectionDateValue = collectionDate ? new Date(collectionDate) : null
+    const startDateValue = startDate ? new Date(startDate) : collectionDateValue ?? new Date()
 
     // Create the harvest
     const harvest = await prisma.harvest.create({
       data: {
         farmId,
         year: parseInt(year),
-        startDate: startDate ? new Date(startDate) : new Date(),
+        startDate: startDateValue,
         endDate: endDate ? new Date(endDate) : null,
-        // collectionDate: collectionDate ? new Date(collectionDate) : null, // Prisma type issue in create
+        collectionDate: collectionDateValue,
         totalYield: totalYieldKg,
         totalYieldTons: totalYieldKg / 1000,
         pricePerKg: pricePerKg ? parseFloat(pricePerKg) : null,
@@ -94,16 +93,6 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // If collectionDate was provided, update it using raw SQL as workaround
-    if (collectionDate) {
-      await prisma.$executeRaw`
-        UPDATE harvests 
-        SET "collectionDate" = ${new Date(collectionDate)}::timestamp
-        WHERE id = ${harvest.id}
-      `
-      console.log('✅ Updated collectionDate via raw SQL:', collectionDate)
-    }
-
     console.log('✅ New harvest created:', harvest.year, 'for farm:', farm.name)
 
     return NextResponse.json({
@@ -112,7 +101,7 @@ export async function POST(request: NextRequest) {
         id: harvest.id,
         year: harvest.year,
         startDate: harvest.startDate,
-        collectionDate: collectionDate ? new Date(collectionDate) : null, // Return the collectionDate we set
+        collectionDate: harvest.collectionDate,
         totalYield: harvest.totalYield,
         totalYieldTons: harvest.totalYieldTons,
         totalValue: harvest.totalValue,
@@ -126,14 +115,6 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('❌ Harvest creation error:', error)
-    
-    // Handle unique constraint violation
-    if (error instanceof Error && error.message.includes('Unique constraint')) {
-      return NextResponse.json({
-        success: false,
-        error: 'Υπάρχει ήδη συγκομιδή για αυτό το έτος σε αυτόν τον ελαιώνα'
-      }, { status: 400 })
-    }
     
     return NextResponse.json({
       success: false,
