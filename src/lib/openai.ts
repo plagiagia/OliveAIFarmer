@@ -1,11 +1,11 @@
-import OpenAI from 'openai'
-import {
-  aiInsightsResponseSchema,
-  dashboardResponseSchema,
-  type AIInsightParsed,
-  type DashboardAIInsightParsed,
-} from '@/lib/ai/schemas'
 import { withRetry } from '@/lib/ai/retry'
+import {
+    aiInsightsResponseSchema,
+    dashboardResponseSchema,
+    type AIInsightParsed,
+    type DashboardAIInsightParsed,
+} from '@/lib/ai/schemas'
+import OpenAI from 'openai'
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 

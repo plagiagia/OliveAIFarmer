@@ -1,17 +1,17 @@
 -- Add structured coordinates + optional GeoJSON polygon for per-zone NDVI later.
-ALTER TABLE "farms" ADD COLUMN     "latitude" DOUBLE PRECISION;
-ALTER TABLE "farms" ADD COLUMN     "longitude" DOUBLE PRECISION;
-ALTER TABLE "farms" ADD COLUMN     "polygon" JSONB;
+ALTER TABLE "farms" ADD COLUMN IF NOT EXISTS "latitude" DOUBLE PRECISION;
+ALTER TABLE "farms" ADD COLUMN IF NOT EXISTS "longitude" DOUBLE PRECISION;
+ALTER TABLE "farms" ADD COLUMN IF NOT EXISTS "polygon" JSONB;
 
 -- Soft-archive AI insights instead of deleting on regeneration; add 24h context-hash cache key.
-ALTER TABLE "smart_recommendations" ADD COLUMN     "isArchived" BOOLEAN NOT NULL DEFAULT false;
-ALTER TABLE "smart_recommendations" ADD COLUMN     "contextHash" TEXT;
+ALTER TABLE "smart_recommendations" ADD COLUMN IF NOT EXISTS "isArchived" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "smart_recommendations" ADD COLUMN IF NOT EXISTS "contextHash" TEXT;
 
-CREATE INDEX "smart_recommendations_farmId_isArchived_idx" ON "smart_recommendations"("farmId", "isArchived");
-CREATE INDEX "smart_recommendations_contextHash_idx" ON "smart_recommendations"("contextHash");
+CREATE INDEX IF NOT EXISTS "smart_recommendations_farmId_isArchived_idx" ON "smart_recommendations"("farmId", "isArchived");
+CREATE INDEX IF NOT EXISTS "smart_recommendations_contextHash_idx" ON "smart_recommendations"("contextHash");
 
 -- Token usage ledger for OpenAI calls (per-user monthly budget enforcement + auditing).
-CREATE TABLE "ai_usage" (
+CREATE TABLE IF NOT EXISTS "ai_usage" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "endpoint" TEXT NOT NULL,
@@ -24,4 +24,4 @@ CREATE TABLE "ai_usage" (
     CONSTRAINT "ai_usage_pkey" PRIMARY KEY ("id")
 );
 
-CREATE INDEX "ai_usage_userId_createdAt_idx" ON "ai_usage"("userId", "createdAt");
+CREATE INDEX IF NOT EXISTS "ai_usage_userId_createdAt_idx" ON "ai_usage"("userId", "createdAt");
