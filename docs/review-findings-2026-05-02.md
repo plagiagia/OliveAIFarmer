@@ -7,8 +7,8 @@ This document consolidates the local code review plus the Vercel/Neon checks so 
 - Latest committed fixes:
 	- `9350997 Remove AI image upload feature`.
 	- `35c3eed Fix harvest collection model`.
-- Vercel production deployment for `35c3eed` is `READY` and aliased to `olive-ai-farmer.vercel.app`.
-- No Neon production schema/data changes were made during either fix.
+- Vercel production deployment is `READY` and aliased to `olive-ai-farmer.vercel.app`.
+- Neon production has the harvest/index cleanup applied and verified.
 - All checks after the harvest fix passed locally: `db:generate`, targeted harvest test, `type-check`, `test:run`, `lint`, and `build`.
 
 ## Fixed
@@ -45,9 +45,9 @@ The app now treats `Harvest` as a collection row, and the UI/API group those row
 
 Production note:
 
-- Neon currently has one harvest row, no duplicate farm/year groups, and no farm/year unique constraint.
+- Neon production currently has one harvest row, no duplicate farm/year groups, and no farm/year unique constraint.
 - The migration SQL was tested successfully on temporary Neon branch `br-icy-sky-a92abxef`, then that branch was deleted.
-- The production database still needs the normal migration reconciliation/deploy flow before the new supporting indexes are applied there.
+- The production migration was applied through Neon MCP migration `cd5e7603-07ae-40bc-bc74-cb7ce7f79acc` and verified on main branch `br-rapid-field-a98oxlrz`.
 
 ## Remaining Findings
 
@@ -60,13 +60,13 @@ Neon project `GroveWise` main has migration history that does not match the work
 - Live Neon has `20250530170558_add_clerk_id`.
 - Live Neon has `20250628000000_add_weather_history`.
 - Live Neon has `20260418120000_add_ai_usage_archive_geo`.
-- The workspace contains `20260418000000_add_indexes_and_harvest_unique`, but Neon has not applied it.
+- The supporting indexes and harvest cleanup have been applied to Neon production through the MCP migration flow, but `_prisma_migrations` still does not record the workspace migrations `20260418000000_add_indexes_and_harvest_unique` or `20260502000000_allow_multiple_harvest_collections`.
 - The live `20250628000000_add_weather_history` migration was not visible in the workspace migration list.
 
 Recommended fix:
 
 - Reconcile migration history before adding automatic deploy migrations.
-- Keep the harvest collection migration in the reconciliation plan.
+- Decide how to represent the MCP-applied index/harvest cleanup in Prisma migration history.
 - Bring the missing migration files/schema history back into source control or mark the live-only migration state intentionally.
 
 ### 2. Vercel Deploy Does Not Run Database Migrations
@@ -81,23 +81,7 @@ Recommended fix:
 - First reconcile the migration history now that the harvest model decision is fixed in the workspace.
 - Then update the production deploy flow to run migrations in a controlled way, for example a prebuild/deploy step that runs `prisma migrate deploy` against the pooled production database.
 
-### 3. Missing Production Indexes
-
-Severity: medium.
-
-Because the missing migration was not applied, production is also missing several supporting indexes for farms, activities, harvests, smart recommendations, and related lookups.
-
-Current impact:
-
-- Data volume is still small.
-- `pg_stat_statements` did not show an application query hotspot.
-
-Risk:
-
-- Query performance will degrade as usage grows.
-- Fixing this should be part of the migration reconciliation work.
-
-### 4. Neon Main Branch Is Not Protected
+### 3. Neon Main Branch Is Not Protected
 
 Severity: medium.
 
@@ -107,7 +91,7 @@ Recommended fix:
 
 - Enable branch protection for the production database before making migration workflows more automatic.
 
-### 5. Vercel Node Version Is Floating To 24.x
+### 4. Vercel Node Version Is Floating To 24.x
 
 Severity: low to medium.
 
@@ -117,7 +101,7 @@ Recommended fix:
 
 - Pin a stable major runtime, preferably Node 20 or Node 22, in `package.json` and/or Vercel project settings.
 
-### 6. API Rate Limits Are Not Distributed
+### 5. API Rate Limits Are Not Distributed
 
 Severity: medium.
 
@@ -128,7 +112,7 @@ Recommended fix:
 - Switch AI and other cost-sensitive routes to the async distributed limiter.
 - In production, fail closed or warn loudly if Upstash is not configured.
 
-### 7. Dashboard Page Auth Is Inconsistent
+### 6. Dashboard Page Auth Is Inconsistent
 
 Severity: medium.
 
@@ -139,7 +123,7 @@ Recommended fix:
 - Enforce dashboard auth in a dashboard layout or Clerk route matcher middleware.
 - Keep individual API auth checks as defense in depth.
 
-### 8. Manual Satellite Refresh Can Fail On Duplicate Dates
+### 7. Manual Satellite Refresh Can Fail On Duplicate Dates
 
 Severity: medium.
 
@@ -149,7 +133,7 @@ Recommended fix:
 
 - Make manual POST use the same upsert/save helper as GET.
 
-### 9. Coordinates Are Split Between Legacy Text And Structured Columns
+### 8. Coordinates Are Split Between Legacy Text And Structured Columns
 
 Severity: low to medium.
 
@@ -161,7 +145,7 @@ Recommended fix:
 - Backfill existing farms from valid legacy coordinates.
 - Gradually move weather/satellite code to structured coordinates with text parsing as a fallback.
 
-### 10. TypeScript 7 Future Warning
+### 9. TypeScript 7 Future Warning
 
 Severity: low.
 
@@ -178,17 +162,17 @@ Recommended fix:
 - Unauthenticated weather/cron smoke requests returned `401`, which is expected.
 - Neon is in a nearby region for the Vercel Frankfurt deployment.
 - The app uses a pooled Neon database host.
+- Production now has the expected farm/activity/harvest/recommendation supporting indexes.
 - Local verification passed after the image/upload removal.
 
 ## Suggested Fix Order
 
 1. Clean Vercel env vars for removed AI image/upload feature.
 2. Reconcile Prisma migration history between repo and Neon.
-3. Apply safe index/schema migrations to production.
-4. Add controlled migration execution to deployment.
-5. Protect the Neon production branch.
-6. Pin Node runtime.
-7. Fix distributed rate limiting for cost-sensitive routes.
-8. Normalize dashboard auth enforcement.
-9. Fix satellite manual refresh upsert behavior.
-10. Backfill and standardize farm coordinates.
+3. Add controlled migration execution to deployment.
+4. Protect the Neon production branch.
+5. Pin Node runtime.
+6. Fix distributed rate limiting for cost-sensitive routes.
+7. Normalize dashboard auth enforcement.
+8. Fix satellite manual refresh upsert behavior.
+9. Backfill and standardize farm coordinates.
