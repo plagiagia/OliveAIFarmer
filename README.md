@@ -128,7 +128,7 @@ Copy `.env.example` to `.env.local` and fill the values.
 | Production  | `npm run db:deploy`  | Apply existing migrations only          |
 | Tooling     | `npm run db:studio`  | Open Prisma Studio                      |
 
-> ℹ️ `npm run build` does **not** mutate your database.
+> ℹ️ `npm run build` does **not** mutate your database locally. On Vercel production deploys, `npm run build:vercel` runs `prisma migrate deploy` before build.
 
 ---
 

@@ -5,8 +5,8 @@ This document consolidates the local code review plus the Vercel/Neon checks so 
 ## Current Status
 
 - Latest committed fixes:
-	- `9350997 Remove AI image upload feature`.
-	- `35c3eed Fix harvest collection model`.
+  - `9350997 Remove AI image upload feature`.
+  - `35c3eed Fix harvest collection model`.
 - Vercel production deployment is `READY` and aliased to `olive-ai-farmer.vercel.app`.
 - Neon production has the harvest/index cleanup applied and verified.
 - All checks after the harvest fix passed locally: `db:generate`, targeted harvest test, `type-check`, `test:run`, `lint`, and `build`.
@@ -53,7 +53,11 @@ Production note:
 
 ### 1. Production Database Migration Drift
 
-Severity: high.
+Severity: resolved (accepted baseline).
+
+Status update (2026-05-02): closed by decision.
+
+The current production schema state is accepted as the baseline. Historical drift cleanup for older migration history is not required before continuing delivery, as long as all future schema changes go through committed Prisma migrations and production deploy migration execution.
 
 Neon project `GroveWise` main has migration history that does not match the workspace:
 
@@ -63,23 +67,25 @@ Neon project `GroveWise` main has migration history that does not match the work
 - The supporting indexes and harvest cleanup have been applied to Neon production through the MCP migration flow, but `_prisma_migrations` still does not record the workspace migrations `20260418000000_add_indexes_and_harvest_unique` or `20260502000000_allow_multiple_harvest_collections`.
 - The live `20250628000000_add_weather_history` migration was not visible in the workspace migration list.
 
-Recommended fix:
+Decision:
 
-- Reconcile migration history before adding automatic deploy migrations.
-- Decide how to represent the MCP-applied index/harvest cleanup in Prisma migration history.
-- Bring the missing migration files/schema history back into source control or mark the live-only migration state intentionally.
+- Keep the current production schema as the authoritative baseline.
+- Enforce forward-only migration discipline for all new schema changes.
+- Ensure production deploys execute `prisma migrate deploy` before application build.
 
 ### 2. Vercel Deploy Does Not Run Database Migrations
 
-Severity: high.
+Severity: resolved.
+
+Status update (2026-05-02): fixed in repo.
 
 Vercel is building with `npm run build`, and the repo build script is `prisma generate && next build`. Build logs did not show `prisma migrate deploy`. This explains why production schema drift can persist.
 
-Recommended fix:
+Implemented fix:
 
-- Do not add migration deploy blindly yet.
-- First reconcile the migration history now that the harvest model decision is fixed in the workspace.
-- Then update the production deploy flow to run migrations in a controlled way, for example a prebuild/deploy step that runs `prisma migrate deploy` against the pooled production database.
+- Vercel build command now runs `npm run build:vercel`.
+- `build:vercel` runs `prisma migrate deploy` only when `VERCEL_ENV=production`.
+- Preview/development deploys skip migration deploy and only generate Prisma client + build the app.
 
 ### 3. Neon Main Branch Is Not Protected
 
