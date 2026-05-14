@@ -44,6 +44,14 @@ const serverSchema = z.object({
   OPENAI_MODEL: z.string().optional(),
   OPENAI_MONTHLY_TOKEN_BUDGET: z.coerce.number().int().positive().optional(),
 
+  // Stripe billing
+  STRIPE_SECRET_KEY: requiredInProd(z.string().min(1)),
+  STRIPE_WEBHOOK_SECRET: requiredInProd(z.string().min(1)),
+  STRIPE_PRICE_GROWER: z.string().optional(),
+  STRIPE_PRICE_PRODUCER: z.string().optional(),
+  STRIPE_PRICE_MILL: z.string().optional(),
+  STRIPE_PRICE_VIEWER_SEAT: z.string().optional(),
+
   // Upstash REST (optional distributed rate limiter; falls back to in-memory).
   UPSTASH_REDIS_REST_URL: z.string().url().optional(),
   UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
@@ -74,6 +82,12 @@ const parsed = merged.safeParse({
   OPENAI_API_KEY: process.env.OPENAI_API_KEY,
   OPENAI_MODEL: process.env.OPENAI_MODEL,
   OPENAI_MONTHLY_TOKEN_BUDGET: process.env.OPENAI_MONTHLY_TOKEN_BUDGET,
+  STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
+  STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
+  STRIPE_PRICE_GROWER: process.env.STRIPE_PRICE_GROWER,
+  STRIPE_PRICE_PRODUCER: process.env.STRIPE_PRICE_PRODUCER,
+  STRIPE_PRICE_MILL: process.env.STRIPE_PRICE_MILL,
+  STRIPE_PRICE_VIEWER_SEAT: process.env.STRIPE_PRICE_VIEWER_SEAT,
   UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
   UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
   COPERNICUS_CLIENT_ID: process.env.COPERNICUS_CLIENT_ID,
