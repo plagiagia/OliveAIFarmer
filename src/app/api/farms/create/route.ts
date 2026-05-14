@@ -1,5 +1,7 @@
 import { prisma } from '@/lib/db'
 import { formatCoordinates, parseCoordinates } from '@/lib/mapbox-utils'
+import { getUserPlanByClerkId } from '@/lib/subscription'
+import { canAddFarm } from '@/lib/plans'
 import { auth } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
 
@@ -84,6 +86,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         error: 'User not found'
       }, { status: 404 })
+    }
+
+    // Enforce plan farm-count limits
+    const userPlan = await getUserPlanByClerkId(userId)
+    const existingFarmCount = await prisma.farm.count({ where: { userId: user.id } })
+    if (!canAddFarm(userPlan.plan, existingFarmCount)) {
+      return NextResponse.json(
+        { error: 'Έχετε φτάσει το όριο ελαιώνων για το πρόγραμμά σας. Αναβαθμίστε για να προσθέσετε περισσότερους.' },
+        { status: 403 }
+      )
     }
 
     // Create the farm with treeCount and oliveVariety stored directly

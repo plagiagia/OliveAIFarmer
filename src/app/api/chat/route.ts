@@ -11,6 +11,8 @@ import {
   streamChat,
   type FarmContext,
 } from '@/lib/openai'
+import { getUserPlanByClerkId } from '@/lib/subscription'
+import { hasFeature } from '@/lib/plans'
 import { ACTIVITY_TYPE_LABELS } from '@/types/activity'
 import { auth } from '@clerk/nextjs/server'
 import { NextRequest } from 'next/server'
@@ -34,6 +36,14 @@ export async function POST(request: NextRequest) {
   if (!userId) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
+
+  const userPlan = await getUserPlanByClerkId(userId)
+  if (!hasFeature(userPlan.plan, 'aiGeoponos')) {
+    return new Response(JSON.stringify({ error: 'Ο AI Γεωπόνος απαιτεί πρόγραμμα Grower ή ανώτερο.' }), {
+      status: 403,
       headers: { 'Content-Type': 'application/json' },
     })
   }

@@ -3,6 +3,7 @@
 import CalendarActivityModal from '@/components/calendar/CalendarActivityModal'
 import FarmCalendar from '@/components/calendar/FarmCalendar'
 import FarmEditModal from '@/components/farms/FarmEditModal'
+import UpgradeBanner from '@/components/dashboard/UpgradeBanner'
 import MapPreview from '@/components/map/MapPreview'
 import OliveIcon from '@/components/ui/OliveIcon'
 import { parseCoordinates } from '@/lib/mapbox-utils'
@@ -279,6 +280,8 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
             </div>
           </div>
         )}
+
+        <UpgradeBanner />
 
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">

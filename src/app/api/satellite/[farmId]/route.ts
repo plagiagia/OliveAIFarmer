@@ -6,6 +6,8 @@ import {
   parseCoordinates,
   SatelliteIndices
 } from '@/lib/satellite'
+import { getUserPlanByClerkId } from '@/lib/subscription'
+import { hasFeature } from '@/lib/plans'
 import { auth } from '@clerk/nextjs/server'
 import { SatelliteSource } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
