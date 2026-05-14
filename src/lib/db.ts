@@ -80,11 +80,16 @@ export async function getUserByClerkId(clerkId: string) {
   }
 }
 
-// Get farm by ID with all related data
-export async function getFarmById(farmId: string) {
+// Get farm by ID with all related data, scoped to the current Clerk user.
+export async function getFarmById(farmId: string, clerkId: string) {
   try {
-    const farm = await prisma.farm.findUnique({
-      where: { id: farmId },
+    const farm = await prisma.farm.findFirst({
+      where: {
+        id: farmId,
+        user: {
+          clerkId,
+        },
+      },
       include: {
         user: {
           select: {

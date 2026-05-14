@@ -23,8 +23,8 @@ export default async function FarmDetailPage({ params }: FarmDetailPageProps) {
     redirect('/dashboard')
   }
 
-  // Get farm data with all relationships
-  const farm = await getFarmById(params.farmId)
+  // Get farm data with all relationships, scoped to the current user
+  const farm = await getFarmById(params.farmId, userId)
 
   if (!farm) {
     redirect('/dashboard')
