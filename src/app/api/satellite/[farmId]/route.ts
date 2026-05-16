@@ -42,6 +42,14 @@ export async function GET(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const userPlan = await getUserPlanByClerkId(userId)
+    if (!hasFeature(userPlan.plan, 'satellite')) {
+      return NextResponse.json(
+        { error: 'Τα δορυφορικά δεδομένα απαιτούν πρόγραμμα Producer ή ανώτερο.' },
+        { status: 403 }
+      )
+    }
+
     const { farmId } = await context.params
     const { searchParams } = new URL(request.url)
     const forceRefresh = searchParams.get('refresh') === 'true'
@@ -200,6 +208,14 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const { userId } = await auth()
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const userPlan = await getUserPlanByClerkId(userId)
+    if (!hasFeature(userPlan.plan, 'satellite')) {
+      return NextResponse.json(
+        { error: 'Τα δορυφορικά δεδομένα απαιτούν πρόγραμμα Producer ή ανώτερο.' },
+        { status: 403 }
+      )
     }
 
     const { farmId } = await context.params
