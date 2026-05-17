@@ -304,10 +304,12 @@ export default function LandingPage() {
       {/* ── FOOTER ── */}
       <footer className="border-t py-8 text-center text-sm text-gray-500">
         <p>© {new Date().getFullYear()} OliveIQ · Χαλκιδική, Ελλάδα</p>
-        <div className="mt-2 flex justify-center gap-6">
+        <div className="mt-3 flex flex-wrap justify-center gap-x-6 gap-y-2">
           <Link href="/sign-in" className="hover:text-olive-700">Σύνδεση</Link>
           <Link href="/sign-up" className="hover:text-olive-700">Εγγραφή</Link>
-          <a href="mailto:hello@oliveiq.app" className="hover:text-olive-700">Επικοινωνία</a>
+          <Link href="/legal/privacy" className="hover:text-olive-700">Πολιτική Απορρήτου</Link>
+          <Link href="/legal/terms" className="hover:text-olive-700">Όροι Χρήσης</Link>
+          <Link href="/legal/imprint" className="hover:text-olive-700">Επικοινωνία</Link>
         </div>
       </footer>
     </div>
