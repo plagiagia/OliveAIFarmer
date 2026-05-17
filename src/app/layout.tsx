@@ -1,6 +1,7 @@
 import { ClerkProvider, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
+import { Settings } from 'lucide-react'
 import './globals.css'
 import { OfflineIndicator } from '@/components/ui/OfflineIndicator'
 import OliveIcon from '@/components/ui/OliveIcon'
@@ -96,8 +97,16 @@ export default function RootLayout({
                         userButtonPopoverActionButton: "text-olive-700 hover:bg-olive-50"
                       }
                     }}
-                    showName={false} // Disable showName to save space on mobile
-                  />
+                    showName={false}
+                  >
+                    <UserButton.MenuItems>
+                      <UserButton.Link
+                        label="Ρυθμίσεις"
+                        labelIcon={<Settings className="h-4 w-4" />}
+                        href="/dashboard/settings"
+                      />
+                    </UserButton.MenuItems>
+                  </UserButton>
                 </div>
               </div>
             </header>
