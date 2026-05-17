@@ -1,10 +1,10 @@
-import { ClerkProvider, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
+import { ClerkProvider, SignedIn, SignedOut } from '@clerk/nextjs'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import { Settings } from 'lucide-react'
 import './globals.css'
 import { OfflineIndicator } from '@/components/ui/OfflineIndicator'
 import OliveIcon from '@/components/ui/OliveIcon'
+import UserMenuButton from '@/components/auth/UserMenuButton'
 
 const inter = Inter({ 
   subsets: ['latin', 'latin-ext'],
@@ -89,24 +89,7 @@ export default function RootLayout({
                     </div>
                     <h1 className="text-lg sm:text-xl font-bold text-olive-800 truncate">ΕλαιοLog</h1>
                   </div>
-                  <UserButton
-                    appearance={{
-                      elements: {
-                        avatarBox: "w-8 h-8 sm:w-10 sm:h-10",
-                        userButtonPopoverCard: "shadow-lg",
-                        userButtonPopoverActionButton: "text-olive-700 hover:bg-olive-50"
-                      }
-                    }}
-                    showName={false}
-                  >
-                    <UserButton.MenuItems>
-                      <UserButton.Link
-                        label="Ρυθμίσεις"
-                        labelIcon={<Settings className="h-4 w-4" />}
-                        href="/dashboard/settings"
-                      />
-                    </UserButton.MenuItems>
-                  </UserButton>
+                  <UserMenuButton />
                 </div>
               </div>
             </header>
