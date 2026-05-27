@@ -155,3 +155,12 @@ export function planLabel(plan: Plan | null | undefined): string {
 export function formatMonthlyPrice(priceMonthly: number): string {
   return priceMonthly === 0 ? 'Δωρεάν' : `€${priceMonthly}/μήνα`
 }
+
+/** User-facing message when a feature requires a minimum plan tier. */
+export function requiresPlanMessage(
+  minPlan: Plan,
+  options: { subject: string; verb?: 'απαιτεί' | 'απαιτούν' }
+): string {
+  const verb = options.verb ?? 'απαιτεί'
+  return `${options.subject} ${verb} πλάνο ${planLabel(minPlan)} ή ανώτερο.`
+}

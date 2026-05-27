@@ -13,7 +13,7 @@ import { recordAIUsage, checkMonthlyBudget } from '@/lib/ai/usage'
 import { ruleBasedInsights } from '@/lib/ai/fallback'
 import { farmIdBodySchema } from '@/lib/ai/schemas'
 import { getUserPlanByClerkId } from '@/lib/subscription'
-import { hasFeature } from '@/lib/plans'
+import { hasFeature, requiresPlanMessage } from '@/lib/plans'
 import { ACTIVITY_TYPE_LABELS } from '@/types/activity'
 import { auth } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     const userPlan = await getUserPlanByClerkId(userId)
     if (!hasFeature(userPlan.plan, 'aiGeoponos')) {
       return NextResponse.json(
-        { error: 'Ο AI Γεωπόνος απαιτεί πρόγραμμα Grower ή ανώτερο.' },
+        { error: requiresPlanMessage('GROWER', { subject: 'Ο AI Γεωπόνος' }) },
         { status: 403 }
       )
     }

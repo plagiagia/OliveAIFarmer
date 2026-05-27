@@ -5,6 +5,7 @@ import './globals.css'
 import { OfflineIndicator } from '@/components/ui/OfflineIndicator'
 import OliveIcon from '@/components/ui/OliveIcon'
 import UserMenuButton from '@/components/auth/UserMenuButton'
+import Link from 'next/link'
 
 const inter = Inter({ 
   subsets: ['latin', 'latin-ext'],
@@ -83,12 +84,12 @@ export default function RootLayout({
             <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-16">
-                  <div className="flex items-center space-x-2 sm:space-x-3">
+                  <Link href="/dashboard" className="flex items-center space-x-2 sm:space-x-3 text-olive-800 hover:text-olive-900 transition-colors">
                     <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-olive-100 to-olive-50 border border-olive-200/70 shadow-sm flex items-center justify-center flex-shrink-0">
                       <OliveIcon size="sm" className="text-olive-700" />
                     </div>
-                    <h1 className="text-lg sm:text-xl font-bold text-olive-800 truncate">ΕλαιοLog</h1>
-                  </div>
+                    <h1 className="text-lg sm:text-xl font-bold truncate">ΕλαιοLog</h1>
+                  </Link>
                   <UserMenuButton />
                 </div>
               </div>

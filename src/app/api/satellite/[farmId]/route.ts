@@ -7,7 +7,7 @@ import {
   SatelliteIndices
 } from '@/lib/satellite'
 import { getUserPlanByClerkId } from '@/lib/subscription'
-import { hasFeature } from '@/lib/plans'
+import { hasFeature, requiresPlanMessage } from '@/lib/plans'
 import { auth } from '@clerk/nextjs/server'
 import { SatelliteSource } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
     const userPlan = await getUserPlanByClerkId(userId)
     if (!hasFeature(userPlan.plan, 'satellite')) {
       return NextResponse.json(
-        { error: 'Τα δορυφορικά δεδομένα απαιτούν πρόγραμμα Producer ή ανώτερο.' },
+        { error: requiresPlanMessage('PRODUCER', { subject: 'Τα δορυφορικά δεδομένα', verb: 'απαιτούν' }) },
         { status: 403 }
       )
     }
@@ -213,7 +213,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const userPlan = await getUserPlanByClerkId(userId)
     if (!hasFeature(userPlan.plan, 'satellite')) {
       return NextResponse.json(
-        { error: 'Τα δορυφορικά δεδομένα απαιτούν πρόγραμμα Producer ή ανώτερο.' },
+        { error: requiresPlanMessage('PRODUCER', { subject: 'Τα δορυφορικά δεδομένα', verb: 'απαιτούν' }) },
         { status: 403 }
       )
     }
