@@ -1,7 +1,7 @@
 'use client'
 
 import { UserButton } from '@clerk/nextjs'
-import { Settings } from 'lucide-react'
+import { CreditCard, Settings } from 'lucide-react'
 
 export default function UserMenuButton() {
   return (
@@ -16,6 +16,11 @@ export default function UserMenuButton() {
       showName={false}
     >
       <UserButton.MenuItems>
+        <UserButton.Link
+          label="Συνδρομή"
+          labelIcon={<CreditCard className="h-4 w-4" />}
+          href="/dashboard/settings#subscription"
+        />
         <UserButton.Link
           label="Ρυθμίσεις"
           labelIcon={<Settings className="h-4 w-4" />}

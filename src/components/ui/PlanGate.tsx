@@ -2,7 +2,7 @@
 
 import { usePlan } from '@/hooks/usePlan'
 import type { Plan, PlanConfig } from '@/lib/plans'
-import { getPlanConfig } from '@/lib/plans'
+import { formatMonthlyPrice, getPlanConfig } from '@/lib/plans'
 import { Lock } from 'lucide-react'
 
 interface PlanGateProps {
@@ -37,7 +37,7 @@ export default function PlanGate({ feature, requiredPlan = 'GROWER', children, f
   const cfg = getPlanConfig(requiredPlan)
   const planLabel = cfg.priceMonthly === 0
     ? cfg.nameEl
-    : `${cfg.nameEl} (€${cfg.priceMonthly}/μήνα)`
+    : `${cfg.nameEl} (${formatMonthlyPrice(cfg.priceMonthly)})`
 
   return (
     <div className="relative rounded-2xl border-2 border-dashed border-olive-200 bg-olive-50/50 p-6 flex flex-col items-center justify-center gap-3 text-center min-h-[120px]">

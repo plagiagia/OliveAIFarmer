@@ -73,11 +73,15 @@ export function usePlan() {
     if (data.url) window.location.href = data.url
   }
 
-  /** Open the Stripe customer portal. */
-  const manageSubscription = async () => {
+  /** Open the Stripe customer portal. Returns false if no portal URL is available. */
+  const manageSubscription = async (): Promise<boolean> => {
     const res = await fetch('/api/stripe/portal', { method: 'POST' })
     const data = await res.json()
-    if (data.url) window.location.href = data.url
+    if (data.url) {
+      window.location.href = data.url
+      return true
+    }
+    return false
   }
 
   return { ...state, can, upgrade, manageSubscription }

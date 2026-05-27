@@ -1,4 +1,5 @@
 import DeleteAccountSection from '@/components/settings/DeleteAccountSection'
+import SubscriptionSection from '@/components/settings/SubscriptionSection'
 import { UserProfile } from '@clerk/nextjs'
 
 export const metadata = {
@@ -11,9 +12,11 @@ export default function SettingsPage() {
       <header className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Ρυθμίσεις Λογαριασμού</h1>
         <p className="mt-1 text-sm text-gray-600">
-          Διαχειριστείτε τα στοιχεία σύνδεσής σας, την ασφάλεια και τον λογαριασμό σας.
+          Διαχειριστείτε τη συνδρομή σας, τα στοιχεία σύνδεσης, την ασφάλεια και τον λογαριασμό σας.
         </p>
       </header>
+
+      <SubscriptionSection />
 
       <UserProfile
         routing="hash"

@@ -150,3 +150,8 @@ export function hasFeature(
 export function planLabel(plan: Plan | null | undefined): string {
   return getPlanConfig(plan).nameEl
 }
+
+/** Formatted monthly price for UI (Greek). */
+export function formatMonthlyPrice(priceMonthly: number): string {
+  return priceMonthly === 0 ? 'Δωρεάν' : `€${priceMonthly}/μήνα`
+}
