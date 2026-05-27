@@ -19,8 +19,8 @@
     "db:studio": "prisma studio",
     "db:seed": "tsx --env-file=.env.local prisma/scripts/seed.ts",
     "db:seed:cleanup": "tsx --env-file=.env.local prisma/scripts/seed-cleanup.ts",
-    "db:backfill:coordinates": "tsx prisma/scripts/backfill-farm-coordinates.ts",
-    "db:backfill:coordinates:write": "tsx prisma/scripts/backfill-farm-coordinates.ts --write"
+    "db:backfill:coordinates": "tsx --env-file=.env.local prisma/scripts/backfill-farm-coordinates.ts",
+    "db:backfill:coordinates:write": "tsx --env-file=.env.local prisma/scripts/backfill-farm-coordinates.ts --write"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.39.3",
