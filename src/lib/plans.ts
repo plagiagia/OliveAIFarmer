@@ -33,7 +33,7 @@ export const PLANS: Record<Plan, PlanConfig> = {
     nameEl: 'Δωρεάν',
     priceMonthly: 0,
     maxFarms: 1,
-    maxTreesTotal: 200,
+    maxTreesTotal: -1,
     maxViewerSeats: 0,
     features: {
       aiGeoponos: false,
@@ -50,11 +50,11 @@ export const PLANS: Record<Plan, PlanConfig> = {
   },
 
   GROWER: {
-    name: 'Grower',
-    nameEl: 'Παραγωγός',
-    priceMonthly: 19,
+    name: 'Small Grove',
+    nameEl: 'Μικρός Ελαιώνας',
+    priceMonthly: 14,
     maxFarms: 3,
-    maxTreesTotal: 1_000,
+    maxTreesTotal: -1,
     maxViewerSeats: 0,
     features: {
       aiGeoponos: true,
@@ -72,8 +72,8 @@ export const PLANS: Record<Plan, PlanConfig> = {
 
   PRODUCER: {
     name: 'Producer',
-    nameEl: 'Ελαιοπαραγωγός',
-    priceMonthly: 49,
+    nameEl: 'Παραγωγός',
+    priceMonthly: 34,
     maxFarms: -1,
     maxTreesTotal: -1,
     maxViewerSeats: -1,
@@ -146,7 +146,7 @@ export function hasFeature(
   return getPlanConfig(plan).features[feature]
 }
 
-/** Human-readable plan label. */
+/** Human-readable plan label (Greek). */
 export function planLabel(plan: Plan | null | undefined): string {
-  return getPlanConfig(plan).name
+  return getPlanConfig(plan).nameEl
 }

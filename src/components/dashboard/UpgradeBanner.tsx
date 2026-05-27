@@ -8,13 +8,13 @@ import { useState } from 'react'
 
 const UPGRADE_MESSAGES: Partial<Record<Plan, { title: string; desc: string; target: Plan }>> = {
   FREE: {
-    title: 'Αναβαθμίστε σε Grower',
-    desc: 'Ξεκλειδώστε AI Γεωπόνο, ειδοποιήσεις Δάκου και παρακολούθηση συγκομιδής για €19/μήνα.',
+    title: 'Αναβαθμίστε σε Μικρό Ελαιώνα',
+    desc: 'Ξεκλειδώστε AI Γεωπόνο, ειδοποιήσεις Δάκου και εξαγωγή PDF.',
     target: 'GROWER',
   },
   GROWER: {
-    title: 'Αναβαθμίστε σε Producer',
-    desc: 'Αποκτήστε δορυφορικό NDVI, κόστος ανά λίτρο και θέσεις απόδημων για €49/μήνα.',
+    title: 'Αναβαθμίστε σε Παραγωγό',
+    desc: 'Αποκτήστε δορυφορικό NDVI, κόστος ανά λίτρο και θέσεις απόδημων.',
     target: 'PRODUCER',
   },
 }

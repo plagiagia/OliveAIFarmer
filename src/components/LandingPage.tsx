@@ -1,41 +1,63 @@
 'use client'
 
-import type { Plan } from '@/lib/plans'
+import type { Plan, PlanConfig } from '@/lib/plans'
 import { PLANS, VIEWER_SEAT_PRICE_MONTHLY } from '@/lib/plans'
 import { Check, ChevronRight, Globe, Leaf, Satellite, Zap } from 'lucide-react'
 import Link from 'next/link'
-import { useState } from 'react'
+import { usePathname } from 'next/navigation'
+import { useEffect, type MouseEvent } from 'react'
+import OliveIcon from '@/components/ui/OliveIcon'
 
-const PLAN_ORDER: Plan[] = ['FREE', 'GROWER', 'PRODUCER', 'MILL']
+function scrollToPricing() {
+  document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+function handlePricingClick(event: MouseEvent<HTMLAnchorElement>) {
+  event.preventDefault()
+  scrollToPricing()
+  window.history.replaceState(null, '', '#pricing')
+}
+
+const PLAN_ORDER = ['FREE', 'GROWER', 'PRODUCER'] as const satisfies readonly Plan[]
+type LandingPlan = (typeof PLAN_ORDER)[number]
 
 const FEATURE_LABELS: Record<string, string> = {
   aiGeoponos: 'AI Γεωπόνος (GPT-4)',
   satellite: 'Δορυφορικό NDVI (Sentinel-2)',
   oliveFlyAlerts: 'Ειδοποιήσεις Δάκου',
   costPerLiter: 'Ανάλυση Κόστους/Λίτρο',
-  multiGrove: 'Πολλαπλοί Ελαιώνες',
+  multiGrove: 'Απεριόριστοι ελαιώνες',
   agronomistSharing: 'Κοινή Πρόσβαση Γεωπόνου',
   exportPdf: 'Εξαγωγή PDF',
-  millRollup: 'Συγκεντρωτικά Ελαιουργείου',
-  traceability: 'Πιστοποιητικό Ιχνηλασιμότητας',
   viewerSeats: `Θέσεις Απόδημου Θεατή (+€${VIEWER_SEAT_PRICE_MONTHLY}/θέση)`,
 }
 
-const PLAN_HIGHLIGHTS: Record<Plan, string[]> = {
-  FREE: ['1 ελαιώνας', '200 δέντρα', 'Βασικό ημερολόγιο'],
-  GROWER: ['έως 3 ελαιώνες', 'έως 1.000 δέντρα', 'Ειδοποιήσεις Δάκου', 'AI Γεωπόνος'],
-  PRODUCER: ['Απεριόριστοι ελαιώνες', 'NDVI Sentinel-2', 'Κόστος ανά λίτρο', 'Θέσεις Απόδημου'],
-  MILL: ['Πολλοί παραγωγοί', 'Ανάλυση ελαιουργείου', 'Ιχνηλασιμότητα'],
+/** Features shown on landing pricing cards. */
+const LANDING_FEATURE_KEYS: Array<keyof PlanConfig['features']> = [
+  'aiGeoponos',
+  'satellite',
+  'oliveFlyAlerts',
+  'costPerLiter',
+  'multiGrove',
+  'agronomistSharing',
+  'exportPdf',
+  'viewerSeats',
+]
+
+const PLAN_HIGHLIGHTS: Record<LandingPlan, string[]> = {
+  FREE: ['1 ελαιώνας', 'Ψηφιακό ημερολόγιο', 'Καταγραφή δραστηριοτήτων'],
+  GROWER: ['έως 3 ελαιώνες', 'Ειδοποιήσεις Δάκου', 'AI Γεωπόνος', 'Εξαγωγή PDF'],
+  PRODUCER: ['Απεριόριστοι ελαιώνες', 'NDVI Sentinel-2', 'Κόστος ανά λίτρο', 'Θέσεις Απόδημου', 'Κοινή πρόσβαση γεωπόνου'],
 }
 
 export default function LandingPage() {
-  const [annual, setAnnual] = useState(false)
+  const pathname = usePathname()
 
-  const price = (plan: Plan) => {
-    const base = PLANS[plan].priceMonthly
-    if (base === 0) return '0'
-    return annual ? Math.round(base * 0.83).toString() : base.toString()
-  }
+  useEffect(() => {
+    if (window.location.hash === '#pricing' || pathname === '/pricing') {
+      requestAnimationFrame(() => scrollToPricing())
+    }
+  }, [pathname])
 
   return (
     <div className="min-h-screen bg-white">
@@ -47,7 +69,11 @@ export default function LandingPage() {
             <span className="text-xl font-bold text-olive-800">OliveIQ</span>
           </div>
           <div className="flex items-center gap-3">
-            <Link href="#pricing" className="hidden text-sm text-gray-600 hover:text-olive-700 sm:block">
+            <Link
+              href="#pricing"
+              onClick={handlePricingClick}
+              className="hidden text-sm text-gray-600 hover:text-olive-700 sm:block"
+            >
               Τιμολόγηση
             </Link>
             <Link
@@ -69,7 +95,7 @@ export default function LandingPage() {
       {/* ── HERO ── */}
       <section className="mx-auto max-w-6xl px-4 py-20 text-center">
         <div className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full border border-olive-200 bg-olive-50 px-4 py-1.5 text-sm text-olive-700">
-          <span>🫒</span>
+          <OliveIcon size="sm" className="shrink-0 text-olive-700" aria-hidden />
           <span>Για Έλληνες ελαιοπαραγωγούς & απόδημους ιδιοκτήτες</span>
         </div>
         <h1 className="mb-6 text-5xl font-extrabold tracking-tight text-gray-900 sm:text-6xl">
@@ -90,12 +116,13 @@ export default function LandingPage() {
           </Link>
           <Link
             href="#pricing"
+            onClick={handlePricingClick}
             className="rounded-2xl border-2 border-olive-200 px-7 py-4 text-lg font-semibold text-olive-700 hover:bg-olive-50 transition-colors"
           >
             Δείτε τιμές
           </Link>
         </div>
-        <p className="mt-4 text-sm text-gray-500">Δεν απαιτείται πιστωτική κάρτα · Δωρεάν για πάντα έως 200 δέντρα</p>
+        <p className="mt-4 text-sm text-gray-500">Δεν απαιτείται πιστωτική κάρτα · Δωρεάν για πάντα · 1 ελαιώνας</p>
       </section>
 
       {/* ── VALUE PROPS ── */}
@@ -148,39 +175,14 @@ export default function LandingPage() {
       </section>
 
       {/* ── PRICING ── */}
-      <section id="pricing" className="py-24">
+      <section id="pricing" className="scroll-mt-20 py-24">
         <div className="mx-auto max-w-6xl px-4">
           <div className="mb-12 text-center">
             <h2 className="mb-4 text-3xl font-bold text-gray-900">Τιμολόγηση</h2>
             <p className="text-gray-600">Ξεκινήστε δωρεάν · Αναβαθμίστε όταν μεγαλώσετε</p>
-
-            {/* Annual toggle */}
-            <div className="mt-6 flex items-center justify-center gap-3">
-              <span className={`text-sm ${!annual ? 'font-semibold text-gray-900' : 'text-gray-500'}`}>
-                Μηνιαία
-              </span>
-              <button
-                onClick={() => setAnnual(!annual)}
-                className={`relative h-6 w-12 rounded-full transition-colors ${
-                  annual ? 'bg-olive-700' : 'bg-gray-200'
-                }`}
-              >
-                <span
-                  className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
-                    annual ? 'translate-x-6' : 'translate-x-0.5'
-                  }`}
-                />
-              </button>
-              <span className={`text-sm ${annual ? 'font-semibold text-gray-900' : 'text-gray-500'}`}>
-                Ετήσια{' '}
-                <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700">
-                  −17%
-                </span>
-              </span>
-            </div>
           </div>
 
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {PLAN_ORDER.map((plan) => {
               const cfg = PLANS[plan]
               const isPopular = plan === 'PRODUCER'
@@ -199,24 +201,19 @@ export default function LandingPage() {
                     </div>
                   )}
                   <div className="mb-4">
-                    <h3 className="text-lg font-bold text-gray-900">{cfg.name}</h3>
+                    <h3 className="text-lg font-bold text-gray-900">{cfg.nameEl}</h3>
                     <div className="mt-2 flex items-end gap-1">
                       <span className="text-4xl font-extrabold text-gray-900">
-                        {cfg.priceMonthly === 0 ? 'Δωρεάν' : `€${price(plan)}`}
+                        {cfg.priceMonthly === 0 ? 'Δωρεάν' : `€${cfg.priceMonthly}`}
                       </span>
                       {cfg.priceMonthly > 0 && (
                         <span className="mb-1 text-gray-500">/μήνα</span>
                       )}
                     </div>
-                    {annual && cfg.priceMonthly > 0 && (
-                      <p className="mt-1 text-xs text-gray-500">
-                        Χρεώνεται ετησίως (€{Math.round(cfg.priceMonthly * 0.83 * 12)}/χρόνο)
-                      </p>
-                    )}
                   </div>
 
-                  {/* Highlights */}
-                  <ul className="mb-6 space-y-2">
+                  {/* Included features only for Free; highlights + comparison for paid */}
+                  <ul className={`space-y-2 ${plan === 'FREE' ? 'mb-8 flex-1' : 'mb-6'}`}>
                     {PLAN_HIGHLIGHTS[plan].map((h) => (
                       <li key={h} className="flex items-start gap-2 text-sm text-gray-700">
                         <Check className="mt-0.5 h-4 w-4 shrink-0 text-olive-600" />
@@ -225,18 +222,19 @@ export default function LandingPage() {
                     ))}
                   </ul>
 
-                  {/* Feature list */}
-                  <ul className="mb-8 space-y-2 border-t pt-4">
-                    {(Object.keys(cfg.features) as Array<keyof typeof cfg.features>).map((f) => (
-                      <li key={f} className={`flex items-start gap-2 text-xs ${cfg.features[f] ? 'text-gray-700' : 'text-gray-400 line-through'}`}>
-                        {cfg.features[f]
-                          ? <Check className="mt-0.5 h-3 w-3 shrink-0 text-olive-600" />
-                          : <span className="mt-0.5 h-3 w-3 shrink-0">–</span>
-                        }
-                        {FEATURE_LABELS[f] ?? f}
-                      </li>
-                    ))}
-                  </ul>
+                  {plan !== 'FREE' && (
+                    <ul className="mb-8 space-y-2 border-t pt-4">
+                      {LANDING_FEATURE_KEYS.map((f) => (
+                        <li key={f} className={`flex items-start gap-2 text-xs ${cfg.features[f] ? 'text-gray-700' : 'text-gray-400 line-through'}`}>
+                          {cfg.features[f]
+                            ? <Check className="mt-0.5 h-3 w-3 shrink-0 text-olive-600" />
+                            : <span className="mt-0.5 h-3 w-3 shrink-0">–</span>
+                          }
+                          {FEATURE_LABELS[f] ?? f}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
 
                   <Link
                     href={cfg.priceMonthly === 0 ? '/sign-up' : '/sign-up'}
@@ -259,7 +257,7 @@ export default function LandingPage() {
               🌍 Θέση Απόδημου Θεατή — +€{VIEWER_SEAT_PRICE_MONTHLY}/μήνα ανά πρόσκληση
             </p>
             <p className="mt-1 text-sm text-gray-600">
-              Δώστε read-only πρόσβαση σε συγγενή ή γεωπόνο στο εξωτερικό. Διαθέσιμο σε πλάνα Producer και άνω.
+              Δώστε read-only πρόσβαση σε συγγενή ή γεωπόνο στο εξωτερικό. Διαθέσιμο στο πλάνο Παραγωγός.
             </p>
           </div>
         </div>
