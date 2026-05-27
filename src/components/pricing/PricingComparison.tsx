@@ -69,7 +69,7 @@ export default function PricingComparison({ showHeader = true, className = '' }:
           {PLAN_ORDER.map((plan) => {
             const cfg = PLANS[plan]
             const isPopular = plan === 'PRODUCER'
-            const isCurrent = isSignedIn && !isLoading && currentPlan === plan
+            const isCurrent = Boolean(isSignedIn && !isLoading && currentPlan === plan)
 
             return (
               <div
