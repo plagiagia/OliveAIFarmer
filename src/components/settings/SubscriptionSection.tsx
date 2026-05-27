@@ -134,7 +134,7 @@ export default function SubscriptionSection() {
                 })}
 
                 <Link
-                  href="/#pricing"
+                  href="/pricing"
                   className="inline-flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                 >
                   Σύγκριση πλάνων

@@ -15,6 +15,11 @@ export async function POST(req: NextRequest) {
   const body = await req.json()
   const { plan, returnUrl } = body as { plan: Plan; returnUrl?: string }
 
+  // Mill is enterprise-only — not available for self-serve checkout
+  if (plan === 'MILL') {
+    return NextResponse.json({ error: 'Το πλάνο Ελαιουργείο δεν είναι διαθέσιμο online.' }, { status: 400 })
+  }
+
   const priceId = STRIPE_PRICE_IDS[plan as keyof typeof STRIPE_PRICE_IDS]
   if (!priceId) {
     return NextResponse.json({ error: 'Invalid plan' }, { status: 400 })

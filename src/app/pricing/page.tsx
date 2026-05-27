@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation'
+import PricingPageContent from '@/components/pricing/PricingPageContent'
 
 export const metadata = {
   title: 'Τιμολόγηση — OliveIQ',
@@ -6,5 +6,5 @@ export const metadata = {
 }
 
 export default function PricingPage() {
-  redirect('/#pricing')
+  return <PricingPageContent />
 }
