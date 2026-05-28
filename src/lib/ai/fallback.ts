@@ -5,7 +5,13 @@
  * persistent errors after retry). Returns a small, sensible set of
  * insights derived purely from the farm context so the UI is never empty.
  */
-import type { FarmContext, AIInsight } from '@/lib/openai'
+import type {
+  FarmContext,
+  AIInsight,
+  DashboardPortfolioContext,
+  DashboardAIInsight,
+  DashboardAIResponse,
+} from '@/lib/openai'
 
 export function ruleBasedInsights(ctx: FarmContext): AIInsight[] {
   const out: AIInsight[] = []
@@ -73,4 +79,139 @@ export function ruleBasedInsights(ctx: FarmContext): AIInsight[] {
   }
 
   return out.slice(0, 5)
+}
+
+function portfolioSummaryFromInsights(
+  insights: DashboardAIInsight[],
+  ctx: DashboardPortfolioContext
+) {
+  const hasCritical = insights.some((i) => i.urgency === 'CRITICAL')
+  const hasHigh = insights.some((i) => i.urgency === 'HIGH')
+  const stressedFarms = ctx.farms.filter(
+    (f) => f.satelliteHealth?.stressLevel && f.satelliteHealth.stressLevel !== 'HEALTHY'
+  ).length
+
+  let overallHealth: 'EXCELLENT' | 'GOOD' | 'FAIR' | 'POOR' = 'GOOD'
+  if (hasCritical || stressedFarms >= Math.max(1, Math.ceil(ctx.totalFarms / 2))) {
+    overallHealth = 'POOR'
+  } else if (hasHigh || stressedFarms > 0) {
+    overallHealth = 'FAIR'
+  } else if (insights.length === 0) {
+    overallHealth = 'GOOD'
+  } else {
+    overallHealth = 'EXCELLENT'
+  }
+
+  return {
+    overallHealth,
+    urgentActions: insights.filter(
+      (i) => (i.urgency === 'HIGH' || i.urgency === 'CRITICAL') && i.actionRequired
+    ).length,
+    opportunitiesCount: insights.filter((i) =>
+      ['OPTIMIZATION', 'SEASONAL_TIP', 'CARE_SUGGESTION'].includes(i.type)
+    ).length,
+  }
+}
+
+/** Portfolio-level rule-based insights when OpenAI is unavailable. */
+export function ruleBasedDashboardInsights(
+  ctx: DashboardPortfolioContext
+): DashboardAIResponse {
+  const out: DashboardAIInsight[] = []
+  const month = ctx.currentMonth
+
+  for (const farm of ctx.farms) {
+    if (farm.satelliteHealth?.stressLevel && farm.satelliteHealth.stressLevel !== 'HEALTHY') {
+      out.push({
+        type: 'RISK_WARNING',
+        title: `Δορυφορικό στρες: ${farm.name}`,
+        message: `Στον ελαιώνα «${farm.name}» τα δεδομένα Sentinel δείχνουν στρες «${farm.satelliteHealth.stressLevel}» (NDVI ${farm.satelliteHealth.ndvi?.toFixed(2) ?? 'n/a'}). Προτεραιότητα επίσκεψης και ελέγχου υγρασίας.`,
+        urgency: farm.satelliteHealth.stressLevel === 'SEVERE_STRESS' ? 'CRITICAL' : 'HIGH',
+        actionRequired: true,
+        reasoning: 'Δορυφορική ένδειξη στρες σε συγκεκριμένο ελαιώνα του χαρτοφυλακίου.',
+        farmId: farm.id,
+        farmName: farm.name,
+      })
+    }
+
+    if (farm.harvestTrend === 'declining') {
+      out.push({
+        type: 'OPTIMIZATION',
+        title: `Πτώση απόδοσης: ${farm.name}`,
+        message: `Η απόδοση στον «${farm.name}» δείχνει πτωτική τάση σε σχέση με την προηγούμενη συγκομιδή. Εξετάστε λίπανση, άρδευση και ιστορικό φυτοπροστασίας.`,
+        urgency: 'MEDIUM',
+        actionRequired: false,
+        reasoning: 'Σύγκριση τελευταίων δύο ετών συγκομιδής.',
+        farmId: farm.id,
+        farmName: farm.name,
+      })
+    }
+
+    if (farm.recentActivities.length === 0) {
+      out.push({
+        type: 'TASK_REMINDER',
+        title: `Καμία δραστηριότητα: ${farm.name}`,
+        message: `Δεν έχουν καταγραφεί δραστηριότητες τις τελευταίες 30 ημέρες στον «${farm.name}». Καταγράψτε ποτίσματα και φροντίδες για καλύτερες συστάσεις.`,
+        urgency: 'LOW',
+        actionRequired: false,
+        reasoning: 'Ατελές ιστορικό δραστηριοτήτων μειώνει την ακρίβεια της ανάλυσης.',
+        farmId: farm.id,
+        farmName: farm.name,
+      })
+    }
+  }
+
+  if (month >= 4 && month <= 6) {
+    out.push({
+      type: 'SEASONAL_TIP',
+      title: 'Άνθηση / καρπόδεση (χαρτοφυλάκιο)',
+      message:
+        'Κρίσιμη περίοδος για όλους τους ελαιώνες: παρακολουθήστε άνθηση, αποφύγετε υδατικό στρες και ελέγξτε παράσιτα ανθέων ανά ελαιώνα.',
+      urgency: 'MEDIUM',
+      actionRequired: false,
+      reasoning: 'Εποχική στρατηγική συμβουλή για όλο το χαρτοφυλάκιο (Άνοιξη–αρχές καλοκαιριού).',
+      farmId: null,
+      farmName: 'Όλοι',
+    })
+  }
+
+  if (month >= 6 && month <= 9) {
+    out.push({
+      type: 'RISK_WARNING',
+      title: 'Παρακολούθηση δάκου (χαρτοφυλάκιο)',
+      message:
+        'Ιούνιος–Σεπτέμβριος: τοποθετήστε παγίδες δάκου και ελέγχετε εβδομαδιαίως σε κάθε ελαιώνα με ιστορικό προσβολών.',
+      urgency: 'HIGH',
+      actionRequired: true,
+      reasoning: 'Καλοκαιρινή περίοδος δραστηριότητας Bactrocera oleae.',
+      farmId: null,
+      farmName: 'Όλοι',
+    })
+  }
+
+  if (out.length === 0) {
+    out.push({
+      type: 'CARE_SUGGESTION',
+      title: 'Συνεχίστε την καταγραφή δεδομένων',
+      message: `Το χαρτοφυλάκιό σας (${ctx.totalFarms} ελαιώνες, ${ctx.totalTrees} δέντρα) δεν εμφανίζει επείγουσες ενδείξεις από τα διαθέσιμα δεδομένα. Συμπληρώστε δραστηριότητες και συγκομιδές για πλουσιότερη AI ανάλυση.`,
+      urgency: 'LOW',
+      actionRequired: false,
+      reasoning: 'Καμία ισχυρή ενδειξη από δορυφόρο, συγκομιδές ή δραστηριότητες.',
+      farmId: null,
+      farmName: 'Όλοι',
+    })
+  }
+
+  const insights = out.slice(0, 10)
+  return {
+    insights,
+    portfolioSummary: portfolioSummaryFromInsights(insights, ctx),
+    meta: {
+      model: 'rule-based',
+      promptVersion: 'fallback-dashboard-v1.0',
+      requestId: null,
+      generatedAt: new Date().toISOString(),
+      usage: null,
+    },
+  }
 }
