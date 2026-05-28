@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db'
+import { reconcileFarmActivationForUser } from '@/lib/farm-activation'
 import { formatCoordinates, parseCoordinates } from '@/lib/mapbox-utils'
 import { getUserPlanByClerkId } from '@/lib/subscription'
 import { canAddFarm } from '@/lib/plans'
@@ -120,6 +121,8 @@ export async function POST(request: NextRequest) {
     })
 
     console.log('✅ New farm created:', farm.name, 'for user:', user.email)
+
+    await reconcileFarmActivationForUser(user.id, userPlan.plan)
 
     return NextResponse.json({
       success: true,

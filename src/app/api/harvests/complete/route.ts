@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db'
+import { INACTIVE_FARM_MESSAGE } from '@/lib/farm-activation'
 import { auth } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
 
@@ -40,6 +41,10 @@ async function completeHarvest(request: NextRequest) {
       return NextResponse.json({ 
         error: 'Harvest not found or access denied' 
       }, { status: 404 })
+    }
+
+    if (!existingHarvest.farm.isActive) {
+      return NextResponse.json({ error: INACTIVE_FARM_MESSAGE }, { status: 403 })
     }
 
     // Get all harvests from the same year and farm to calculate proper date range

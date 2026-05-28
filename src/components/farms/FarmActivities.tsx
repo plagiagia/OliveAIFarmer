@@ -8,9 +8,10 @@ import ActivityFormModal from '../activities/ActivityFormModal'
 
 interface FarmActivitiesProps {
   farm: any
+  readOnly?: boolean
 }
 
-export default function FarmActivities({ farm }: FarmActivitiesProps) {
+export default function FarmActivities({ farm, readOnly = false }: FarmActivitiesProps) {
   const [activities, setActivities] = useState<ActivityWithTrees[]>([])
   const [filteredActivities, setFilteredActivities] = useState<ActivityWithTrees[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -203,13 +204,15 @@ export default function FarmActivities({ farm }: FarmActivitiesProps) {
           <h2 className="text-2xl font-bold text-gray-900">Δραστηριότητες</h2>
           <p className="text-gray-600">Καταγραφή και διαχείριση εργασιών στον ελαιώνα</p>
         </div>
-        <button 
-          onClick={handleNewActivity}
-          className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Νέα Δραστηριότητα</span>
-        </button>
+        {!readOnly && (
+          <button 
+            onClick={handleNewActivity}
+            className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Νέα Δραστηριότητα</span>
+          </button>
+        )}
       </div>
 
       {/* Statistics */}
@@ -330,6 +333,7 @@ export default function FarmActivities({ farm }: FarmActivitiesProps) {
               onDelete={handleDelete}
               onToggleComplete={handleToggleComplete}
               isLoading={isSubmitting}
+              readOnly={readOnly}
             />
           ))}
         </div>
@@ -354,12 +358,14 @@ export default function FarmActivities({ farm }: FarmActivitiesProps) {
           <Activity className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">Δεν υπάρχουν δραστηριότητες ακόμα</h3>
           <p className="text-gray-500 mb-6">Καταγράψτε τις εργασίες στον ελαιώνα σας</p>
-          <button 
-            onClick={handleNewActivity}
-            className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors"
-          >
-            Καταγραφή Πρώτης Δραστηριότητας
-          </button>
+          {!readOnly && (
+            <button 
+              onClick={handleNewActivity}
+              className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors"
+            >
+              Καταγραφή Πρώτης Δραστηριότητας
+            </button>
+          )}
         </div>
       )}
 

@@ -1,4 +1,5 @@
 import { getWeatherHistory, prisma } from '@/lib/db'
+import { INACTIVE_FARM_MESSAGE } from '@/lib/farm-activation'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { recordAIUsage, checkMonthlyBudget } from '@/lib/ai/usage'
 import { chatRequestSchema } from '@/lib/ai/schemas'
@@ -111,6 +112,13 @@ export async function POST(request: NextRequest) {
     })
 
     if (farm) {
+      if (!farm.isActive) {
+        return new Response(JSON.stringify({ error: INACTIVE_FARM_MESSAGE }), {
+          status: 403,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      }
+
       const records = await getWeatherHistory(farmId, {
         startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
         limit: 30,

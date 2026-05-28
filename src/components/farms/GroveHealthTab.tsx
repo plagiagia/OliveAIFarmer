@@ -50,6 +50,7 @@ interface SatelliteData {
 
 interface GroveHealthTabProps {
   farmId: string
+  readOnly?: boolean
 }
 
 const METRIC_EXPLANATIONS = [
@@ -124,7 +125,7 @@ const TrendIcon = ({ trend }: { trend: 'improving' | 'stable' | 'declining' }) =
   return <Minus className="w-4 h-4 text-gray-400" />
 }
 
-export default function GroveHealthTab({ farmId }: GroveHealthTabProps) {
+export default function GroveHealthTab({ farmId, readOnly = false }: GroveHealthTabProps) {
   const [data, setData] = useState<SatelliteData | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -280,6 +281,7 @@ export default function GroveHealthTab({ farmId }: GroveHealthTabProps) {
               </p>
             </div>
           </div>
+          {!readOnly && (
           <button
             onClick={handleRefresh}
             disabled={refreshing}
@@ -289,6 +291,7 @@ export default function GroveHealthTab({ farmId }: GroveHealthTabProps) {
             <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
             {refreshing ? 'Ανανέωση...' : 'Ανανέωση'}
           </button>
+          )}
         </div>
 
         {data?.lastUpdated && (
@@ -464,6 +467,7 @@ export default function GroveHealthTab({ farmId }: GroveHealthTabProps) {
           <p className="text-gray-600 mb-4">
             Δεν βρέθηκαν διαθέσιμα δορυφορικά δεδομένα. Αυτό μπορεί να οφείλεται σε νεφοκάλυψη.
           </p>
+          {!readOnly && (
           <button
             onClick={handleRefresh}
             disabled={refreshing}
@@ -473,6 +477,7 @@ export default function GroveHealthTab({ farmId }: GroveHealthTabProps) {
             <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
             Δοκιμάστε Ξανά
           </button>
+          )}
         </div>
       )}
 

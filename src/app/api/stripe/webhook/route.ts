@@ -1,4 +1,5 @@
 import { env } from '@/env'
+import { reconcileFarmActivationForUser } from '@/lib/farm-activation'
 import { prisma } from '@/lib/db'
 import type { Plan } from '@/lib/plans'
 import { stripe } from '@/lib/stripe'
@@ -101,6 +102,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end,
     },
   })
+
+  await reconcileFarmActivationForUser(userId, plan)
 }
 
 async function handleSubscriptionUpdated(stripeSubscription: Stripe.Subscription) {
@@ -137,9 +140,16 @@ async function handleSubscriptionUpdated(stripeSubscription: Stripe.Subscription
       stripePriceId: stripeSubscription.items.data[0]?.price.id ?? null,
     },
   })
+
+  await reconcileFarmActivationForUser(subscription.userId, plan)
 }
 
 async function handleSubscriptionDeleted(stripeSubscription: Stripe.Subscription) {
+  const subscription = await prisma.subscription.findUnique({
+    where: { stripeSubscriptionId: stripeSubscription.id },
+    select: { userId: true },
+  })
+
   await prisma.subscription.updateMany({
     where: { stripeSubscriptionId: stripeSubscription.id },
     data: {
@@ -150,6 +160,10 @@ async function handleSubscriptionDeleted(stripeSubscription: Stripe.Subscription
       cancelAtPeriodEnd: false,
     },
   })
+
+  if (subscription) {
+    await reconcileFarmActivationForUser(subscription.userId, 'FREE')
+  }
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {

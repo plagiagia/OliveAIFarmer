@@ -3,10 +3,12 @@
 import {
   Activity,
   BarChart3,
+  Lock,
   Satellite,
   Sparkles,
   Wheat
 } from 'lucide-react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useState } from 'react'
 import AIGeoponosTab from './AIGeoponosTab'
@@ -62,15 +64,37 @@ export default function FarmDetailContent({ farm, user }: FarmDetailContentProps
     { id: 'ai-geoponos', label: 'AI Γεωπόνος', icon: Sparkles, badge: unreadInsightsCount },
   ]
 
+  const isReadOnly = farm.isActive === false
+
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-green-100">
+      <div className={`min-h-screen ${isReadOnly ? 'bg-gray-100' : 'bg-gradient-to-br from-green-50 via-emerald-50 to-green-100'}`}>
+        {isReadOnly && (
+          <div className="bg-gray-200 border-b border-gray-300">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div className="flex items-center gap-2 text-sm text-gray-700">
+                <Lock className="w-4 h-4 flex-shrink-0" />
+                <span>
+                  Αυτός ο ελαιώνας είναι ανενεργός λόγω ορίων προγράμματος. Μπορείτε να δείτε τα δεδομένα, αλλά όχι να τα επεξεργαστείτε.
+                </span>
+              </div>
+              <Link
+                href="/dashboard/settings#subscription"
+                className="text-sm font-semibold text-olive-700 hover:text-olive-800 whitespace-nowrap"
+              >
+                Αναβάθμιση πλάνου →
+              </Link>
+            </div>
+          </div>
+        )}
+
         {/* Farm Header */}
         <FarmHeader
           farm={farm}
           user={user}
           onEdit={() => setShowEditModal(true)}
           onBack={() => router.push('/dashboard')}
+          readOnly={isReadOnly}
         />
 
         {/* Navigation Tabs */}
@@ -109,15 +133,15 @@ export default function FarmDetailContent({ farm, user }: FarmDetailContentProps
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {activeTab === 'overview' && <FarmStats farm={farm} />}
-          {activeTab === 'activities' && <FarmActivities farm={farm} />}
-          {activeTab === 'harvests' && <FarmHarvests farm={farm} />}
-          {activeTab === 'grove-health' && <GroveHealthTab farmId={farm.id} />}
-          {activeTab === 'ai-geoponos' && <AIGeoponosTab farmId={farm.id} />}
+          {activeTab === 'activities' && <FarmActivities farm={farm} readOnly={isReadOnly} />}
+          {activeTab === 'harvests' && <FarmHarvests farm={farm} readOnly={isReadOnly} />}
+          {activeTab === 'grove-health' && <GroveHealthTab farmId={farm.id} readOnly={isReadOnly} />}
+          {activeTab === 'ai-geoponos' && <AIGeoponosTab farmId={farm.id} readOnly={isReadOnly} />}
         </div>
       </div>
 
       {/* Edit Modal */}
-      {showEditModal && (
+      {showEditModal && !isReadOnly && (
         <FarmEditModal
           farm={farm}
           onClose={() => setShowEditModal(false)}

@@ -49,6 +49,7 @@ model Farm {
   oliveVariety String? // Primary olive variety (e.g., "Κορωνέικη", "Καλαμών")
   treeAge     Int?     // Average age of trees in years (optional)
   description String?
+  isActive    Boolean  @default(true) // false when plan limits exceeded after downgrade
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

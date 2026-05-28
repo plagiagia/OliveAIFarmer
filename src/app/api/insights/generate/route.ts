@@ -1,4 +1,5 @@
 import { getWeatherHistory, prisma } from '@/lib/db'
+import { INACTIVE_FARM_MESSAGE } from '@/lib/farm-activation'
 import { checkRateLimit } from '@/lib/rate-limit'
 import {
   AIInsight,
@@ -134,6 +135,10 @@ export async function POST(request: NextRequest) {
         { error: 'Farm not found or access denied' },
         { status: 404 }
       )
+    }
+
+    if (!farm.isActive) {
+      return NextResponse.json({ error: INACTIVE_FARM_MESSAGE }, { status: 403 })
     }
 
     // Get weather history for the last 30 days

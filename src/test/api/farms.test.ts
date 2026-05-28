@@ -14,6 +14,7 @@ vi.mock('@/lib/db', () => ({
       update: vi.fn(),
       delete: vi.fn(),
       count: vi.fn(),
+      updateMany: vi.fn(),
     },
   },
 }))
@@ -133,6 +134,8 @@ describe('POST /api/farms/create', () => {
       stripeSubscriptionId: null,
     })
     vi.mocked(prisma.farm.count).mockResolvedValue(0)
+    vi.mocked(prisma.farm.findMany).mockResolvedValue([{ id: 'farm-123' }] as never)
+    vi.mocked(prisma.farm.updateMany).mockResolvedValue({ count: 0 })
     vi.mocked(prisma.farm.create).mockResolvedValue(mockFarm as never)
 
     const request = new NextRequest('http://localhost/api/farms/create', {

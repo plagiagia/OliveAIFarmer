@@ -1,4 +1,7 @@
 import FarmCreationForm from '@/components/farms/FarmCreationForm'
+import { prisma } from '@/lib/db'
+import { canAddFarm } from '@/lib/plans'
+import { getUserPlanByClerkId } from '@/lib/subscription'
 import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 
@@ -7,6 +10,22 @@ export default async function NewFarmPage() {
 
   if (!userId) {
     redirect('/')
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { clerkId: userId },
+    select: { id: true },
+  })
+
+  if (user) {
+    const [userPlan, farmCount] = await Promise.all([
+      getUserPlanByClerkId(userId),
+      prisma.farm.count({ where: { userId: user.id } }),
+    ])
+
+    if (!canAddFarm(userPlan.plan, farmCount)) {
+      redirect('/dashboard')
+    }
   }
 
   return (
@@ -20,9 +39,9 @@ export default async function NewFarmPage() {
             Συμπληρώστε τις παρακάτω πληροφορίες για τον ελαιώνα σας
           </p>
         </div>
-        
+
         <FarmCreationForm userId={userId} />
       </div>
     </div>
   )
-} 
+}

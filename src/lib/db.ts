@@ -255,6 +255,7 @@ export async function getAllFarmsWithCoordinates() {
   try {
     const farms = await prisma.farm.findMany({
       where: {
+        isActive: true,
         OR: [
           {
             latitude: { not: null },
@@ -387,6 +388,7 @@ export async function getAllFarmsForSatellite() {
   try {
     const farms = await prisma.farm.findMany({
       where: {
+        isActive: true,
         OR: [
           {
             latitude: { not: null },

@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db'
+import { INACTIVE_FARM_MESSAGE } from '@/lib/farm-activation'
 import {
   calculateHealthMetrics,
   fetchAllSatelliteData,
@@ -72,6 +73,10 @@ export async function GET(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Farm not found' }, { status: 404 })
     }
 
+    if (forceRefresh && !farm.isActive) {
+      return NextResponse.json({ error: INACTIVE_FARM_MESSAGE }, { status: 403 })
+    }
+
     // Check if farm has coordinates
     const coords = getFarmCoordinates(farm)
     if (!coords) {
@@ -99,8 +104,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
     let currentIndices: SatelliteIndices | null = null
 
-    // Fetch fresh data if needed
-    if (forceRefresh || cacheAge > 3) {
+    // Fetch fresh data if needed (skip external fetch for inactive farms)
+    if (farm.isActive && (forceRefresh || cacheAge > 3)) {
       try {
         // Fetch current indices (Sentinel-2 + Sentinel-1 soil moisture)
         currentIndices = await fetchAllSatelliteData(
@@ -230,6 +235,10 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     if (!farm) {
       return NextResponse.json({ error: 'Farm not found' }, { status: 404 })
+    }
+
+    if (!farm.isActive) {
+      return NextResponse.json({ error: INACTIVE_FARM_MESSAGE }, { status: 403 })
     }
 
     const coords = getFarmCoordinates(farm)

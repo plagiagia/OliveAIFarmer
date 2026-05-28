@@ -76,10 +76,10 @@ export async function GET(request: NextRequest) {
             id: farmId,
             user: { clerkId: userId }
           },
-          select: { id: true }
+          select: { id: true, isActive: true }
         })
 
-        if (!farm) {
+        if (!farm || !farm.isActive) {
           // Don't leak farm existence; just skip saving.
           return NextResponse.json(weatherIntelligence)
         }

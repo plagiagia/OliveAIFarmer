@@ -6,11 +6,13 @@ import FarmEditModal from '@/components/farms/FarmEditModal'
 import UpgradeBanner from '@/components/dashboard/UpgradeBanner'
 import MapPreview from '@/components/map/MapPreview'
 import OliveIcon from '@/components/ui/OliveIcon'
+import { usePlan } from '@/hooks/usePlan'
+import { canAddFarm } from '@/lib/plans'
 import { parseCoordinates } from '@/lib/mapbox-utils'
 import { ACTIVITY_TYPE_COLORS, ACTIVITY_TYPE_ICONS, ActivityType } from '@/types/activity'
 import { format } from 'date-fns'
 import { el } from 'date-fns/locale'
-import { Activity, BarChart3, Filter, MapPin, Plus, Sparkles, Trophy } from 'lucide-react'
+import { Activity, BarChart3, Filter, Lock, MapPin, Plus, Sparkles, Trophy } from 'lucide-react'
 import Link from 'next/link'
 import { useCallback, useEffect, useState } from 'react'
 
@@ -24,6 +26,7 @@ interface Farm {
   lastActivityDate: Date | null
   activitiesCount: number
   harvestsCount: number
+  isActive: boolean
 }
 
 interface User {
@@ -186,6 +189,7 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
   showSuccessMessage: boolean;
   showDeleteMessage: boolean;
 }) {
+  const { plan, isLoading: isPlanLoading } = usePlan()
   const [editingFarm, setEditingFarm] = useState<Farm | null>(null)
   // Note: farms state is intentionally unused - using user.farms directly, reload for updates
   const [_farms, _setFarms] = useState(user.farms)
@@ -257,6 +261,13 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
     ? calendarActivities
     : calendarActivities.filter(a => a.type === activityTypeFilter)
 
+  const activeFarms = user.farms.filter((farm) => farm.isActive)
+  const canCreateFarm = !isPlanLoading && canAddFarm(plan, user.farms.length)
+  const sortedFarms = [...user.farms].sort((a, b) => {
+    if (a.isActive === b.isActive) return 0
+    return a.isActive ? -1 : 1
+  })
+
   return (
     <>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -290,7 +301,10 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
               Καλώς ήρθατε, {user.firstName}!
             </h1>
             <p className="text-gray-600 mt-1 sm:mt-2 text-sm sm:base">
-              Διαχειριστείτε {user.farms.length === 1 ? 'τον ελαιώνα σας' : `τους ${user.farms.length} ελαιώνες σας`}
+              Διαχειριστείτε {activeFarms.length === 1 ? 'τον ενεργό ελαιώνα σας' : `τους ${activeFarms.length} ενεργούς ελαιώνες σας`}
+              {user.farms.length > activeFarms.length && (
+                <span className="text-gray-400"> ({user.farms.length - activeFarms.length} ανενεργοί)</span>
+              )}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
@@ -308,15 +322,17 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
               <BarChart3 className="w-4 h-4" />
               <span className="whitespace-nowrap">Αναλύσεις</span>
             </Link>
-            <button
-              onClick={() => {
-                window.location.href = '/dashboard/farms/new'
-              }}
-              className="w-full sm:w-auto justify-center bg-gradient-to-r from-olive-700 to-olive-600 hover:from-olive-800 hover:to-olive-700 text-white py-2 px-3 sm:px-4 rounded-xl font-semibold text-sm transition-all duration-200 hover:shadow-lg flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              <span className="whitespace-nowrap">Νέος Ελαιώνας</span>
-            </button>
+            {canCreateFarm && (
+              <button
+                onClick={() => {
+                  window.location.href = '/dashboard/farms/new'
+                }}
+                className="w-full sm:w-auto justify-center bg-gradient-to-r from-olive-700 to-olive-600 hover:from-olive-800 hover:to-olive-700 text-white py-2 px-3 sm:px-4 rounded-xl font-semibold text-sm transition-all duration-200 hover:shadow-lg flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                <span className="whitespace-nowrap">Νέος Ελαιώνας</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -329,7 +345,7 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
               </div>
               <div className="min-w-0">
                 <div className="text-xl sm:text-2xl font-bold text-gray-800 truncate">
-                  {user.farms.reduce((sum, farm) => sum + farm.treesCount, 0)}
+                  {activeFarms.reduce((sum, farm) => sum + farm.treesCount, 0)}
                 </div>
                 <div className="text-xs sm:text-sm text-gray-500 truncate">Δέντρα</div>
               </div>
@@ -343,7 +359,7 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
               </div>
               <div className="min-w-0">
                 <div className="text-xl sm:text-2xl font-bold text-gray-800 truncate">
-                  {user.farms.reduce((sum, farm) => sum + (farm.totalArea || 0), 0).toFixed(1)}
+                  {activeFarms.reduce((sum, farm) => sum + (farm.totalArea || 0), 0).toFixed(1)}
                 </div>
                 <div className="text-xs sm:text-sm text-gray-500 truncate">Στρέμματα</div>
               </div>
@@ -459,7 +475,7 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
         <div className="mb-6">
           <h2 className="text-xl font-bold text-gray-900 mb-4">Οι Ελαιώνες σας</h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {user.farms.map((farm) => (
+            {sortedFarms.map((farm) => (
               <FarmCard key={farm.id} farm={farm} onEdit={setEditingFarm} />
             ))}
           </div>
@@ -481,7 +497,7 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
           isOpen={showActivityModal}
           onClose={() => { setShowActivityModal(false); setSelectedDate(null) }}
           selectedDate={selectedDate}
-          farms={user.farms.map(f => ({ id: f.id, name: f.name, location: f.location, coordinates: f.coordinates, treeCount: f.treesCount }))}
+          farms={activeFarms.map(f => ({ id: f.id, name: f.name, location: f.location, coordinates: f.coordinates, treeCount: f.treesCount }))}
           onSuccess={handleActivityCreated}
         />
       )}
@@ -495,10 +511,15 @@ function FarmCard({ farm, onEdit: _onEdit }: { farm: Farm; onEdit: (farm: Farm |
   }
 
   const coordinates = farm.coordinates ? parseCoordinates(farm.coordinates) : null
+  const isInactive = !farm.isActive
 
   return (
     <div
-      className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden cursor-pointer group"
+      className={`rounded-2xl shadow-sm transition-all duration-200 overflow-hidden group ${
+        isInactive
+          ? 'bg-gray-50 border border-gray-200 opacity-75 cursor-pointer'
+          : 'bg-white hover:shadow-md cursor-pointer'
+      }`}
       onClick={handleFarmClick}
     >
       {/* Map Preview */}
@@ -522,7 +543,16 @@ function FarmCard({ farm, onEdit: _onEdit }: { farm: Farm; onEdit: (farm: Farm |
 
       {/* Card Content */}
       <div className="p-6">
-        <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-olive-700 transition-colors">
+        {isInactive && (
+          <div className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-gray-200 px-3 py-1 text-xs font-medium text-gray-600">
+            <Lock className="w-3 h-3" />
+            Ανενεργός — αναβαθμίστε για ενεργοποίηση
+          </div>
+        )}
+
+        <h3 className={`text-xl font-bold mb-2 transition-colors ${
+          isInactive ? 'text-gray-500' : 'text-gray-900 group-hover:text-olive-700'
+        }`}>
           {farm.name}
         </h3>
 

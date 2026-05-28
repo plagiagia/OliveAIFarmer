@@ -1,5 +1,6 @@
 import FarmDetailContent from '@/components/farms/FarmDetailContent'
 import { getFarmById, getUserByClerkId } from '@/lib/db'
+import { reconcileFarmActivationByClerkId } from '@/lib/farm-activation'
 import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 
@@ -17,6 +18,7 @@ export default async function FarmDetailPage({ params }: FarmDetailPageProps) {
   }
 
   // Get user data
+  await reconcileFarmActivationByClerkId(userId)
   const user = await getUserByClerkId(userId)
 
   if (!user) {
