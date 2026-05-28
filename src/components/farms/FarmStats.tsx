@@ -10,8 +10,10 @@ import {
     TreePine,
     Wheat
 } from 'lucide-react'
+import PlanGate from '@/components/ui/PlanGate'
 import dynamic from 'next/dynamic'
 import { parseCoordinates } from '@/lib/mapbox-utils'
+import DakosAlertsPanel from './DakosAlertsPanel'
 
 // Dynamic import to ensure weather widget only loads client-side
 const WeatherWidget = dynamic(
@@ -117,6 +119,10 @@ export default function FarmStats({ farm }: FarmStatsProps) {
           )
         })}
       </div>
+
+      <PlanGate feature="oliveFlyAlerts" requiredPlan="GROWER">
+        <DakosAlertsPanel farmId={farm.id} />
+      </PlanGate>
 
       {/* Weather Intelligence Section */}
       {coordinates && (

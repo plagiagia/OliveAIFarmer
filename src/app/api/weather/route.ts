@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getWeatherIntelligence } from '@/lib/weather'
 import { prisma, saveWeatherRecord } from '@/lib/db'
-import { auth } from '@clerk/nextjs/server'
+import { hasFeature } from '@/lib/plans'
 import { checkRateLimit } from '@/lib/rate-limit'
+import { getUserPlanByClerkId } from '@/lib/subscription'
+import { auth } from '@clerk/nextjs/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -66,6 +68,13 @@ export async function GET(request: NextRequest) {
       latitude,
       longitude
     )
+
+    const userPlan = await getUserPlanByClerkId(userId)
+    if (!hasFeature(userPlan.plan, 'oliveFlyAlerts')) {
+      weatherIntelligence.diseaseRisks = weatherIntelligence.diseaseRisks.filter(
+        (risk) => risk.disease !== 'Olive Fruit Fly'
+      )
+    }
 
     // Opportunistically save weather data if farmId is provided
     if (farmId && weatherIntelligence.weather.current) {
