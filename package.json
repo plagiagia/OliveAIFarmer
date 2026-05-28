@@ -20,7 +20,8 @@
     "db:seed": "tsx --env-file=.env.local prisma/scripts/seed.ts",
     "db:seed:cleanup": "tsx --env-file=.env.local prisma/scripts/seed-cleanup.ts",
     "db:backfill:coordinates": "tsx --env-file=.env.local prisma/scripts/backfill-farm-coordinates.ts",
-    "db:backfill:coordinates:write": "tsx --env-file=.env.local prisma/scripts/backfill-farm-coordinates.ts --write"
+    "db:backfill:coordinates:write": "tsx --env-file=.env.local prisma/scripts/backfill-farm-coordinates.ts --write",
+    "stripe:listen": "stripe listen --forward-to localhost:3000/api/stripe/webhook"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.39.3",

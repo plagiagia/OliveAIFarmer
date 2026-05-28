@@ -34,6 +34,14 @@ Quick checks:
 
 Always commit a matching file under `prisma/migrations/` when changing `schema.prisma`.
 
+## Stripe billing
+
+Architecture, local CLI setup, Vercel webhooks, and production cutover: **`docs/STRIPE.md`**.
+
+Quick local loop: `stripe login` → `npm run stripe:listen` (terminal 2) → set `STRIPE_WEBHOOK_SECRET` + `STRIPE_SECRET_KEY` in `.env.local` → restart `npm run dev`. Without webhooks, checkout succeeds but plan stays FREE.
+
+Cursor rule when editing Stripe code: `.cursor/rules/stripe-billing.mdc`.
+
 ## Verify changes
 
 ```bash
