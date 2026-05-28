@@ -1,6 +1,6 @@
 'use client'
 
-import { TrendingUp, DollarSign, TreeDeciduous, BarChart3, Target } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface EfficiencyData {
   roi: number
@@ -10,178 +10,139 @@ interface EfficiencyData {
   profitMargin: number
 }
 
+type MetricStatus = 'good' | 'fair' | 'poor'
+
 interface EfficiencyMetricsProps {
   data: EfficiencyData
   title?: string
 }
 
+function getStatus(
+  value: number,
+  mode: 'higher' | 'lower',
+  goodThreshold: number,
+  fairThreshold: number
+): MetricStatus {
+  if (mode === 'higher') {
+    if (value > goodThreshold) return 'good'
+    if (value > fairThreshold) return 'fair'
+    return 'poor'
+  }
+  if (value < goodThreshold) return 'good'
+  if (value < fairThreshold) return 'fair'
+  return 'poor'
+}
+
+const statusLabel: Record<MetricStatus, string> = {
+  good: 'Εξαιρετικό',
+  fair: 'Καλό',
+  poor: 'Χρειάζεται βελτίωση'
+}
+
+function StatusDot({ status }: { status: MetricStatus }) {
+  return (
+    <span
+      className={cn(
+        'inline-block h-2 w-2 shrink-0 rounded-full',
+        status === 'good' && 'bg-olive-600',
+        status === 'fair' && 'bg-amber-500',
+        status === 'poor' && 'bg-red-500'
+      )}
+      aria-hidden
+    />
+  )
+}
+
 export function EfficiencyMetrics({ data, title = 'Δείκτες Απόδοσης' }: EfficiencyMetricsProps) {
-  const metrics = [
+  const rows: Array<{
+    label: string
+    value: string
+    hint: string
+    status: MetricStatus
+  }> = [
     {
       label: 'ROI (Απόδοση Επένδυσης)',
       value: `${data.roi.toFixed(1)}%`,
-      icon: TrendingUp,
-      color: data.roi > 30 ? 'green' : data.roi > 15 ? 'yellow' : 'red',
-      description: 'Κέρδος σε σχέση με το κόστος',
-      benchmark: { good: 30, fair: 15 }
+      hint: 'Κέρδος σε σχέση με το κόστος',
+      status: getStatus(data.roi, 'higher', 30, 15)
     },
     {
-      label: 'Κόστος ανά Κιλό',
+      label: 'Κόστος ανά κιλό',
       value: `€${data.costPerKg.toFixed(2)}`,
-      icon: DollarSign,
-      color: data.costPerKg < 1.5 ? 'green' : data.costPerKg < 2.5 ? 'yellow' : 'red',
-      description: 'Μέσο κόστος παραγωγής',
-      benchmark: { good: 1.5, fair: 2.5 }
+      hint: 'Μέσο κόστος παραγωγής',
+      status: getStatus(data.costPerKg, 'lower', 1.5, 2.5)
     },
     {
-      label: 'Απόδοση ανά Δέντρο',
+      label: 'Απόδοση ανά δέντρο',
       value: `${data.yieldPerTree.toFixed(1)} kg`,
-      icon: TreeDeciduous,
-      color: data.yieldPerTree > 20 ? 'green' : data.yieldPerTree > 10 ? 'yellow' : 'red',
-      description: 'Μέση παραγωγή ανά δέντρο',
-      benchmark: { good: 20, fair: 10 }
+      hint: 'Μέση παραγωγή ανά δέντρο',
+      status: getStatus(data.yieldPerTree, 'higher', 20, 10)
     },
     {
-      label: 'Απόδοση ανά Στρέμμα',
+      label: 'Απόδοση ανά στρέμμα',
       value: `${data.avgYieldPerStremma.toFixed(0)} kg`,
-      icon: BarChart3,
-      color: data.avgYieldPerStremma > 150 ? 'green' : data.avgYieldPerStremma > 100 ? 'yellow' : 'red',
-      description: 'Μέση παραγωγή ανά στρέμμα',
-      benchmark: { good: 150, fair: 100 }
+      hint: 'Μέση παραγωγή ανά στρέμμα',
+      status: getStatus(data.avgYieldPerStremma, 'higher', 150, 100)
     },
     {
-      label: 'Περιθώριο Κέρδους',
+      label: 'Περιθώριο κέρδους',
       value: `${data.profitMargin.toFixed(1)}%`,
-      icon: Target,
-      color: data.profitMargin > 40 ? 'green' : data.profitMargin > 20 ? 'yellow' : 'red',
-      description: 'Ποσοστό κέρδους επί των εσόδων',
-      benchmark: { good: 40, fair: 20 }
+      hint: 'Ποσοστό κέρδους επί των εσόδων',
+      status: getStatus(data.profitMargin, 'higher', 40, 20)
     }
   ]
 
-  const getColorClasses = (color: string) => {
-    switch (color) {
-      case 'green':
-        return {
-          bg: 'bg-green-50',
-          text: 'text-green-700',
-          icon: 'bg-green-100',
-          border: 'border-green-200'
-        }
-      case 'yellow':
-        return {
-          bg: 'bg-yellow-50',
-          text: 'text-yellow-700',
-          icon: 'bg-yellow-100',
-          border: 'border-yellow-200'
-        }
-      case 'red':
-        return {
-          bg: 'bg-red-50',
-          text: 'text-red-700',
-          icon: 'bg-red-100',
-          border: 'border-red-200'
-        }
-      default:
-        return {
-          bg: 'bg-gray-50',
-          text: 'text-gray-700',
-          icon: 'bg-gray-100',
-          border: 'border-gray-200'
-        }
-    }
-  }
-
-  const getPerformanceLevel = (color: string) => {
-    switch (color) {
-      case 'green':
-        return 'Εξαιρετικό'
-      case 'yellow':
-        return 'Καλό'
-      case 'red':
-        return 'Χρειάζεται Βελτίωση'
-      default:
-        return 'Μέτριο'
-    }
-  }
-
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-      <h3 className="text-lg font-semibold text-gray-900 mb-6">{title}</h3>
+    <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+      <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+      <p className="mt-1 text-sm text-gray-500">
+        Σύγκριση με τυπικά όρια για ελαιοπαραγωγή στην Ελλάδα
+      </p>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {metrics.map((metric, index) => {
-          const Icon = metric.icon
-          const colors = getColorClasses(metric.color)
-          const performanceLevel = getPerformanceLevel(metric.color)
-
-          return (
-            <div
-              key={index}
-              className={`${colors.bg} ${colors.border} border rounded-xl p-4 transition-all duration-200 hover:shadow-md`}
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div className={`${colors.icon} p-2 rounded-lg`}>
-                  <Icon className={`w-5 h-5 ${colors.text}`} />
-                </div>
-                <span className={`text-xs font-medium px-2 py-1 ${colors.bg} ${colors.text} rounded-full`}>
-                  {performanceLevel}
-                </span>
-              </div>
-
-              <div className="mb-2">
-                <div className={`text-2xl font-bold ${colors.text} mb-1`}>
-                  {metric.value}
-                </div>
-                <p className="text-sm font-medium text-gray-700">
-                  {metric.label}
-                </p>
-              </div>
-
-              <p className="text-xs text-gray-600">
-                {metric.description}
-              </p>
-
-              {/* Progress Bar */}
-              <div className="mt-3">
-                <div className="w-full bg-gray-200 rounded-full h-1.5">
-                  <div
-                    className={`h-1.5 rounded-full ${
-                      metric.color === 'green' ? 'bg-green-500' :
-                      metric.color === 'yellow' ? 'bg-yellow-500' :
-                      'bg-red-500'
-                    }`}
-                    style={{
-                      width: `${Math.min(
-                        (metric.color === 'green' ? 100 :
-                         metric.color === 'yellow' ? 66 : 33), 100
-                      )}%`
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-          )
-        })}
+      <div className="mt-6 overflow-x-auto">
+        <table className="w-full min-w-[320px] text-sm">
+          <thead>
+            <tr className="border-b border-gray-200 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+              <th className="pb-3 pr-4 font-medium">Δείκτης</th>
+              <th className="pb-3 pr-4 font-medium">Τιμή</th>
+              <th className="pb-3 font-medium">Κατάσταση</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {rows.map((row) => (
+              <tr key={row.label} className="group">
+                <td className="py-4 pr-4 align-top">
+                  <p className="font-medium text-gray-900">{row.label}</p>
+                  <p className="mt-0.5 text-xs text-gray-500">{row.hint}</p>
+                </td>
+                <td className="py-4 pr-4 align-top">
+                  <p className="text-lg font-semibold tabular-nums text-gray-900">{row.value}</p>
+                </td>
+                <td className="py-4 align-top">
+                  <div className="flex items-center gap-2">
+                    <StatusDot status={row.status} />
+                    <span className="text-gray-600">{statusLabel[row.status]}</span>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
-      {/* Legend */}
-      <div className="mt-6 pt-4 border-t border-gray-200">
-        <div className="flex flex-wrap gap-4 text-xs text-gray-600">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-green-500 rounded-full" />
-            <span>Εξαιρετικό (πάνω από benchmark)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-yellow-500 rounded-full" />
-            <span>Καλό (εντός ορίων)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-red-500 rounded-full" />
-            <span>Χρειάζεται Βελτίωση</span>
-          </div>
-        </div>
-      </div>
+      <p className="mt-4 border-t border-gray-100 pt-4 text-xs text-gray-500">
+        <span className="inline-flex items-center gap-1.5">
+          <StatusDot status="good" /> Εξαιρετικό
+        </span>
+        <span className="mx-2">·</span>
+        <span className="inline-flex items-center gap-1.5">
+          <StatusDot status="fair" /> Καλό
+        </span>
+        <span className="mx-2">·</span>
+        <span className="inline-flex items-center gap-1.5">
+          <StatusDot status="poor" /> Χρειάζεται βελτίωση
+        </span>
+      </p>
     </div>
   )
 }

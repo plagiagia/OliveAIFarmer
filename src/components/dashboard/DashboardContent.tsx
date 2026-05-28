@@ -125,7 +125,7 @@ function OnboardingView({ user }: { user: User | null }) {
           <OliveIcon size="2xl" className="text-olive-600" />
         </div>
         <h1 className="text-4xl font-bold text-olive-800 mb-4">
-          Καλώς ήρθατε{user?.firstName ? ` ${user.firstName}` : ''} στο ΕλαιοLog!
+          Καλώς ήρθατε{user?.firstName ? ` ${user.firstName}` : ''} στο OliveIQ!
         </h1>
         <p className="text-xl text-gray-600 mb-8">
           Ας δημιουργήσουμε τον πρώτο σας ελαιώνα

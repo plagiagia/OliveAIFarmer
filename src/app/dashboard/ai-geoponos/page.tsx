@@ -4,7 +4,7 @@ import { prisma } from '@/lib/db'
 import DashboardAIGeoponos from '@/components/dashboard/DashboardAIGeoponos'
 
 export const metadata = {
-  title: 'AI Γεωπόνος | ΕλαιοLog',
+  title: 'AI Γεωπόνος | OliveIQ',
   description: 'Ο ψηφιακός σας γεωπονικός σύμβουλος για όλους τους ελαιώνες σας'
 }
 

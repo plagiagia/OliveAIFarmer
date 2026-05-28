@@ -81,7 +81,7 @@ const nextConfig = {
     ],
   },
   env: {
-    NEXT_PUBLIC_APP_NAME: 'OliveLog',
+    NEXT_PUBLIC_APP_NAME: 'OliveIQ',
     NEXT_PUBLIC_APP_DESCRIPTION: 'Ψηφιακό Ημερολόγιο Ελαιοδέντρων',
   },
 }

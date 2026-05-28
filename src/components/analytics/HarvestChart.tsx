@@ -10,6 +10,7 @@ import {
   ResponsiveContainer,
   Legend
 } from 'recharts'
+import { CHART, TOOLTIP_STYLE } from './chartColors'
 
 interface HarvestData {
   year: number
@@ -43,32 +44,27 @@ export function HarvestChart({ data, title = 'Παραγωγή ανά Έτος' 
       <h3 className="text-lg font-semibold text-gray-900 mb-4">{title}</h3>
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+          <CartesianGrid strokeDasharray="3 3" stroke={CHART.grid} />
           <XAxis
             dataKey="year"
-            stroke="#6b7280"
+            stroke={CHART.axis}
             fontSize={12}
           />
           <YAxis
             yAxisId="left"
-            stroke="#2E7D32"
+            stroke={CHART.revenue}
             fontSize={12}
             tickFormatter={(value) => `${(value / 1000).toFixed(0)}t`}
           />
           <YAxis
             yAxisId="right"
             orientation="right"
-            stroke="#1976D2"
+            stroke={CHART.costs}
             fontSize={12}
             tickFormatter={(value) => `€${(value / 1000).toFixed(0)}k`}
           />
           <Tooltip
-            contentStyle={{
-              backgroundColor: 'white',
-              border: '1px solid #e5e7eb',
-              borderRadius: '12px',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-            }}
+            contentStyle={TOOLTIP_STYLE}
             formatter={(value, name) => {
               const numValue = Number(value) || 0
               if (name === 'totalYield') return [formatYield(numValue), 'Παραγωγή']
@@ -88,18 +84,18 @@ export function HarvestChart({ data, title = 'Παραγωγή ανά Έτος' 
             yAxisId="left"
             type="monotone"
             dataKey="totalYield"
-            stroke="#2E7D32"
+            stroke={CHART.revenue}
             strokeWidth={3}
-            dot={{ fill: '#2E7D32', strokeWidth: 2, r: 4 }}
+            dot={{ fill: CHART.revenue, strokeWidth: 2, r: 4 }}
             activeDot={{ r: 6 }}
           />
           <Line
             yAxisId="right"
             type="monotone"
             dataKey="totalValue"
-            stroke="#1976D2"
+            stroke={CHART.costs}
             strokeWidth={3}
-            dot={{ fill: '#1976D2', strokeWidth: 2, r: 4 }}
+            dot={{ fill: CHART.costs, strokeWidth: 2, r: 4 }}
             activeDot={{ r: 6 }}
           />
         </LineChart>

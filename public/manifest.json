@@ -1,7 +1,7 @@
 {
-  "name": "ΕλαιοLog - Ψηφιακό Ημερολόγιο Ελαιοδέντρων",
-  "short_name": "ΕλαιοLog",
-  "description": "Το ψηφιακό ημερολόγιο που βοηθάει τους Έλληνες αγρότες να διαχειριστούν τον ελαιώνα τους αποτελεσματικά.",
+  "name": "OliveIQ — Ο ελαιώνας σας, πάντα υπό έλεγχο",
+  "short_name": "OliveIQ",
+  "description": "Έξυπνη διαχείριση ελαιώνα. AI γεωπόνος, δορυφόρος, ειδοποιήσεις δάκου.",
   "start_url": "/dashboard",
   "display": "standalone",
   "background_color": "#f8fafc",
@@ -14,9 +14,22 @@
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "/favicon.ico",
-      "sizes": "32x32",
-      "type": "image/x-icon"
+      "src": "/images/logo-monogram.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/apple-touch-icon.png",

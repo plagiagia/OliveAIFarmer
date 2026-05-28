@@ -10,6 +10,7 @@ import {
   ResponsiveContainer,
   Legend
 } from 'recharts'
+import { CHART, TOOLTIP_STYLE } from './chartColors'
 
 interface FarmComparisonData {
   farmName: string
@@ -47,10 +48,10 @@ export function FarmComparisonChart({ data, title = 'Σύγκριση Ελαιώ
       <h3 className="text-lg font-semibold text-gray-900 mb-4">{title}</h3>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+          <CartesianGrid strokeDasharray="3 3" stroke={CHART.grid} />
           <XAxis
             dataKey="name"
-            stroke="#6b7280"
+            stroke={CHART.axis}
             fontSize={12}
             angle={-45}
             textAnchor="end"
@@ -58,23 +59,18 @@ export function FarmComparisonChart({ data, title = 'Σύγκριση Ελαιώ
           />
           <YAxis
             yAxisId="left"
-            stroke="#2E7D32"
+            stroke={CHART.revenue}
             fontSize={12}
             tickFormatter={(value) => `${value} kg/στρ`}
           />
           <YAxis
             yAxisId="right"
             orientation="right"
-            stroke="#1976D2"
+            stroke={CHART.costs}
             fontSize={12}
           />
           <Tooltip
-            contentStyle={{
-              backgroundColor: 'white',
-              border: '1px solid #e5e7eb',
-              borderRadius: '12px',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-            }}
+            contentStyle={TOOLTIP_STYLE}
             formatter={(value, name) => {
               const numValue = Number(value) || 0
               if (name === 'yieldPerStremma') return [`${numValue.toFixed(1)} kg/στρέμμα`, 'Απόδοση/Στρέμμα']
@@ -92,13 +88,13 @@ export function FarmComparisonChart({ data, title = 'Σύγκριση Ελαιώ
           <Bar
             yAxisId="left"
             dataKey="yieldPerStremma"
-            fill="#2E7D32"
+            fill={CHART.revenue}
             radius={[4, 4, 0, 0]}
           />
           <Bar
             yAxisId="right"
             dataKey="treeCount"
-            fill="#1976D2"
+            fill={CHART.costsLight}
             radius={[4, 4, 0, 0]}
           />
         </BarChart>

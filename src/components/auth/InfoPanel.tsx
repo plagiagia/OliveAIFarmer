@@ -1,7 +1,7 @@
 'use client'
 
 import { BarChart3, Cloud, Smartphone, Sprout } from 'lucide-react'
-import OliveIcon from '../ui/OliveIcon'
+import BrandLogo from '../ui/BrandLogo'
 
 export default function InfoPanel() {
   const benefits = [
@@ -35,13 +35,15 @@ export default function InfoPanel() {
         {/* Brand */}
         <div className="text-center lg:text-left mb-12">
           <div className="mb-6 animate-float flex justify-center lg:justify-start">
-            <OliveIcon size="2xl" className="text-white" />
+            <div className="rounded-2xl bg-white p-4 shadow-lg">
+              <BrandLogo size="2xl" />
+            </div>
           </div>
           <h1 className="text-4xl lg:text-5xl font-bold mb-6">
-            ΕλαιοLog
+            OliveIQ
           </h1>
           <p className="text-xl lg:text-2xl leading-relaxed opacity-90">
-            Το ψηφιακό ημερολόγιο που θα σας βοηθήσει να διαχειριστείτε τον ελαιώνα σας αποτελεσματικά
+            Ο ελαιώνας σας, πάντα υπό έλεγχο
           </p>
         </div>
 

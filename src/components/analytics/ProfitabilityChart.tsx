@@ -12,6 +12,7 @@ import {
   ResponsiveContainer,
   ReferenceLine
 } from 'recharts'
+import { CHART } from './chartColors'
 
 interface ProfitabilityData {
   year: number
@@ -54,17 +55,17 @@ export function ProfitabilityChart({ data, title = 'Κερδοφορία ανά 
           <p className="font-semibold text-gray-900 mb-2">Έτος {label}</p>
           <div className="space-y-1 text-sm">
             <div className="flex justify-between gap-4">
-              <span className="text-green-600">Έσοδα:</span>
+              <span className="text-olive-700">Έσοδα:</span>
               <strong>€{revenue.toLocaleString('el-GR')}</strong>
             </div>
             <div className="flex justify-between gap-4">
-              <span className="text-orange-600">Έξοδα:</span>
+              <span className="text-earth-800">Έξοδα:</span>
               <strong>€{costs.toLocaleString('el-GR')}</strong>
             </div>
             <div className="border-t border-gray-200 my-1" />
             <div className="flex justify-between gap-4">
-              <span className={profit >= 0 ? 'text-blue-600' : 'text-red-600'}>Κέρδος:</span>
-              <strong className={profit >= 0 ? 'text-blue-600' : 'text-red-600'}>
+              <span className={profit >= 0 ? 'text-olive-800' : 'text-red-600'}>Κέρδος:</span>
+              <strong className={profit >= 0 ? 'text-olive-800' : 'text-red-600'}>
                 €{profit.toLocaleString('el-GR')}
               </strong>
             </div>
@@ -80,14 +81,14 @@ export function ProfitabilityChart({ data, title = 'Κερδοφορία ανά 
       <h3 className="text-lg font-semibold text-gray-900 mb-4">{title}</h3>
       <ResponsiveContainer width="100%" height={300}>
         <ComposedChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+          <CartesianGrid strokeDasharray="3 3" stroke={CHART.grid} />
           <XAxis
             dataKey="year"
-            stroke="#6b7280"
+            stroke={CHART.axis}
             fontSize={12}
           />
           <YAxis
-            stroke="#6b7280"
+            stroke={CHART.axis}
             fontSize={12}
             tickFormatter={formatCurrency}
           />
@@ -100,23 +101,23 @@ export function ProfitabilityChart({ data, title = 'Κερδοφορία ανά 
               return value
             }}
           />
-          <ReferenceLine y={0} stroke="#666" strokeDasharray="3 3" />
+          <ReferenceLine y={0} stroke={CHART.reference} strokeDasharray="3 3" />
           <Bar
             dataKey="revenue"
-            fill="#4CAF50"
+            fill={CHART.revenueLight}
             radius={[4, 4, 0, 0]}
           />
           <Bar
             dataKey="costs"
-            fill="#FF9800"
+            fill={CHART.costsLight}
             radius={[4, 4, 0, 0]}
           />
           <Line
             type="monotone"
             dataKey="profit"
-            stroke="#1976D2"
+            stroke={CHART.profit}
             strokeWidth={3}
-            dot={{ fill: '#1976D2', strokeWidth: 2, r: 5 }}
+            dot={{ fill: CHART.profit, strokeWidth: 2, r: 5 }}
             activeDot={{ r: 7 }}
           />
         </ComposedChart>

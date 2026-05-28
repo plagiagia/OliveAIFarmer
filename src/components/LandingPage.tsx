@@ -1,8 +1,10 @@
 'use client'
 
 import PricingComparison from '@/components/pricing/PricingComparison'
+import BrandLogo from '@/components/ui/BrandLogo'
 import OliveIcon from '@/components/ui/OliveIcon'
 import { Check, ChevronRight, Globe, Leaf, Satellite, Zap } from 'lucide-react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, type MouseEvent } from 'react'
 
@@ -28,10 +30,10 @@ export default function LandingPage() {
       {/* ── NAV ── */}
       <nav className="sticky top-0 z-50 border-b border-gray-100 bg-white/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-2">
-            <Leaf className="h-6 w-6 text-olive-700" />
+          <Link href="/" className="flex items-center gap-2">
+            <BrandLogo size="md" priority />
             <span className="text-xl font-bold text-olive-800">OliveIQ</span>
-          </div>
+          </Link>
           <div className="flex items-center gap-3">
             <Link
               href="#pricing"
@@ -57,36 +59,58 @@ export default function LandingPage() {
       </nav>
 
       {/* ── HERO ── */}
-      <section className="mx-auto max-w-6xl px-4 py-20 text-center">
-        <div className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full border border-olive-200 bg-olive-50 px-4 py-1.5 text-sm text-olive-700">
-          <OliveIcon size="sm" className="shrink-0 text-olive-700" aria-hidden />
-          <span>Για Έλληνες ελαιοπαραγωγούς & απόδημους ιδιοκτήτες</span>
+      <section className="relative overflow-hidden">
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-[min(52vw,420px)] sm:h-[min(48vw,480px)]"
+          aria-hidden
+        >
+          <Image
+            src="/images/hero-landscape.png"
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-bottom"
+          />
         </div>
-        <h1 className="mb-6 text-5xl font-extrabold tracking-tight text-gray-900 sm:text-6xl">
-          Ο ελαιώνας σας,{' '}
-          <span className="text-olive-700">πάντα υπό έλεγχο</span>
-        </h1>
-        <p className="mx-auto mb-10 max-w-2xl text-xl text-gray-600">
-          Παρακολουθήστε λιπάνσεις, ψεκασμούς, συγκομιδή και κόστος ελαιολάδου σε ένα
-          μέρος. AI γεωπόνος, δορυφορικός χάρτης NDVI, ειδοποιήσεις δάκου — από οπουδήποτε.
-        </p>
-        <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-          <Link
-            href="/sign-up"
-            className="flex items-center gap-2 rounded-2xl bg-olive-700 px-7 py-4 text-lg font-semibold text-white shadow-lg hover:bg-olive-800 transition-colors"
-          >
-            Ξεκινήστε Δωρεάν
-            <ChevronRight className="h-5 w-5" />
-          </Link>
-          <Link
-            href="#pricing"
-            onClick={handlePricingClick}
-            className="rounded-2xl border-2 border-olive-200 px-7 py-4 text-lg font-semibold text-olive-700 hover:bg-olive-50 transition-colors"
-          >
-            Δείτε τιμές
-          </Link>
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-[min(52vw,420px)] bg-gradient-to-t from-white/40 via-transparent to-transparent sm:h-[min(48vw,480px)]"
+          aria-hidden
+        />
+
+        <div className="relative z-10 mx-auto max-w-6xl px-4 pb-16 pt-16 text-center sm:pb-24 sm:pt-20">
+          <div className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full border border-olive-200 bg-white/90 px-4 py-1.5 text-sm text-olive-700 shadow-sm backdrop-blur-sm">
+            <OliveIcon size="sm" className="shrink-0 text-olive-700" aria-hidden />
+            <span>Για Έλληνες ελαιοπαραγωγούς & απόδημους ιδιοκτήτες</span>
+          </div>
+          <h1 className="mb-6 text-5xl font-extrabold tracking-tight text-gray-900 sm:text-6xl">
+            Ο ελαιώνας σας,{' '}
+            <span className="text-olive-700">πάντα υπό έλεγχο</span>
+          </h1>
+          <p className="mx-auto mb-10 max-w-2xl text-xl text-gray-600">
+            Παρακολουθήστε λιπάνσεις, ψεκασμούς, συγκομιδή και κόστος ελαιολάδου σε ένα
+            μέρος. AI γεωπόνος, δορυφορικός χάρτης NDVI, ειδοποιήσεις δάκου — από οπουδήποτε.
+          </p>
+          <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+            <Link
+              href="/sign-up"
+              className="flex items-center gap-2 rounded-2xl bg-olive-700 px-7 py-4 text-lg font-semibold text-white shadow-lg hover:bg-olive-800 transition-colors"
+            >
+              Ξεκινήστε Δωρεάν
+              <ChevronRight className="h-5 w-5" />
+            </Link>
+            <Link
+              href="#pricing"
+              onClick={handlePricingClick}
+              className="rounded-2xl border-2 border-olive-200 bg-white/90 px-7 py-4 text-lg font-semibold text-olive-700 shadow-sm backdrop-blur-sm hover:bg-olive-50 transition-colors"
+            >
+              Δείτε τιμές
+            </Link>
+          </div>
+          <p className="mt-4 text-sm text-gray-500">
+            Δεν απαιτείται πιστωτική κάρτα · Δωρεάν για πάντα · 1 ελαιώνας
+          </p>
         </div>
-        <p className="mt-4 text-sm text-gray-500">Δεν απαιτείται πιστωτική κάρτα · Δωρεάν για πάντα · 1 ελαιώνας</p>
       </section>
 
       {/* ── VALUE PROPS ── */}

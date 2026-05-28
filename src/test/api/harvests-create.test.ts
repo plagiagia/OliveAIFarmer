@@ -30,6 +30,7 @@ describe('POST /api/harvests/create', () => {
     vi.mocked(prisma.farm.findFirst).mockResolvedValue({
       id: 'farm-123',
       name: 'North Grove',
+      isActive: true,
     } as never)
 
     const startDate = new Date('2026-10-18T00:00:00.000Z')
@@ -88,5 +89,31 @@ describe('POST /api/harvests/create', () => {
         completed: false,
       }),
     })
+  })
+
+  it('returns 403 when farm is inactive due to plan limits', async () => {
+    vi.mocked(auth).mockResolvedValue({ userId: 'clerk-user-123' } as never)
+    vi.mocked(prisma.farm.findFirst).mockResolvedValue({
+      id: 'farm-123',
+      name: 'North Grove',
+      isActive: false,
+    } as never)
+
+    const request = new NextRequest('http://localhost/api/harvests/create', {
+      method: 'POST',
+      body: JSON.stringify({
+        farmId: 'farm-123',
+        year: 2026,
+        collectionDate: '2026-10-18',
+        totalYield: 310,
+      }),
+    })
+
+    const response = await POST(request)
+    const data = await response.json()
+
+    expect(response.status).toBe(403)
+    expect(data.error).toContain('ανενεργός')
+    expect(prisma.harvest.create).not.toHaveBeenCalled()
   })
 })

@@ -381,7 +381,7 @@ export default function FarmCreationForm({ userId: _userId }: FarmCreationFormPr
           <div className="mt-8 bg-green-50 rounded-2xl p-6 border border-green-200">
             <h3 className="font-bold text-green-800 mb-3 flex items-center">
               <span className="text-xl mr-2">💡</span>
-              Συμβουλές για το ΕλαιοLog
+              Συμβουλές για το OliveIQ
             </h3>
             <ul className="text-sm text-green-700 space-y-2">
               <li className="flex items-start">
