@@ -4,6 +4,7 @@ import CalendarActivityModal from '@/components/calendar/CalendarActivityModal'
 import FarmCalendar from '@/components/calendar/FarmCalendar'
 import FarmEditModal from '@/components/farms/FarmEditModal'
 import UpgradeBanner from '@/components/dashboard/UpgradeBanner'
+import PricingModal from '@/components/pricing/PricingModal'
 import MapPreview from '@/components/map/MapPreview'
 import OliveIcon from '@/components/ui/OliveIcon'
 import { usePlan } from '@/hooks/usePlan'
@@ -189,8 +190,9 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
   showSuccessMessage: boolean;
   showDeleteMessage: boolean;
 }) {
-  const { plan, isLoading: isPlanLoading } = usePlan()
+  const { plan, isLoading: isPlanLoading, can } = usePlan()
   const [editingFarm, setEditingFarm] = useState<Farm | null>(null)
+  const [showPricingModal, setShowPricingModal] = useState(false)
   // Note: farms state is intentionally unused - using user.farms directly, reload for updates
   const [_farms, _setFarms] = useState(user.farms)
 
@@ -263,6 +265,7 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
 
   const activeFarms = user.farms.filter((farm) => farm.isActive)
   const canCreateFarm = !isPlanLoading && canAddFarm(plan, user.farms.length)
+  const canUseAiGeoponos = !isPlanLoading && can('aiGeoponos')
   const sortedFarms = [...user.farms].sort((a, b) => {
     if (a.isActive === b.isActive) return 0
     return a.isActive ? -1 : 1
@@ -308,13 +311,25 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
-            <Link
-              href="/dashboard/ai-geoponos"
-              className="flex-1 sm:flex-none justify-center bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white py-2 px-3 sm:px-4 rounded-xl font-semibold text-sm transition-all duration-200 hover:shadow-lg flex items-center gap-2"
-            >
-              <Sparkles className="w-4 h-4" />
-              <span className="whitespace-nowrap">AI Γεωπόνος</span>
-            </Link>
+            {canUseAiGeoponos ? (
+              <Link
+                href="/dashboard/ai-geoponos"
+                className="flex-1 sm:flex-none justify-center bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white py-2 px-3 sm:px-4 rounded-xl font-semibold text-sm transition-all duration-200 hover:shadow-lg flex items-center gap-2"
+              >
+                <Sparkles className="w-4 h-4" />
+                <span className="whitespace-nowrap">AI Γεωπόνος</span>
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowPricingModal(true)}
+                title="Απαιτείται πλάνο Αγρότης — αναβαθμίστε για πρόσβαση"
+                className="flex-1 sm:flex-none justify-center bg-gray-100 border border-gray-200 text-gray-500 opacity-75 hover:opacity-90 py-2 px-3 sm:px-4 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center gap-2 cursor-pointer"
+              >
+                <Lock className="w-4 h-4" />
+                <span className="whitespace-nowrap">AI Γεωπόνος</span>
+              </button>
+            )}
             <Link
               href="/dashboard/analytics"
               className="flex-1 sm:flex-none justify-center bg-white border border-gray-200 hover:border-olive-300 text-gray-700 hover:text-olive-700 py-2 px-3 sm:px-4 rounded-xl font-medium text-sm transition-all duration-200 hover:shadow-md flex items-center gap-2"
@@ -492,6 +507,12 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
       )}
 
       {/* Calendar Activity Modal */}
+      <PricingModal
+        isOpen={showPricingModal}
+        onClose={() => setShowPricingModal(false)}
+        title="Ξεκλειδώστε τον AI Γεωπόνο"
+      />
+
       {showActivityModal && selectedDate && (
         <CalendarActivityModal
           isOpen={showActivityModal}

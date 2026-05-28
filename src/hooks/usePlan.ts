@@ -14,6 +14,8 @@ interface PlanState {
   isLoading: boolean
 }
 
+export type UpgradeResult = { ok: true } | { ok: false; error: string }
+
 const DEFAULT_STATE: PlanState = {
   plan: 'FREE',
   config: getPlanConfig('FREE'),
@@ -63,14 +65,28 @@ export function usePlan() {
     hasFeature(state.plan, feature)
 
   /** Redirect to Stripe checkout for a given plan. */
-  const upgrade = async (plan: Plan) => {
-    const res = await fetch('/api/stripe/checkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ plan }),
-    })
-    const data = await res.json()
-    if (data.url) window.location.href = data.url
+  const upgrade = async (plan: Plan): Promise<UpgradeResult> => {
+    try {
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan }),
+      })
+      const data = (await res.json()) as { url?: string; error?: string }
+      if (res.ok && data.url) {
+        window.location.href = data.url
+        return { ok: true }
+      }
+      return {
+        ok: false,
+        error: data.error ?? 'Αποτυχία έναρξης πληρωμής. Δοκιμάστε ξανά.',
+      }
+    } catch {
+      return {
+        ok: false,
+        error: 'Σφάλμα σύνδεσης. Ελέγξτε το δίκτυό σας και δοκιμάστε ξανά.',
+      }
+    }
   }
 
   /** Open the Stripe customer portal. Returns false if no portal URL is available. */

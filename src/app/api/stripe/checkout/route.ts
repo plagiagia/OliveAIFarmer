@@ -1,8 +1,12 @@
 import { prisma } from '@/lib/db'
 import type { Plan } from '@/lib/plans'
-import { stripe, STRIPE_PRICE_IDS } from '@/lib/stripe'
+import { isStripeSecretKeyConfigured, stripe, STRIPE_PRICE_IDS } from '@/lib/stripe'
 import { auth } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
+import Stripe from 'stripe'
+
+const STRIPE_NOT_CONFIGURED_MSG =
+  'Το Stripe δεν είναι ρυθμισμένο. Προσθέστε έγκυρο STRIPE_SECRET_KEY από το Stripe Dashboard στο .env.local και κάντε restart τον dev server.'
 
 // POST /api/stripe/checkout
 // Body: { plan: Plan, returnUrl?: string }
@@ -10,6 +14,10 @@ export async function POST(req: NextRequest) {
   const { userId } = await auth()
   if (!userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  if (!isStripeSecretKeyConfigured()) {
+    return NextResponse.json({ error: STRIPE_NOT_CONFIGURED_MSG }, { status: 503 })
   }
 
   const body = await req.json()
@@ -22,7 +30,15 @@ export async function POST(req: NextRequest) {
 
   const priceId = STRIPE_PRICE_IDS[plan as keyof typeof STRIPE_PRICE_IDS]
   if (!priceId) {
-    return NextResponse.json({ error: 'Invalid plan' }, { status: 400 })
+    return NextResponse.json(
+      {
+        error:
+          plan === 'FREE'
+            ? 'Μη έγκυρο πλάνο.'
+            : 'Η online πληρωμή δεν είναι διαθέσιμη αυτή τη στιγμή. Επικοινωνήστε με την υποστήριξη.',
+      },
+      { status: 503 },
+    )
   }
 
   const user = await prisma.user.findUnique({
@@ -40,25 +56,55 @@ export async function POST(req: NextRequest) {
     : `${origin}/dashboard?upgrade=success`
   const cancelUrl = `${origin}/pricing`
 
-  // Re-use existing Stripe customer if available
-  const customerId = user.subscription?.stripeCustomerId ?? undefined
+  // Re-use existing Stripe customer when valid for this Stripe account
+  let customerId = user.subscription?.stripeCustomerId ?? undefined
+  if (customerId) {
+    try {
+      await stripe.customers.retrieve(customerId)
+    } catch (err) {
+      if (err instanceof Stripe.errors.StripeInvalidRequestError) {
+        customerId = undefined
+      } else {
+        throw err
+      }
+    }
+  }
 
-  const session = await stripe.checkout.sessions.create({
-    mode: 'subscription',
-    customer: customerId,
-    customer_email: customerId ? undefined : user.email,
-    line_items: [{ price: priceId, quantity: 1 }],
-    success_url: successUrl,
-    cancel_url: cancelUrl,
-    metadata: {
-      userId: user.id,
-      clerkId: userId,
-      plan,
-    },
-    subscription_data: {
-      metadata: { userId: user.id, clerkId: userId, plan },
-    },
-  })
+  try {
+    const session = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      customer: customerId,
+      customer_email: customerId ? undefined : user.email,
+      line_items: [{ price: priceId, quantity: 1 }],
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+      metadata: {
+        userId: user.id,
+        clerkId: userId,
+        plan,
+      },
+      subscription_data: {
+        metadata: { userId: user.id, clerkId: userId, plan },
+      },
+    })
 
-  return NextResponse.json({ url: session.url })
+    if (!session.url) {
+      return NextResponse.json(
+        { error: 'Δεν δημιουργήθηκε σύνδεσμος πληρωμής. Δοκιμάστε ξανά.' },
+        { status: 500 },
+      )
+    }
+
+    return NextResponse.json({ url: session.url })
+  } catch (err) {
+    console.error('[stripe/checkout]', err)
+    const isDev = process.env.NODE_ENV === 'development'
+    let message = 'Αποτυχία σύνδεσης με Stripe. Δοκιμάστε ξανά ή επικοινωνήστε μαζί μας.'
+    if (err instanceof Stripe.errors.StripeAuthenticationError) {
+      message = STRIPE_NOT_CONFIGURED_MSG
+    } else if (isDev && err instanceof Stripe.errors.StripeError) {
+      message = err.message
+    }
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
 }

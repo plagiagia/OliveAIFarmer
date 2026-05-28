@@ -48,11 +48,17 @@ export default function PricingComparison({ showHeader = true, className = '' }:
   const { isSignedIn } = useAuth()
   const { plan: currentPlan, isLoading, upgrade } = usePlan()
   const [busyPlan, setBusyPlan] = useState<Plan | null>(null)
+  const [upgradeError, setUpgradeError] = useState<string | null>(null)
 
   const handleUpgrade = async (target: Plan) => {
+    setUpgradeError(null)
     setBusyPlan(target)
-    await upgrade(target)
-    setBusyPlan(null)
+    try {
+      const result = await upgrade(target)
+      if (!result.ok) setUpgradeError(result.error)
+    } finally {
+      setBusyPlan(null)
+    }
   }
 
   return (
@@ -62,6 +68,15 @@ export default function PricingComparison({ showHeader = true, className = '' }:
           <div className="mb-12 text-center">
             <h2 className="mb-4 text-3xl font-bold text-gray-900">Τιμολόγηση</h2>
             <p className="text-gray-600">Ξεκινήστε δωρεάν · Αναβαθμίστε όταν μεγαλώσετε</p>
+          </div>
+        )}
+
+        {upgradeError && (
+          <div
+            role="alert"
+            className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+          >
+            {upgradeError}
           </div>
         )}
 

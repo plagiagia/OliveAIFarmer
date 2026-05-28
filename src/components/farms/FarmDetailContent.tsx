@@ -1,5 +1,7 @@
 'use client'
 
+import PricingModal from '@/components/pricing/PricingModal'
+import { usePlan } from '@/hooks/usePlan'
 import {
   Activity,
   BarChart3,
@@ -24,14 +26,40 @@ interface FarmDetailContentProps {
   user: any
 }
 
+type FarmTabId = 'overview' | 'activities' | 'harvests' | 'grove-health' | 'ai-geoponos'
+
+const LOCKED_TAB_HINTS: Partial<Record<FarmTabId, { title: string; tooltip: string }>> = {
+  'grove-health': {
+    title: 'Ξεκλειδώστε την Υγεία Ελαιώνα',
+    tooltip: 'Απαιτείται πλάνο Παραγωγός — αναβαθμίστε για δορυφορικό NDVI',
+  },
+  'ai-geoponos': {
+    title: 'Ξεκλειδώστε τον AI Γεωπόνο',
+    tooltip: 'Απαιτείται πλάνο Αγρότης — αναβαθμίστε για πρόσβαση',
+  },
+}
+
 export default function FarmDetailContent({ farm, user }: FarmDetailContentProps) {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<'overview' | 'activities' | 'harvests' | 'grove-health' | 'ai-geoponos'>('overview')
+  const { isLoading: isPlanLoading, can } = usePlan()
+  const [activeTab, setActiveTab] = useState<FarmTabId>('overview')
   const [showEditModal, setShowEditModal] = useState(false)
+  const [showPricingModal, setShowPricingModal] = useState(false)
+  const [pricingModalTitle, setPricingModalTitle] = useState('Αναβαθμίστε το πλάνο σας')
   const [unreadInsightsCount, setUnreadInsightsCount] = useState(0)
+
+  const canUseAiGeoponos = !isPlanLoading && can('aiGeoponos')
+  const canUseGroveHealth = !isPlanLoading && can('satellite')
+
+  const isTabLocked = (tabId: FarmTabId) => {
+    if (tabId === 'grove-health') return !canUseGroveHealth
+    if (tabId === 'ai-geoponos') return !canUseAiGeoponos
+    return false
+  }
 
   // Fetch unread insights count
   const fetchUnreadCount = useCallback(async () => {
+    if (!canUseAiGeoponos) return
     try {
       const response = await fetch(`/api/insights/${farm.id}`)
       if (response.ok) {
@@ -41,15 +69,24 @@ export default function FarmDetailContent({ farm, user }: FarmDetailContentProps
     } catch (error) {
       console.error('Failed to fetch insights count:', error)
     }
-  }, [farm.id])
+  }, [farm.id, canUseAiGeoponos])
 
   useEffect(() => {
-    fetchUnreadCount()
-  }, [fetchUnreadCount])
+    if (canUseAiGeoponos) fetchUnreadCount()
+  }, [fetchUnreadCount, canUseAiGeoponos])
+
+  useEffect(() => {
+    if (
+      (activeTab === 'ai-geoponos' && !canUseAiGeoponos) ||
+      (activeTab === 'grove-health' && !canUseGroveHealth)
+    ) {
+      setActiveTab('overview')
+    }
+  }, [canUseAiGeoponos, canUseGroveHealth, activeTab])
 
   // Reset unread count when viewing AI tab
   useEffect(() => {
-    if (activeTab === 'ai-geoponos') {
+    if (canUseAiGeoponos && activeTab === 'ai-geoponos') {
       // Refetch after a delay to get updated count
       const timer = setTimeout(fetchUnreadCount, 2000)
       return () => clearTimeout(timer)
@@ -105,16 +142,33 @@ export default function FarmDetailContent({ farm, user }: FarmDetailContentProps
 
             <div className="flex space-x-4 sm:space-x-8 overflow-x-auto scrollbar-hide py-1 sm:py-0">
               {tabs.map((tab) => {
-                const Icon = tab.icon
-                const badge = 'badge' in tab ? (tab.badge ?? 0) : 0
+                const tabId = tab.id as FarmTabId
+                const isLocked = isTabLocked(tabId)
+                const lockHint = LOCKED_TAB_HINTS[tabId]
+                const Icon = isLocked ? Lock : tab.icon
+                const badge = canUseAiGeoponos && 'badge' in tab ? (tab.badge ?? 0) : 0
+                const isActive = !isLocked && activeTab === tabId
+
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id as 'overview' | 'activities' | 'harvests' | 'grove-health' | 'ai-geoponos')}
-                    className={`flex items-center space-x-2 py-3 sm:py-4 px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap transition-colors ${activeTab === tab.id
-                      ? 'border-green-500 text-green-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                      }`}
+                    type="button"
+                    title={isLocked ? lockHint?.tooltip : undefined}
+                    onClick={() => {
+                      if (isLocked && lockHint) {
+                        setPricingModalTitle(lockHint.title)
+                        setShowPricingModal(true)
+                        return
+                      }
+                      setActiveTab(tabId)
+                    }}
+                    className={`flex items-center space-x-2 py-3 sm:py-4 px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap transition-colors ${
+                      isLocked
+                        ? 'border-transparent text-gray-400 opacity-75 cursor-pointer hover:opacity-90'
+                        : isActive
+                          ? 'border-green-500 text-green-600'
+                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
                   >
                     <Icon className="w-4 h-4 flex-shrink-0" />
                     <span>{tab.label}</span>
@@ -135,10 +189,20 @@ export default function FarmDetailContent({ farm, user }: FarmDetailContentProps
           {activeTab === 'overview' && <FarmStats farm={farm} />}
           {activeTab === 'activities' && <FarmActivities farm={farm} readOnly={isReadOnly} />}
           {activeTab === 'harvests' && <FarmHarvests farm={farm} readOnly={isReadOnly} />}
-          {activeTab === 'grove-health' && <GroveHealthTab farmId={farm.id} readOnly={isReadOnly} />}
-          {activeTab === 'ai-geoponos' && <AIGeoponosTab farmId={farm.id} readOnly={isReadOnly} />}
+          {canUseGroveHealth && activeTab === 'grove-health' && (
+            <GroveHealthTab farmId={farm.id} readOnly={isReadOnly} />
+          )}
+          {canUseAiGeoponos && activeTab === 'ai-geoponos' && (
+            <AIGeoponosTab farmId={farm.id} readOnly={isReadOnly} />
+          )}
         </div>
       </div>
+
+      <PricingModal
+        isOpen={showPricingModal}
+        onClose={() => setShowPricingModal(false)}
+        title={pricingModalTitle}
+      />
 
       {/* Edit Modal */}
       {showEditModal && !isReadOnly && (

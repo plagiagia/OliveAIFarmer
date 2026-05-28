@@ -53,8 +53,12 @@ export default function SubscriptionSection() {
   const handleUpgrade = async (target: Plan) => {
     setBusy(target)
     setError(null)
-    await upgrade(target)
-    setBusy(null)
+    try {
+      const result = await upgrade(target)
+      if (!result.ok) setError(result.error)
+    } finally {
+      setBusy(null)
+    }
   }
 
   const upgradeOptions = UPGRADE_TARGETS[plan] ?? []
