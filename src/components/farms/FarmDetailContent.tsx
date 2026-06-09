@@ -135,7 +135,7 @@ export default function FarmDetailContent({ farm, user }: FarmDetailContentProps
         />
 
         {/* Navigation Tabs */}
-        <div className="bg-white border-b border-gray-200 sticky top-16 z-10 shadow-sm sm:shadow-none">
+        <div className="bg-white border-b border-gray-200 sticky top-[calc(4rem+env(safe-area-inset-top))] z-10 shadow-sm sm:shadow-none">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative group">
             {/* Right scroll indicator hint for mobile */}
             <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-white via-white/80 to-transparent pointer-events-none z-20 sm:hidden" />
@@ -162,7 +162,7 @@ export default function FarmDetailContent({ farm, user }: FarmDetailContentProps
                       }
                       setActiveTab(tabId)
                     }}
-                    className={`flex items-center space-x-2 py-3 sm:py-4 px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap transition-colors ${
+                    className={`flex min-h-[48px] items-center space-x-2 py-3 sm:py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap transition-colors active:scale-[0.98] ${
                       isLocked
                         ? 'border-transparent text-gray-400 opacity-75 cursor-pointer hover:opacity-90'
                         : isActive

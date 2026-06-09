@@ -301,16 +301,21 @@ export default function HarvestCreateModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 sm:p-4">
+      <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl max-w-4xl w-full max-h-[92vh] sm:max-h-[90vh] overflow-y-auto overscroll-contain">
+        {/* Drag handle (mobile bottom sheet) */}
+        <div className="sm:hidden pt-3 flex justify-center" aria-hidden="true">
+          <div className="h-1.5 w-12 rounded-full bg-gray-300" />
+        </div>
+
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="sticky top-0 z-10 bg-white flex items-center justify-between p-4 sm:p-6 border-b border-gray-200">
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-amber-100 rounded-lg">
               {harvestMode === 'daily' ? <Calendar className="w-6 h-6 text-amber-600" /> : <Wheat className="w-6 h-6 text-amber-600" />}
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
                 {editingHarvest && 'Επεξεργασία Συγκομιδής'}
                 {!editingHarvest && harvestMode === 'new' && 'Νέα Συγκομιδή'}
                 {!editingHarvest && harvestMode === 'daily' && `Συλλογή - Συγκομιδή ${formData.year}`}
@@ -327,24 +332,25 @@ export default function HarvestCreateModal({
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="touch-target flex items-center justify-center p-2.5 hover:bg-gray-100 rounded-lg transition-colors"
+            aria-label="Κλείσιμο"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-8">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-8">
           {/* Mode Selection for Ongoing Harvest */}
           {ongoingHarvest && harvestMode === 'daily' && (
             <div className="bg-green-50 border border-green-200 rounded-xl p-4">
               <h3 className="font-semibold text-green-900 mb-3">Συγκομιδή σε εξέλιξη</h3>
-              <div className="flex space-x-4">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   type="button"
                   onClick={() => setHarvestMode('daily')}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-                    harvestMode === 'daily' 
-                      ? 'bg-green-600 text-white' 
+                  className={`flex items-center justify-center sm:justify-start space-x-2 px-4 py-3 sm:py-2 rounded-lg transition-colors active:scale-[0.98] ${
+                    harvestMode === 'daily'
+                      ? 'bg-green-600 text-white'
                       : 'bg-white text-green-700 border border-green-300 hover:bg-green-50'
                   }`}
                 >
@@ -354,7 +360,7 @@ export default function HarvestCreateModal({
                 <button
                   type="button"
                   onClick={handleCompleteHarvest}
-                  className="flex items-center space-x-2 px-4 py-2 bg-white text-amber-700 border border-amber-300 rounded-lg hover:bg-amber-50 transition-colors"
+                  className="flex items-center justify-center sm:justify-start space-x-2 px-4 py-3 sm:py-2 bg-white text-amber-700 border border-amber-300 rounded-lg hover:bg-amber-50 transition-colors active:scale-[0.98]"
                 >
                   <CheckCircle className="w-4 h-4" />
                   <span>Ολοκλήρωση Συγκομιδής</span>
@@ -378,6 +384,7 @@ export default function HarvestCreateModal({
                 </label>
                 <input
                   type="number"
+                  inputMode="numeric"
                   value={formData.year}
                   onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) })}
                   className={`w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 ${
@@ -457,6 +464,7 @@ export default function HarvestCreateModal({
                 <div className="flex items-center gap-2">
                   <input
                     type="number"
+                    inputMode="decimal"
                     value={formData.totalYield}
                     onChange={(e) => setFormData({ ...formData, totalYield: e.target.value })}
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500"
@@ -538,6 +546,7 @@ export default function HarvestCreateModal({
                       </label>
                       <input
                         type="number"
+                        inputMode="decimal"
                         value={formData.pricePerKg}
                         onChange={(e) => setFormData({ ...formData, pricePerKg: e.target.value })}
                         className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -554,6 +563,7 @@ export default function HarvestCreateModal({
                       </label>
                       <input
                         type="number"
+                        inputMode="decimal"
                         value={formData.pricePerTon}
                         onChange={(e) => setFormData({ ...formData, pricePerTon: e.target.value })}
                         className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -679,19 +689,19 @@ export default function HarvestCreateModal({
             </div>
           )}
 
-          {/* Action Buttons */}
-          <div className="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200">
+          {/* Action Buttons - sticky so the CTA stays reachable on mobile */}
+          <div className="sticky bottom-0 z-10 -mx-4 sm:-mx-6 -mb-4 sm:-mb-6 flex items-center justify-end space-x-3 sm:space-x-4 border-t border-gray-200 bg-white px-4 sm:px-6 pt-4 pb-safe-4">
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
+              className="flex-1 sm:flex-none justify-center px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors active:scale-[0.98] flex items-center"
             >
               Ακύρωση
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`px-6 py-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 ${
+              className={`flex-1 sm:flex-none justify-center px-6 py-3 rounded-xl transition-colors active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 ${
                 harvestMode === 'complete'
                   ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white'
                   : harvestMode === 'daily'

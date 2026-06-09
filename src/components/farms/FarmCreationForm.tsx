@@ -239,6 +239,7 @@ export default function FarmCreationForm({ userId: _userId }: FarmCreationFormPr
                     {/* Area Value Input */}
                     <input
                       type="number"
+                      inputMode="decimal"
                       step="0.1"
                       min="0"
                       value={formData.totalArea}
@@ -281,6 +282,7 @@ export default function FarmCreationForm({ userId: _userId }: FarmCreationFormPr
                   </label>
                   <input
                     type="number"
+                    inputMode="numeric"
                     required
                     min="1"
                     value={formData.treeCount}
@@ -300,6 +302,7 @@ export default function FarmCreationForm({ userId: _userId }: FarmCreationFormPr
                   </label>
                   <input
                     type="number"
+                    inputMode="numeric"
                     min="0"
                     max="1000"
                     value={formData.treeAge}
