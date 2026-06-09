@@ -1,5 +1,6 @@
 'use client'
 
+import { usePlan } from '@/hooks/usePlan'
 import { format } from 'date-fns'
 import { el } from 'date-fns/locale'
 import {
@@ -50,6 +51,7 @@ interface SatelliteData {
 
 interface GroveHealthTabProps {
   farmId: string
+  readOnly?: boolean
 }
 
 const METRIC_EXPLANATIONS = [
@@ -124,7 +126,10 @@ const TrendIcon = ({ trend }: { trend: 'improving' | 'stable' | 'declining' }) =
   return <Minus className="w-4 h-4 text-gray-400" />
 }
 
-export default function GroveHealthTab({ farmId }: GroveHealthTabProps) {
+export default function GroveHealthTab({ farmId, readOnly = false }: GroveHealthTabProps) {
+  const { isLoading: isPlanLoading, can } = usePlan()
+  const canUseSatellite = !isPlanLoading && can('satellite')
+
   const [data, setData] = useState<SatelliteData | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -133,6 +138,8 @@ export default function GroveHealthTab({ farmId }: GroveHealthTabProps) {
 
   // Fetch satellite data
   const fetchData = useCallback(async (forceRefresh = false) => {
+    if (!canUseSatellite) return
+
     try {
       if (forceRefresh) {
         setRefreshing(true)
@@ -146,6 +153,8 @@ export default function GroveHealthTab({ farmId }: GroveHealthTabProps) {
       const result = await response.json()
 
       if (!response.ok) {
+        // Plan gating is handled by the locked tab + pricing modal in FarmDetailContent
+        if (response.status === 403) return
         throw new Error(result.error || 'Failed to fetch satellite data')
       }
 
@@ -156,11 +165,17 @@ export default function GroveHealthTab({ farmId }: GroveHealthTabProps) {
       setLoading(false)
       setRefreshing(false)
     }
-  }, [farmId])
+  }, [farmId, canUseSatellite])
 
   useEffect(() => {
-    fetchData()
-  }, [fetchData])
+    if (canUseSatellite) fetchData()
+    else setLoading(false)
+  }, [fetchData, canUseSatellite])
+
+  // Tab lock in FarmDetailContent is the user-facing upgrade path; avoid duplicate plan messaging
+  if (!canUseSatellite) {
+    return null
+  }
 
   // Handle refresh
   const handleRefresh = () => {
@@ -280,6 +295,7 @@ export default function GroveHealthTab({ farmId }: GroveHealthTabProps) {
               </p>
             </div>
           </div>
+          {!readOnly && (
           <button
             onClick={handleRefresh}
             disabled={refreshing}
@@ -289,6 +305,7 @@ export default function GroveHealthTab({ farmId }: GroveHealthTabProps) {
             <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
             {refreshing ? 'Ανανέωση...' : 'Ανανέωση'}
           </button>
+          )}
         </div>
 
         {data?.lastUpdated && (
@@ -298,8 +315,8 @@ export default function GroveHealthTab({ farmId }: GroveHealthTabProps) {
         )}
       </div>
 
-      {/* Error message */}
-      {error && !error.includes('coordinates') && (
+      {/* Error message (operational errors only — plan gating is on the tab) */}
+      {error && !error.includes('coordinates') && !error.includes('πλάνο') && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-3">
           <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0" />
           <p className="text-red-800">{error}</p>
@@ -464,6 +481,7 @@ export default function GroveHealthTab({ farmId }: GroveHealthTabProps) {
           <p className="text-gray-600 mb-4">
             Δεν βρέθηκαν διαθέσιμα δορυφορικά δεδομένα. Αυτό μπορεί να οφείλεται σε νεφοκάλυψη.
           </p>
+          {!readOnly && (
           <button
             onClick={handleRefresh}
             disabled={refreshing}
@@ -473,6 +491,7 @@ export default function GroveHealthTab({ farmId }: GroveHealthTabProps) {
             <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
             Δοκιμάστε Ξανά
           </button>
+          )}
         </div>
       )}
 

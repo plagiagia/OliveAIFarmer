@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db'
+import { INACTIVE_FARM_MESSAGE } from '@/lib/farm-activation'
 import { auth } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 
@@ -83,6 +84,10 @@ export async function POST(request: Request) {
 
     if (!farm) {
       return NextResponse.json({ error: 'Farm not found or access denied' }, { status: 404 })
+    }
+
+    if (!farm.isActive) {
+      return NextResponse.json({ error: INACTIVE_FARM_MESSAGE }, { status: 403 })
     }
 
     // Create the activity

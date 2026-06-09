@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db'
+import { INACTIVE_FARM_MESSAGE } from '@/lib/farm-activation'
 import { auth } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
 
@@ -47,13 +48,18 @@ export async function PATCH(request: NextRequest) {
             clerkId: userId
           }
         }
-      }
+      },
+      include: { farm: { select: { isActive: true } } }
     })
 
     if (!existingHarvest) {
       return NextResponse.json({ 
         error: 'Η συγκομιδή δεν βρέθηκε ή δεν έχετε πρόσβαση σε αυτήν' 
       }, { status: 404 })
+    }
+
+    if (!existingHarvest.farm.isActive) {
+      return NextResponse.json({ error: INACTIVE_FARM_MESSAGE }, { status: 403 })
     }
 
     // Convert totalYield to kg if needed

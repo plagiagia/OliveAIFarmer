@@ -1,4 +1,5 @@
 import { getWeatherHistory, prisma } from '@/lib/db'
+import { INACTIVE_FARM_MESSAGE } from '@/lib/farm-activation'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { recordAIUsage, checkMonthlyBudget } from '@/lib/ai/usage'
 import { chatRequestSchema } from '@/lib/ai/schemas'
@@ -11,6 +12,8 @@ import {
   streamChat,
   type FarmContext,
 } from '@/lib/openai'
+import { getUserPlanByClerkId } from '@/lib/subscription'
+import { hasFeature, requiresPlanMessage } from '@/lib/plans'
 import { ACTIVITY_TYPE_LABELS } from '@/types/activity'
 import { auth } from '@clerk/nextjs/server'
 import { NextRequest } from 'next/server'
@@ -34,6 +37,16 @@ export async function POST(request: NextRequest) {
   if (!userId) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
+
+  const userPlan = await getUserPlanByClerkId(userId)
+  if (!hasFeature(userPlan.plan, 'aiGeoponos')) {
+    return new Response(JSON.stringify({
+      error: requiresPlanMessage('GROWER', { subject: 'Ο AI Γεωπόνος' }),
+    }), {
+      status: 403,
       headers: { 'Content-Type': 'application/json' },
     })
   }
@@ -99,6 +112,13 @@ export async function POST(request: NextRequest) {
     })
 
     if (farm) {
+      if (!farm.isActive) {
+        return new Response(JSON.stringify({ error: INACTIVE_FARM_MESSAGE }), {
+          status: 403,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      }
+
       const records = await getWeatherHistory(farmId, {
         startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
         limit: 30,

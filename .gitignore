@@ -46,6 +46,10 @@ dev.db
 Thumbs.db
 *.pem
 
+# Stripe CLI (local dev tool — not part of the project)
+stripe.exe
+stripe.zip
+
 # Logs
 logs
 *.log

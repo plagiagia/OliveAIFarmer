@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db'
+import { INACTIVE_FARM_MESSAGE } from '@/lib/farm-activation'
 import {
   calculateHealthMetrics,
   fetchAllSatelliteData,
@@ -6,6 +7,8 @@ import {
   parseCoordinates,
   SatelliteIndices
 } from '@/lib/satellite'
+import { getUserPlanByClerkId } from '@/lib/subscription'
+import { hasFeature, requiresPlanMessage } from '@/lib/plans'
 import { auth } from '@clerk/nextjs/server'
 import { SatelliteSource } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
@@ -40,6 +43,14 @@ export async function GET(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const userPlan = await getUserPlanByClerkId(userId)
+    if (!hasFeature(userPlan.plan, 'satellite')) {
+      return NextResponse.json(
+        { error: requiresPlanMessage('PRODUCER', { subject: 'Τα δορυφορικά δεδομένα', verb: 'απαιτούν' }) },
+        { status: 403 }
+      )
+    }
+
     const { farmId } = await context.params
     const { searchParams } = new URL(request.url)
     const forceRefresh = searchParams.get('refresh') === 'true'
@@ -60,6 +71,10 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
     if (!farm) {
       return NextResponse.json({ error: 'Farm not found' }, { status: 404 })
+    }
+
+    if (forceRefresh && !farm.isActive) {
+      return NextResponse.json({ error: INACTIVE_FARM_MESSAGE }, { status: 403 })
     }
 
     // Check if farm has coordinates
@@ -89,8 +104,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
     let currentIndices: SatelliteIndices | null = null
 
-    // Fetch fresh data if needed
-    if (forceRefresh || cacheAge > 3) {
+    // Fetch fresh data if needed (skip external fetch for inactive farms)
+    if (farm.isActive && (forceRefresh || cacheAge > 3)) {
       try {
         // Fetch current indices (Sentinel-2 + Sentinel-1 soil moisture)
         currentIndices = await fetchAllSatelliteData(
@@ -200,6 +215,14 @@ export async function POST(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const userPlan = await getUserPlanByClerkId(userId)
+    if (!hasFeature(userPlan.plan, 'satellite')) {
+      return NextResponse.json(
+        { error: requiresPlanMessage('PRODUCER', { subject: 'Τα δορυφορικά δεδομένα', verb: 'απαιτούν' }) },
+        { status: 403 }
+      )
+    }
+
     const { farmId } = await context.params
 
     // Verify farm ownership
@@ -212,6 +235,10 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     if (!farm) {
       return NextResponse.json({ error: 'Farm not found' }, { status: 404 })
+    }
+
+    if (!farm.isActive) {
+      return NextResponse.json({ error: INACTIVE_FARM_MESSAGE }, { status: 403 })
     }
 
     const coords = getFarmCoordinates(farm)

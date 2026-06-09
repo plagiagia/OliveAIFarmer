@@ -21,9 +21,10 @@ interface FarmHeaderProps {
   user: unknown
   onEdit: () => void
   onBack: () => void
+  readOnly?: boolean
 }
 
-export default function FarmHeader({ farm, user: _user, onEdit, onBack }: FarmHeaderProps) {
+export default function FarmHeader({ farm, user: _user, onEdit, onBack, readOnly = false }: FarmHeaderProps) {
   return (
     <div className="bg-white shadow-sm border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -37,13 +38,15 @@ export default function FarmHeader({ farm, user: _user, onEdit, onBack }: FarmHe
             <span className="font-medium">Πίσω</span>
           </button>
 
-          <button
-            onClick={onEdit}
-            className="w-full sm:w-auto flex items-center justify-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm"
-          >
-            <Edit className="w-4 h-4" />
-            <span>Επεξεργασία</span>
-          </button>
+          {!readOnly && (
+            <button
+              onClick={onEdit}
+              className="w-full sm:w-auto flex items-center justify-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm"
+            >
+              <Edit className="w-4 h-4" />
+              <span>Επεξεργασία</span>
+            </button>
+          )}
         </div>
 
         {/* Farm Title & Basic Info */}

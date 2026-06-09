@@ -1,6 +1,6 @@
 'use client'
 
-import OliveIcon from '@/components/ui/OliveIcon'
+import BrandLogo from '@/components/ui/BrandLogo'
 import { WifiOff, RefreshCw } from 'lucide-react'
 
 export default function OfflinePage() {
@@ -44,9 +44,9 @@ export default function OfflinePage() {
 
         {/* Olive logo */}
         <div className="mt-8 flex justify-center">
-          <OliveIcon size="xl" className="text-olive-600" />
+          <BrandLogo size="xl" />
         </div>
-        <p className="text-sm text-gray-500 mt-2">ΕλαιοLog</p>
+        <p className="text-sm text-gray-500 mt-2">OliveIQ</p>
       </div>
     </div>
   )

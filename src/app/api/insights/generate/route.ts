@@ -1,4 +1,5 @@
 import { getWeatherHistory, prisma } from '@/lib/db'
+import { INACTIVE_FARM_MESSAGE } from '@/lib/farm-activation'
 import { checkRateLimit } from '@/lib/rate-limit'
 import {
   AIInsight,
@@ -12,6 +13,8 @@ import { contextHash } from '@/lib/ai/hash'
 import { recordAIUsage, checkMonthlyBudget } from '@/lib/ai/usage'
 import { ruleBasedInsights } from '@/lib/ai/fallback'
 import { farmIdBodySchema } from '@/lib/ai/schemas'
+import { getUserPlanByClerkId } from '@/lib/subscription'
+import { hasFeature, requiresPlanMessage } from '@/lib/plans'
 import { ACTIVITY_TYPE_LABELS } from '@/types/activity'
 import { auth } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
@@ -32,6 +35,14 @@ export async function POST(request: NextRequest) {
     const { userId } = await auth()
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const userPlan = await getUserPlanByClerkId(userId)
+    if (!hasFeature(userPlan.plan, 'aiGeoponos')) {
+      return NextResponse.json(
+        { error: requiresPlanMessage('GROWER', { subject: 'Ο AI Γεωπόνος' }) },
+        { status: 403 }
+      )
     }
 
     const rateLimit = checkRateLimit(`ai:generate:${userId}`, 10, 60 * 60 * 1000)
@@ -124,6 +135,10 @@ export async function POST(request: NextRequest) {
         { error: 'Farm not found or access denied' },
         { status: 404 }
       )
+    }
+
+    if (!farm.isActive) {
+      return NextResponse.json({ error: INACTIVE_FARM_MESSAGE }, { status: 403 })
     }
 
     // Get weather history for the last 30 days

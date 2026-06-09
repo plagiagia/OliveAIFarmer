@@ -94,7 +94,7 @@ export const ACTIVITY_TYPE_ICONS: Record<ActivityType, string> = {
   PRUNING: '✂️',
   FERTILIZING: '🌱',
   PEST_CONTROL: '🛡️',
-  SOIL_WORK: '🪨',
+  SOIL_WORK: '🚜',
   HARVESTING: '🌾',
   MAINTENANCE: '🔧',
   INSPECTION: '🔍',

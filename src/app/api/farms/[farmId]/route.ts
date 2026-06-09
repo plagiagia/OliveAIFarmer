@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db'
+import { INACTIVE_FARM_MESSAGE, reconcileFarmActivationByClerkId } from '@/lib/farm-activation'
 import { formatCoordinates, parseCoordinates } from '@/lib/mapbox-utils'
 import { auth } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
@@ -144,6 +145,10 @@ export async function PUT(
       )
     }
 
+    if (!existingFarm.isActive) {
+      return NextResponse.json({ error: INACTIVE_FARM_MESSAGE }, { status: 403 })
+    }
+
     // Update farm with treeCount and oliveVariety stored directly
     const updatedFarm = await prisma.farm.update({
       where: { id: farmId },
@@ -217,6 +222,8 @@ export async function DELETE(
     await prisma.farm.delete({
       where: { id: farmId }
     })
+
+    await reconcileFarmActivationByClerkId(userId)
 
     console.log(`🗑️ Farm deleted: ${existingFarm.name} for user: ${userId}`)
 

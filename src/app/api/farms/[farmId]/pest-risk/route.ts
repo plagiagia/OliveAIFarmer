@@ -1,5 +1,7 @@
 import { getWeatherHistory, prisma } from '@/lib/db'
 import { computePestRisk, type DailyWeather } from '@/lib/agronomy/pest-risk'
+import { hasFeature, requiresPlanMessage } from '@/lib/plans'
+import { getUserPlanByClerkId } from '@/lib/subscription'
 import { auth } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
 
@@ -20,6 +22,14 @@ export async function GET(
     const { userId } = await auth()
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const userPlan = await getUserPlanByClerkId(userId)
+    if (!hasFeature(userPlan.plan, 'oliveFlyAlerts')) {
+      return NextResponse.json(
+        { error: requiresPlanMessage('GROWER', { subject: 'Οι ειδοποιήσεις δάκου', verb: 'απαιτούν' }) },
+        { status: 403 }
+      )
     }
 
     const { farmId } = await params

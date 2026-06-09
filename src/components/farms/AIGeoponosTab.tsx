@@ -36,6 +36,7 @@ interface Insight {
 
 interface AIGeoponosTabProps {
   farmId: string
+  readOnly?: boolean
 }
 
 // Type icons
@@ -48,7 +49,7 @@ const TYPE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = 
   SEASONAL_TIP: Sparkles
 }
 
-export default function AIGeoponosTab({ farmId }: AIGeoponosTabProps) {
+export default function AIGeoponosTab({ farmId, readOnly = false }: AIGeoponosTabProps) {
   const [insights, setInsights] = useState<Insight[]>([])
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
@@ -197,6 +198,7 @@ export default function AIGeoponosTab({ farmId }: AIGeoponosTabProps) {
               </p>
             </div>
           </div>
+          {!readOnly && (
           <button
             onClick={handleGenerate}
             disabled={generating}
@@ -206,6 +208,7 @@ export default function AIGeoponosTab({ farmId }: AIGeoponosTabProps) {
             <RefreshCw className={`w-4 h-4 ${generating ? 'animate-spin' : ''}`} />
             {generating ? 'Δημιουργία...' : 'Νέες Προτάσεις'}
           </button>
+          )}
         </div>
 
         {lastGeneratedAt && (

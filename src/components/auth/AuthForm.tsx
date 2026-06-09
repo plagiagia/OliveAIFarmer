@@ -41,7 +41,7 @@ export default function AuthForm({ mode, onNotification }: AuthFormProps) {
 
         if (result.status === 'complete') {
           await setActive({ session: result.createdSessionId })
-          onNotification('Επιτυχής σύνδεση! Καλώς ήρθατε στο ΕλαιοLog.', 'success')
+          onNotification('Επιτυχής σύνδεση! Καλώς ήρθατε στο OliveIQ.', 'success')
         }
       } else {
         onNotification('Δημιουργία λογαριασμού...', 'info')
@@ -58,7 +58,7 @@ export default function AuthForm({ mode, onNotification }: AuthFormProps) {
         })
 
         if (result.status === 'complete') {
-          onNotification('Επιτυχής εγγραφή! Καλώς ήρθατε στο ΕλαιοLog.', 'success')
+          onNotification('Επιτυχής εγγραφή! Καλώς ήρθατε στο OliveIQ.', 'success')
         } else {
           // If email verification is required
           await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })

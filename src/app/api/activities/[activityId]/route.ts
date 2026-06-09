@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db'
+import { INACTIVE_FARM_MESSAGE } from '@/lib/farm-activation'
 import { auth } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 
@@ -53,11 +54,16 @@ export async function PUT(request: Request, { params }: RouteParams) {
         farm: {
           user: { clerkId: userId }
         }
-      }
+      },
+      include: { farm: { select: { isActive: true } } }
     })
 
     if (!existingActivity) {
       return NextResponse.json({ error: 'Activity not found' }, { status: 404 })
+    }
+
+    if (!existingActivity.farm.isActive) {
+      return NextResponse.json({ error: INACTIVE_FARM_MESSAGE }, { status: 403 })
     }
 
     const body = await request.json()
@@ -118,11 +124,16 @@ export async function DELETE(request: Request, { params }: RouteParams) {
         farm: {
           user: { clerkId: userId }
         }
-      }
+      },
+      include: { farm: { select: { isActive: true } } }
     })
 
     if (!activity) {
       return NextResponse.json({ error: 'Activity not found' }, { status: 404 })
+    }
+
+    if (!activity.farm.isActive) {
+      return NextResponse.json({ error: INACTIVE_FARM_MESSAGE }, { status: 403 })
     }
 
     // Delete the activity (tree activities will be deleted automatically due to cascade)

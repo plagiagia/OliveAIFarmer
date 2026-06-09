@@ -25,9 +25,10 @@ interface GroupedHarvest {
 
 interface FarmHarvestsProps {
   farm: Farm
+  readOnly?: boolean
 }
 
-export default function FarmHarvests({ farm }: FarmHarvestsProps) {
+export default function FarmHarvests({ farm, readOnly = false }: FarmHarvestsProps) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [editingHarvest, setEditingHarvest] = useState<any>(null)
   const [collapsedYears, setCollapsedYears] = useState<Set<number>>(new Set())
@@ -218,13 +219,15 @@ export default function FarmHarvests({ farm }: FarmHarvestsProps) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-gray-900">Συγκομιδές</h2>
-        <button 
-          onClick={() => setIsCreateModalOpen(true)}
-          className="flex items-center space-x-2 bg-gradient-to-r from-amber-600 to-orange-600 text-white px-4 py-2 rounded-lg hover:from-amber-700 hover:to-orange-700 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Νέα Συγκομιδή</span>
-        </button>
+        {!readOnly && (
+          <button 
+            onClick={() => setIsCreateModalOpen(true)}
+            className="flex items-center space-x-2 bg-gradient-to-r from-amber-600 to-orange-600 text-white px-4 py-2 rounded-lg hover:from-amber-700 hover:to-orange-700 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Νέα Συγκομιδή</span>
+          </button>
+        )}
       </div>
 
       {/* Summary Statistics */}
@@ -326,7 +329,7 @@ export default function FarmHarvests({ farm }: FarmHarvestsProps) {
                         )}
                       </button>
                       
-                      {!harvest.isCompleted && (
+                      {!readOnly && !harvest.isCompleted && (
                         <button
                           onClick={() => handleCompleteHarvest(harvest.year)}
                           className="flex items-center space-x-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
@@ -336,6 +339,8 @@ export default function FarmHarvests({ farm }: FarmHarvestsProps) {
                         </button>
                       )}
                       
+                      {!readOnly && (
+                      <>
                       <button 
                         onClick={() => {
                           // Find the first harvest from this year to edit
@@ -356,6 +361,8 @@ export default function FarmHarvests({ farm }: FarmHarvestsProps) {
                       >
                         <Trash2 className="w-4 h-4 text-red-600" />
                       </button>
+                      </>
+                      )}
                     </div>
                   </div>
 
@@ -444,6 +451,7 @@ export default function FarmHarvests({ farm }: FarmHarvestsProps) {
                                 </div>
                               )}
 
+                              {!readOnly ? (
                               <div className="flex items-center space-x-2">
                                 <button
                                   onClick={() => {
@@ -472,6 +480,15 @@ export default function FarmHarvests({ farm }: FarmHarvestsProps) {
                                   )}
                                 </div>
                               </div>
+                              ) : (
+                                <div className="flex items-center space-x-1">
+                                  {collection.completed ? (
+                                    <CheckCircle className="w-4 h-4 text-green-600" />
+                                  ) : (
+                                    <Clock className="w-4 h-4 text-yellow-600" />
+                                  )}
+                                </div>
+                              )}
                             </div>
                           </div>
 
@@ -494,12 +511,14 @@ export default function FarmHarvests({ farm }: FarmHarvestsProps) {
           <Wheat className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">Δεν υπάρχουν συγκομιδές ακόμα</h3>
           <p className="text-gray-500 mb-6">Καταγράψτε τις συγκομιδές του ελαιώνα σας με πλήρη οικονομικά στοιχεία</p>
-          <button 
-            onClick={() => setIsCreateModalOpen(true)}
-            className="bg-gradient-to-r from-amber-600 to-orange-600 text-white px-6 py-3 rounded-lg hover:from-amber-700 hover:to-orange-700 transition-colors"
-          >
-            Καταγραφή Πρώτης Συγκομιδής
-          </button>
+          {!readOnly && (
+            <button 
+              onClick={() => setIsCreateModalOpen(true)}
+              className="bg-gradient-to-r from-amber-600 to-orange-600 text-white px-6 py-3 rounded-lg hover:from-amber-700 hover:to-orange-700 transition-colors"
+            >
+              Καταγραφή Πρώτης Συγκομιδής
+            </button>
+          )}
         </div>
       )}
 

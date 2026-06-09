@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db'
+import { INACTIVE_FARM_MESSAGE } from '@/lib/farm-activation'
 import { fetchWeatherData } from '@/lib/weather'
 import { auth } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
@@ -75,6 +76,10 @@ export async function POST(request: Request) {
 
     if (farms.length !== farmIds.length) {
       return NextResponse.json({ error: 'Some farms not found or access denied' }, { status: 404 })
+    }
+
+    if (farms.some((farm) => !farm.isActive)) {
+      return NextResponse.json({ error: INACTIVE_FARM_MESSAGE }, { status: 403 })
     }
 
     // Calculate cost distribution by tree count when multiple farms selected

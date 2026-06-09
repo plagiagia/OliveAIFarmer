@@ -26,6 +26,12 @@ model User {
   // User's farms
   farms Farm[]
 
+  // Subscription (one per user)
+  subscription Subscription?
+
+  // Farms this user can view as a diaspora viewer
+  groveViews GroveViewer[]
+
   @@map("users")
 }
 
@@ -43,6 +49,7 @@ model Farm {
   oliveVariety String? // Primary olive variety (e.g., "Κορωνέικη", "Καλαμών")
   treeAge     Int?     // Average age of trees in years (optional)
   description String?
+  isActive    Boolean  @default(true) // false when plan limits exceeded after downgrade
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -62,6 +69,9 @@ model Farm {
 
   // Satellite data (Copernicus)
   satelliteData SatelliteData[]
+
+  // Diaspora viewer seats
+  viewers GroveViewer[]
 
   @@index([userId])
   @@map("farms")
@@ -354,4 +364,78 @@ enum SatelliteSource {
   SENTINEL_1  // Radar (SAR) - for soil moisture
   SENTINEL_2  // Optical - for vegetation indices
   SENTINEL_3  // Ocean and Land Colour Instrument
+}
+
+// ===== SAAS: SUBSCRIPTION & BILLING =====
+
+enum Plan {
+  FREE        // Δωρεάν — 1 ελαιώνας, 200 δέντρα
+  GROWER      // €19/month — έως 1.000 δέντρα, ειδοποιήσεις δάκου, παρακολούθηση συγκομιδής
+  PRODUCER    // €49/month — πολλαπλοί ελαιώνες, δορυφόρος NDVI, κόστος/λίτρο
+  MILL        // €149/month — συγκεντρωτικά ελαιουργείου, εξαγωγή ιχνηλασιμότητας
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  TRIALING
+  PAST_DUE
+  CANCELED
+  INCOMPLETE
+}
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  userId               String             @unique
+  user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  plan                 Plan               @default(FREE)
+  status               SubscriptionStatus @default(ACTIVE)
+
+  // Stripe identifiers (null for free plan)
+  stripeCustomerId     String?            @unique
+  stripeSubscriptionId String?            @unique
+  stripePriceId        String?
+
+  // Current billing period
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean            @default(false)
+
+  // Viewer seat add-on count (€9/seat/month)
+  viewerSeatCount      Int                @default(0)
+
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  @@map("subscriptions")
+}
+
+// Diaspora viewer seat — read-only access to a specific grove
+model GroveViewer {
+  id        String   @id @default(cuid())
+
+  // The grove being shared
+  farmId    String
+  farm      Farm     @relation(fields: [farmId], references: [id], onDelete: Cascade)
+
+  // Viewer's email (invited before they may have an account)
+  email     String
+
+  // If the viewer has an account, link it
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  // Stripe subscription item ID for this seat
+  stripeSubscriptionItemId String?
+
+  // When the invite was accepted
+  acceptedAt DateTime?
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([farmId, email])
+  @@index([farmId])
+  @@index([email])
+  @@map("grove_viewers")
 }

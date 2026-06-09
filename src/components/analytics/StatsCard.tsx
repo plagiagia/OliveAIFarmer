@@ -12,40 +12,11 @@ interface StatsCardProps {
     value: number
     isPositive: boolean
   }
+  /** @deprecated Use neutral cards; only valueTone applies semantic color to the number */
   color?: 'green' | 'blue' | 'amber' | 'purple' | 'gray' | 'red'
-}
-
-const colorStyles = {
-  green: {
-    bg: 'bg-green-50',
-    icon: 'bg-green-100 text-green-600',
-    trend: 'text-green-600'
-  },
-  blue: {
-    bg: 'bg-blue-50',
-    icon: 'bg-blue-100 text-blue-600',
-    trend: 'text-blue-600'
-  },
-  amber: {
-    bg: 'bg-amber-50',
-    icon: 'bg-amber-100 text-amber-600',
-    trend: 'text-amber-600'
-  },
-  purple: {
-    bg: 'bg-purple-50',
-    icon: 'bg-purple-100 text-purple-600',
-    trend: 'text-purple-600'
-  },
-  gray: {
-    bg: 'bg-gray-50',
-    icon: 'bg-gray-100 text-gray-600',
-    trend: 'text-gray-600'
-  },
-  red: {
-    bg: 'bg-red-50',
-    icon: 'bg-red-100 text-red-600',
-    trend: 'text-red-600'
-  }
+  valueTone?: 'neutral' | 'positive' | 'negative'
+  /** Full value for hover tooltip when `value` is abbreviated */
+  valueTitle?: string
 }
 
 export function StatsCard({
@@ -54,40 +25,52 @@ export function StatsCard({
   subtitle,
   icon: Icon,
   trend,
-  color = 'green'
+  valueTone = 'neutral',
+  valueTitle
 }: StatsCardProps) {
-  const styles = colorStyles[color]
+  const valueColorClass =
+    valueTone === 'positive'
+      ? 'text-olive-800'
+      : valueTone === 'negative'
+        ? 'text-red-700'
+        : 'text-gray-900'
 
   return (
-    <div className={cn(
-      'rounded-2xl p-5 transition-all hover:shadow-md',
-      styles.bg
-    )}>
-      <div className="flex items-start justify-between">
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-gray-600">{title}</p>
-          <p className="text-2xl font-bold text-gray-900">{value}</p>
-          {subtitle && (
-            <p className="text-xs text-gray-500">{subtitle}</p>
-          )}
-          {trend && (
-            <div className={cn(
-              'flex items-center gap-1 text-sm font-medium',
-              trend.isPositive ? 'text-green-600' : 'text-red-600'
-            )}>
-              <span>{trend.isPositive ? '↑' : '↓'}</span>
-              <span>{Math.abs(trend.value)}%</span>
-              <span className="text-gray-500 font-normal">vs πέρυσι</span>
-            </div>
-          )}
+    <div className="flex h-full flex-col rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
+      <div className="mb-3 flex items-center gap-2">
+        <div
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-600"
+          aria-hidden
+        >
+          <Icon className="h-4 w-4" />
         </div>
-        <div className={cn(
-          'flex items-center justify-center w-12 h-12 rounded-xl',
-          styles.icon
-        )}>
-          <Icon className="w-6 h-6" />
-        </div>
+        <p className="min-w-0 flex-1 text-sm font-medium leading-tight text-gray-500">{title}</p>
       </div>
+
+      <p
+        className={cn(
+          'break-words text-lg font-bold leading-tight tabular-nums tracking-tight',
+          valueColorClass
+        )}
+        title={valueTitle ?? (typeof value === 'string' ? value : String(value))}
+      >
+        {value}
+      </p>
+
+      {subtitle && <p className="mt-1 text-xs text-gray-500">{subtitle}</p>}
+
+      {trend && (
+        <p
+          className={cn(
+            'mt-2 text-xs font-medium leading-snug',
+            trend.isPositive ? 'text-olive-700' : 'text-red-600'
+          )}
+        >
+          <span aria-hidden>{trend.isPositive ? '↑ ' : '↓ '}</span>
+          {Math.abs(trend.value)}%{' '}
+          <span className="font-normal text-gray-500">vs πέρυσι</span>
+        </p>
+      )}
     </div>
   )
 }

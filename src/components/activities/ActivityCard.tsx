@@ -21,6 +21,7 @@ interface ActivityCardProps {
   onDelete: (activityId: string) => void
   onToggleComplete: (activityId: string, completed: boolean) => void
   isLoading?: boolean
+  readOnly?: boolean
 }
 
 export default function ActivityCard({ 
@@ -28,7 +29,8 @@ export default function ActivityCard({
   onEdit, 
   onDelete, 
   onToggleComplete,
-  isLoading = false 
+  isLoading = false,
+  readOnly = false,
 }: ActivityCardProps) {
   const [showMenu, setShowMenu] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
@@ -88,24 +90,26 @@ export default function ActivityCard({
             <div>
               <div className="flex items-center space-x-2">
                 <h3 className="text-lg font-semibold text-gray-900">{activity.title}</h3>
-                <button
-                  onClick={handleToggleComplete}
-                  disabled={isUpdating || isLoading}
-                  className={`transition-colors ${
-                    activity.completed 
-                      ? 'text-green-600 hover:text-green-700' 
-                      : 'text-gray-400 hover:text-green-600'
-                  } ${isUpdating ? 'opacity-50' : ''}`}
-                  title={activity.completed ? 'Σημείωση ως ανολοκλήρωτη' : 'Σημείωση ως ολοκληρωμένη'}
-                >
-                  {isUpdating ? (
-                    <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                  ) : activity.completed ? (
-                    <CheckCircle2 className="w-5 h-5" />
-                  ) : (
-                    <Circle className="w-5 h-5" />
-                  )}
-                </button>
+                {!readOnly && (
+                  <button
+                    onClick={handleToggleComplete}
+                    disabled={isUpdating || isLoading}
+                    className={`transition-colors ${
+                      activity.completed 
+                        ? 'text-green-600 hover:text-green-700' 
+                        : 'text-gray-400 hover:text-green-600'
+                    } ${isUpdating ? 'opacity-50' : ''}`}
+                    title={activity.completed ? 'Σημείωση ως ανολοκλήρωτη' : 'Σημείωση ως ολοκληρωμένη'}
+                  >
+                    {isUpdating ? (
+                      <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    ) : activity.completed ? (
+                      <CheckCircle2 className="w-5 h-5" />
+                    ) : (
+                      <Circle className="w-5 h-5" />
+                    )}
+                  </button>
+                )}
               </div>
               <div className="flex items-center space-x-2 mt-1">
                 <span className={`px-2 py-1 text-xs font-medium rounded-full ${ACTIVITY_TYPE_COLORS[activity.type]}`}>
@@ -121,6 +125,7 @@ export default function ActivityCard({
           </div>
 
           {/* Actions Menu */}
+          {!readOnly && (
           <div className="relative">
             <button
               onClick={() => setShowMenu(!showMenu)}
@@ -159,6 +164,7 @@ export default function ActivityCard({
               />
             )}
           </div>
+          )}
         </div>
 
         {/* Description */}

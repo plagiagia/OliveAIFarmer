@@ -48,10 +48,10 @@ export function ActivityHeatmap({ data, title = 'Ένταση Δραστηριο
   const getIntensityColor = (count: number) => {
     if (count === 0) return 'bg-gray-100'
     const intensity = count / maxCount
-    if (intensity > 0.75) return 'bg-green-600'
-    if (intensity > 0.5) return 'bg-green-500'
-    if (intensity > 0.25) return 'bg-green-400'
-    return 'bg-green-300'
+    if (intensity > 0.75) return 'bg-olive-800'
+    if (intensity > 0.5) return 'bg-olive-700'
+    if (intensity > 0.25) return 'bg-olive-500'
+    return 'bg-olive-300'
   }
 
   const maxMonthlyCount = Math.max(...Object.values(monthlyActivity), 1)
@@ -97,10 +97,10 @@ export function ActivityHeatmap({ data, title = 'Ένταση Δραστηριο
           <span>Λιγότερες</span>
           <div className="flex gap-1">
             <div className="w-4 h-4 bg-gray-100 rounded" />
-            <div className="w-4 h-4 bg-green-300 rounded" />
-            <div className="w-4 h-4 bg-green-400 rounded" />
-            <div className="w-4 h-4 bg-green-500 rounded" />
-            <div className="w-4 h-4 bg-green-600 rounded" />
+            <div className="h-4 w-4 rounded bg-olive-300" />
+            <div className="h-4 w-4 rounded bg-olive-500" />
+            <div className="h-4 w-4 rounded bg-olive-700" />
+            <div className="h-4 w-4 rounded bg-olive-800" />
           </div>
           <span>Περισσότερες</span>
         </div>

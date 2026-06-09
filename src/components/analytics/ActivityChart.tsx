@@ -10,6 +10,7 @@ import {
   ResponsiveContainer,
   Cell
 } from 'recharts'
+import { ACTIVITY_CHART_COLORS, CHART, TOOLTIP_STYLE } from './chartColors'
 
 interface ActivityData {
   type: string
@@ -22,18 +23,6 @@ interface ActivityData {
 interface ActivityChartProps {
   data: ActivityData[]
   title?: string
-}
-
-const ACTIVITY_COLORS: Record<string, string> = {
-  WATERING: '#2196F3',
-  PRUNING: '#4CAF50',
-  FERTILIZING: '#8BC34A',
-  PEST_CONTROL: '#FF9800',
-  SOIL_WORK: '#795548',
-  HARVESTING: '#9C27B0',
-  MAINTENANCE: '#607D8B',
-  INSPECTION: '#00BCD4',
-  OTHER: '#9E9E9E',
 }
 
 export function ActivityChart({ data, title = 'Δραστηριότητες ανά Τύπο' }: ActivityChartProps) {
@@ -53,22 +42,17 @@ export function ActivityChart({ data, title = 'Δραστηριότητες αν
       <h3 className="text-lg font-semibold text-gray-900 mb-4">{title}</h3>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={data} layout="vertical" margin={{ top: 5, right: 30, left: 100, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-          <XAxis type="number" stroke="#6b7280" fontSize={12} />
+          <CartesianGrid strokeDasharray="3 3" stroke={CHART.grid} />
+          <XAxis type="number" stroke={CHART.axis} fontSize={12} />
           <YAxis
             type="category"
             dataKey="typeLabel"
-            stroke="#6b7280"
+            stroke={CHART.axis}
             fontSize={12}
             width={90}
           />
           <Tooltip
-            contentStyle={{
-              backgroundColor: 'white',
-              border: '1px solid #e5e7eb',
-              borderRadius: '12px',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-            }}
+            contentStyle={TOOLTIP_STYLE}
             formatter={(value, name, props) => {
               const payload = props?.payload as ActivityData | undefined
               if (!payload) return [Number(value) || 0, String(name)]
@@ -91,7 +75,7 @@ export function ActivityChart({ data, title = 'Δραστηριότητες αν
             {data.map((entry, index) => (
               <Cell
                 key={`cell-${index}`}
-                fill={ACTIVITY_COLORS[entry.type] || ACTIVITY_COLORS.OTHER}
+                fill={ACTIVITY_CHART_COLORS[entry.type] || ACTIVITY_CHART_COLORS.OTHER}
               />
             ))}
           </Bar>

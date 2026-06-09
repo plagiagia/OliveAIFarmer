@@ -8,6 +8,7 @@ import {
   Tooltip,
   Legend
 } from 'recharts'
+import { getSeriesColor } from './chartColors'
 
 interface CostBreakdownData {
   type: string
@@ -21,8 +22,6 @@ interface CostBreakdownChartProps {
   data: CostBreakdownData[]
   title?: string
 }
-
-const COLORS = ['#2196F3', '#4CAF50', '#8BC34A', '#FF9800', '#795548', '#9C27B0', '#607D8B', '#00BCD4', '#9E9E9E']
 
 export function CostBreakdownChart({ data, title = 'Κατανομή Κόστους' }: CostBreakdownChartProps) {
   if (!data || data.length === 0 || data.every(d => d.cost === 0)) {
@@ -97,7 +96,7 @@ export function CostBreakdownChart({ data, title = 'Κατανομή Κόστο�
             dataKey="cost"
           >
             {chartData.map((_, index) => (
-              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              <Cell key={`cell-${index}`} fill={getSeriesColor(index)} />
             ))}
           </Pie>
           <Tooltip content={<CustomTooltip />} />

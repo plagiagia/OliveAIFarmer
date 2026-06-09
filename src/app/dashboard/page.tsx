@@ -1,5 +1,6 @@
 import DashboardContent from '@/components/dashboard/DashboardContent'
 import { getUserByClerkId } from '@/lib/db'
+import { reconcileFarmActivationByClerkId } from '@/lib/farm-activation'
 import { auth } from '@clerk/nextjs/server'
 
 export default async function DashboardPage() {
@@ -9,6 +10,10 @@ export default async function DashboardPage() {
   // The layout ensures only signed-in users can access this page
   
   // Get user data from database (userId will be available due to layout auth)
+  if (userId) {
+    await reconcileFarmActivationByClerkId(userId)
+  }
+
   const user = userId ? await getUserByClerkId(userId) : null
   
   // If user doesn't exist in database, we'll handle this in the client component
@@ -17,7 +22,7 @@ export default async function DashboardPage() {
     email: user.email,
     firstName: user.firstName,
     lastName: user.lastName,
-    farms: user.farms?.map((farm: { id: string; name: string; location: string; coordinates: string | null; totalArea: number | null; treeCount?: number | null; activities?: { date: Date }[]; harvests?: { id: string }[] }) => {
+    farms: user.farms?.map((farm: { id: string; name: string; location: string; coordinates: string | null; totalArea: number | null; treeCount?: number | null; isActive: boolean; activities?: { date: Date }[]; harvests?: { id: string }[] }) => {
       // Calculate the most recent activity date properly
       const mostRecentActivityDate = farm.activities && farm.activities.length > 0
         ? new Date(Math.max(...farm.activities.map((activity: { date: Date }) => new Date(activity.date).getTime())))
@@ -33,6 +38,7 @@ export default async function DashboardPage() {
         lastActivityDate: mostRecentActivityDate,
         activitiesCount: farm.activities?.length || 0,
         harvestsCount: farm.harvests?.length || 0,
+        isActive: farm.isActive,
       }
     }) || []
   } : null

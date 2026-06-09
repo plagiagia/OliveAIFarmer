@@ -92,6 +92,11 @@ export default function FarmEditModal({ farm, onClose, onSuccess }: FarmEditModa
   }
 
   const handleDelete = async () => {
+    if (!farm?.id) {
+      setError('Δεν βρέθηκε ο ελαιώνας προς διαγραφή.')
+      return
+    }
+
     setIsDeleting(true)
     setError('')
 
@@ -100,17 +105,19 @@ export default function FarmEditModal({ farm, onClose, onSuccess }: FarmEditModa
         method: 'DELETE',
       })
 
-      const data = await response.json()
+      const data = await response.json().catch(() => ({}))
 
-      if (data.success) {
-        // Redirect to dashboard after successful deletion
-        window.location.href = '/dashboard?deleted=true'
-      } else {
+      if (!response.ok || !data.success) {
         setError(data.error || 'Αποτυχία διαγραφής ελαιώνα')
+        setShowDeleteConfirm(false)
+        return
       }
+
+      window.location.href = '/dashboard?deleted=true'
     } catch (error) {
       console.error('Delete error:', error)
       setError('Αποτυχία διαγραφής ελαιώνα. Προσπαθήστε ξανά.')
+      setShowDeleteConfirm(false)
     } finally {
       setIsDeleting(false)
     }
@@ -145,8 +152,62 @@ export default function FarmEditModal({ farm, onClose, onSuccess }: FarmEditModa
   const isFormValid = formData.name.trim() && formData.location.trim() && formData.treeCount.trim() && parseInt(formData.treeCount) > 0
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      {showDeleteConfirm && (
+        <div
+          className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 p-4"
+          role="alertdialog"
+          aria-labelledby="delete-farm-title"
+          aria-describedby="delete-farm-desc"
+        >
+          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="mt-0.5 h-6 w-6 flex-shrink-0 text-red-600" />
+              <div className="flex-1">
+                <h4 id="delete-farm-title" className="mb-2 text-lg font-bold text-red-900">
+                  Επιβεβαίωση Διαγραφής
+                </h4>
+                <p id="delete-farm-desc" className="mb-3 text-red-800">
+                  Είστε σίγουροι ότι θέλετε να διαγράψετε τον ελαιώνα <strong>&quot;{farm.name}&quot;</strong>;
+                </p>
+                <p className="mb-5 text-sm text-red-700">
+                  Θα διαγραφούν επίσης όλες οι δραστηριότητες, συγκομιδές και δεδομένα που σχετίζονται με αυτόν τον ελαιώνα. Η ενέργεια δεν μπορεί να αναιρεθεί.
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    onClick={handleDelete}
+                    disabled={isDeleting}
+                    className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {isDeleting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Διαγραφή...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="h-4 w-4" />
+                        <span>Ναι, Διαγραφή</span>
+                      </>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowDeleteConfirm(false)}
+                    disabled={isDeleting}
+                    className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    Ακύρωση
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="relative z-0 max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-xl bg-white shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gray-50 rounded-t-xl">
           <div className="flex items-center space-x-3">
@@ -172,51 +233,6 @@ export default function FarmEditModal({ farm, onClose, onSuccess }: FarmEditModa
               <div>
                 <strong>Σφάλμα:</strong>
                 <p className="mt-1">{error}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Delete Confirmation Dialog */}
-        {showDeleteConfirm && (
-          <div className="mx-6 mt-4 bg-red-50 border border-red-200 rounded-lg p-6">
-            <div className="flex items-start">
-              <AlertTriangle className="w-6 h-6 text-red-600 mr-3 flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <h4 className="text-lg font-bold text-red-900 mb-2">
-                  Επιβεβαίωση Διαγραφής
-                </h4>
-                <p className="text-red-800 mb-4">
-                  Είστε σίγουροι ότι θέλετε να διαγράψετε τον ελαιώνα <strong>&quot;{farm.name}&quot;</strong>;
-                </p>
-                <p className="text-sm text-red-700 mb-4">
-                  ⚠️ Αυτή η ενέργεια θα διαγράψει επίσης όλα τα δέντρα, τμήματα, δραστηριότητες και συγκομιδές που σχετίζονται με αυτόν τον ελαιώνα. Αυτή η ενέργεια δεν μπορεί να αναιρεθεί.
-                </p>
-                <div className="flex space-x-3">
-                  <button
-                    onClick={handleDelete}
-                    disabled={isDeleting}
-                    className="flex items-center space-x-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isDeleting ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Διαγραφή...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Trash2 className="w-4 h-4" />
-                        <span>Ναι, Διαγραφή</span>
-                      </>
-                    )}
-                  </button>
-                  <button
-                    onClick={() => setShowDeleteConfirm(false)}
-                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    Ακύρωση
-                  </button>
-                </div>
               </div>
             </div>
           </div>
@@ -437,8 +453,12 @@ export default function FarmEditModal({ farm, onClose, onSuccess }: FarmEditModa
             {/* Delete Button */}
             <button
               type="button"
-              onClick={() => setShowDeleteConfirm(true)}
-              className="flex items-center space-x-2 text-red-600 hover:text-red-700 hover:bg-red-50 px-4 py-2 rounded-lg transition-colors"
+              onClick={() => {
+                setError('')
+                setShowDeleteConfirm(true)
+              }}
+              disabled={isDeleting}
+              className="flex items-center space-x-2 text-red-600 hover:text-red-700 hover:bg-red-50 px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
             >
               <Trash2 className="w-4 h-4" />
               <span>Διαγραφή Ελαιώνα</span>
@@ -476,4 +496,4 @@ export default function FarmEditModal({ farm, onClose, onSuccess }: FarmEditModa
       </div>
     </div>
   )
-} 
+}

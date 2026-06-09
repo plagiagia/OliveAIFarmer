@@ -1,3 +1,4 @@
+export { default as BrandLogo } from './BrandLogo'
 export { ErrorBoundary, DefaultErrorFallback, useErrorHandler } from './ErrorBoundary'
 export { default as Notification } from './Notification'
 export { OfflineIndicator } from './OfflineIndicator'

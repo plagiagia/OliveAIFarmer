@@ -13,6 +13,8 @@ vi.mock('@/lib/db', () => ({
       findMany: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
+      count: vi.fn(),
+      updateMany: vi.fn(),
     },
   },
 }))
@@ -22,9 +24,15 @@ vi.mock('@clerk/nextjs/server', () => ({
   auth: vi.fn(),
 }))
 
+vi.mock('@/lib/subscription', () => ({
+  getUserPlanByClerkId: vi.fn(),
+}))
+
 import { POST } from '@/app/api/farms/create/route'
 import { prisma } from '@/lib/db'
 import { auth } from '@clerk/nextjs/server'
+import { getUserPlanByClerkId } from '@/lib/subscription'
+import { getPlanConfig } from '@/lib/plans'
 
 describe('POST /api/farms/create', () => {
   beforeEach(() => {
@@ -116,6 +124,18 @@ describe('POST /api/farms/create', () => {
 
     vi.mocked(auth).mockResolvedValue({ userId: 'test-clerk-id' } as never)
     vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser as never)
+    vi.mocked(getUserPlanByClerkId).mockResolvedValue({
+      plan: 'FREE',
+      config: getPlanConfig('FREE'),
+      status: 'ACTIVE',
+      cancelAtPeriodEnd: false,
+      currentPeriodEnd: null,
+      stripeCustomerId: null,
+      stripeSubscriptionId: null,
+    })
+    vi.mocked(prisma.farm.count).mockResolvedValue(0)
+    vi.mocked(prisma.farm.findMany).mockResolvedValue([{ id: 'farm-123' }] as never)
+    vi.mocked(prisma.farm.updateMany).mockResolvedValue({ count: 0 })
     vi.mocked(prisma.farm.create).mockResolvedValue(mockFarm as never)
 
     const request = new NextRequest('http://localhost/api/farms/create', {
@@ -140,5 +160,44 @@ describe('POST /api/farms/create', () => {
     expect(data.farm.location).toBe('Καλαμάτα, Μεσσηνία')
     expect(data.farm.treeCount).toBe(100)
     expect(data.farm.oliveVariety).toBe('Κορωνέικη')
+  })
+
+  it('returns 403 when plan farm limit is reached', async () => {
+    const mockUser = {
+      id: 'user-123',
+      clerkId: 'test-clerk-id',
+      email: 'test@example.com',
+      firstName: 'Test',
+      lastName: 'User',
+    }
+
+    vi.mocked(auth).mockResolvedValue({ userId: 'test-clerk-id' } as never)
+    vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser as never)
+    vi.mocked(getUserPlanByClerkId).mockResolvedValue({
+      plan: 'FREE',
+      config: getPlanConfig('FREE'),
+      status: 'ACTIVE',
+      cancelAtPeriodEnd: false,
+      currentPeriodEnd: null,
+      stripeCustomerId: null,
+      stripeSubscriptionId: null,
+    })
+    vi.mocked(prisma.farm.count).mockResolvedValue(1)
+
+    const request = new NextRequest('http://localhost/api/farms/create', {
+      method: 'POST',
+      body: JSON.stringify({
+        name: 'Extra Farm',
+        location: 'Athens',
+        treeCount: '50',
+      }),
+    })
+
+    const response = await POST(request)
+    const data = await response.json()
+
+    expect(response.status).toBe(403)
+    expect(data.error).toContain('όριο ελαιώνων')
+    expect(prisma.farm.create).not.toHaveBeenCalled()
   })
 })

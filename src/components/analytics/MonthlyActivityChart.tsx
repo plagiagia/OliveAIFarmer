@@ -9,6 +9,7 @@ import {
   Tooltip,
   ResponsiveContainer
 } from 'recharts'
+import { CHART } from './chartColors'
 
 interface MonthlyData {
   month: string
@@ -59,36 +60,36 @@ export function MonthlyActivityChart({ data, title = 'Μηνιαία Δραστ�
         <AreaChart data={fullYearData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
           <defs>
             <linearGradient id="colorActivities" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#2E7D32" stopOpacity={0.8}/>
-              <stop offset="95%" stopColor="#2E7D32" stopOpacity={0.1}/>
+              <stop offset="5%" stopColor={CHART.revenue} stopOpacity={0.8}/>
+              <stop offset="95%" stopColor={CHART.revenue} stopOpacity={0.1}/>
             </linearGradient>
             <linearGradient id="colorCosts" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#FF9800" stopOpacity={0.8}/>
-              <stop offset="95%" stopColor="#FF9800" stopOpacity={0.1}/>
+              <stop offset="5%" stopColor={CHART.costs} stopOpacity={0.8}/>
+              <stop offset="95%" stopColor={CHART.costs} stopOpacity={0.1}/>
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+          <CartesianGrid strokeDasharray="3 3" stroke={CHART.grid} />
           <XAxis
             dataKey="month"
-            stroke="#6b7280"
+            stroke={CHART.axis}
             fontSize={12}
           />
           <YAxis
             yAxisId="left"
-            stroke="#2E7D32"
+            stroke={CHART.revenue}
             fontSize={12}
           />
           <YAxis
             yAxisId="right"
             orientation="right"
-            stroke="#FF9800"
+            stroke={CHART.costs}
             fontSize={12}
             tickFormatter={(value) => `€${(value / 1000).toFixed(0)}k`}
           />
           <Tooltip
             contentStyle={{
               backgroundColor: 'white',
-              border: '1px solid #e5e7eb',
+              border: `1px solid ${CHART.grid}`,
               borderRadius: '12px',
               boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
             }}
@@ -103,7 +104,7 @@ export function MonthlyActivityChart({ data, title = 'Μηνιαία Δραστ�
             yAxisId="left"
             type="monotone"
             dataKey="activities"
-            stroke="#2E7D32"
+            stroke={CHART.revenue}
             strokeWidth={2}
             fillOpacity={1}
             fill="url(#colorActivities)"
@@ -112,7 +113,7 @@ export function MonthlyActivityChart({ data, title = 'Μηνιαία Δραστ�
             yAxisId="right"
             type="monotone"
             dataKey="costs"
-            stroke="#FF9800"
+            stroke={CHART.costs}
             strokeWidth={2}
             fillOpacity={1}
             fill="url(#colorCosts)"

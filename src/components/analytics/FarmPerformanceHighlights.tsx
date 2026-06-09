@@ -1,6 +1,7 @@
 'use client'
 
-import { Trophy, TrendingDown, Zap, MapPin } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { MapPin, TrendingDown, Trophy, Zap } from 'lucide-react'
 import Link from 'next/link'
 
 interface FarmPerformance {
@@ -27,12 +28,14 @@ interface FarmPerformanceHighlightsProps {
   title?: string
 }
 
+type HighlightKind = 'best' | 'worst' | 'efficient'
+
 export function FarmPerformanceHighlights({ data, title = 'Απόδοση Ελαιώνων' }: FarmPerformanceHighlightsProps) {
   if (!data.best && !data.worst && !data.mostEfficient) {
     return (
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">{title}</h3>
-        <div className="h-64 flex items-center justify-center text-gray-500">
+      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <h3 className="mb-4 text-lg font-semibold text-gray-900">{title}</h3>
+        <div className="flex h-48 items-center justify-center text-gray-500">
           Δεν υπάρχουν αρκετά δεδομένα για σύγκριση
         </div>
       </div>
@@ -41,148 +44,124 @@ export function FarmPerformanceHighlights({ data, title = 'Απόδοση Ελα
 
   const FarmCard = ({
     farm,
-    type,
+    kind,
     icon: Icon,
-    colorClass,
     label
   }: {
     farm: FarmPerformance
-    type: string
+    kind: HighlightKind
     icon: React.ElementType
-    colorClass: string
     label: string
-  }) => (
-    <Link
-      href={`/dashboard/farms/${farm.farmId}`}
-      className="block bg-white border-2 rounded-xl p-5 hover:shadow-lg transition-all duration-200 group"
-    >
-      <div className="flex items-start justify-between mb-3">
-        <div className={`${colorClass} p-3 rounded-xl`}>
-          <Icon className="w-6 h-6 text-white" />
+  }) => {
+    const primaryMetrics =
+      kind === 'efficient'
+        ? [
+            { label: 'Απόδοση/στρ.', value: `${farm.yieldPerStremma.toFixed(1)} kg` },
+            { label: 'Απόδοση/δέντρο', value: `${farm.yieldPerTree.toFixed(1)} kg` }
+          ]
+        : [
+            { label: 'ROI', value: `${farm.roi.toFixed(1)}%` },
+            {
+              label: 'Κέρδος',
+              value: `€${farm.profit.toLocaleString('el-GR')}`,
+              emphasize: farm.profit < 0
+            }
+          ]
+
+    return (
+      <Link
+        href={`/dashboard/farms/${farm.farmId}`}
+        className="group block rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-shadow hover:border-olive-300 hover:shadow-md"
+      >
+        <div className="mb-3 flex items-start justify-between gap-2">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gray-100 text-gray-600">
+            <Icon className="h-5 w-5" aria-hidden />
+          </div>
+          <span className="rounded-full bg-olive-50 px-2.5 py-1 text-xs font-medium text-olive-800">
+            {label}
+          </span>
         </div>
-        <span className="text-xs font-medium px-3 py-1 bg-gray-100 text-gray-600 rounded-full">
-          {label}
-        </span>
-      </div>
 
-      <h4 className="text-lg font-bold text-gray-900 mb-1 group-hover:text-olive-700 transition-colors flex items-center gap-2">
-        <MapPin className="w-4 h-4" />
-        {farm.farmName}
-      </h4>
+        <h4 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900 transition-colors group-hover:text-olive-800">
+          <MapPin className="h-4 w-4 shrink-0 text-gray-400" aria-hidden />
+          <span className="truncate">{farm.farmName}</span>
+        </h4>
 
-      <div className="grid grid-cols-2 gap-3 mt-4">
-        {type === 'best' && (
-          <>
-            <div>
-              <p className="text-xs text-gray-500">ROI</p>
-              <p className="text-lg font-bold text-green-600">{farm.roi.toFixed(1)}%</p>
+        <div className="grid grid-cols-2 gap-3">
+          {primaryMetrics.map((m) => (
+            <div key={m.label}>
+              <p className="text-xs text-gray-500">{m.label}</p>
+              <p
+                className={cn(
+                  'text-lg font-semibold tabular-nums',
+                  'emphasize' in m && m.emphasize ? 'text-red-700' : 'text-gray-900'
+                )}
+              >
+                {m.value}
+              </p>
             </div>
-            <div>
-              <p className="text-xs text-gray-500">Κέρδος</p>
-              <p className="text-lg font-bold text-green-600">€{farm.profit.toLocaleString('el-GR')}</p>
-            </div>
-          </>
-        )}
+          ))}
+        </div>
 
-        {type === 'worst' && (
-          <>
-            <div>
-              <p className="text-xs text-gray-500">ROI</p>
-              <p className="text-lg font-bold text-red-600">{farm.roi.toFixed(1)}%</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500">Κέρδος</p>
-              <p className="text-lg font-bold text-red-600">€{farm.profit.toLocaleString('el-GR')}</p>
-            </div>
-          </>
-        )}
-
-        {type === 'efficient' && (
-          <>
-            <div>
-              <p className="text-xs text-gray-500">Απόδοση/Στρ.</p>
-              <p className="text-lg font-bold text-blue-600">{farm.yieldPerStremma.toFixed(1)} kg</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500">Απόδοση/Δέντρο</p>
-              <p className="text-lg font-bold text-blue-600">{farm.yieldPerTree.toFixed(1)} kg</p>
-            </div>
-          </>
-        )}
-      </div>
-
-      <div className="mt-4 pt-3 border-t border-gray-100">
-        <div className="grid grid-cols-3 gap-2 text-center text-xs">
+        <div className="mt-4 grid grid-cols-3 gap-2 border-t border-gray-100 pt-3 text-center text-xs">
           <div>
             <p className="text-gray-500">Παραγωγή</p>
-            <p className="font-semibold text-gray-700">{farm.totalYield.toLocaleString('el-GR')} kg</p>
+            <p className="font-medium text-gray-800">{farm.totalYield.toLocaleString('el-GR')} kg</p>
           </div>
           <div>
             <p className="text-gray-500">Έσοδα</p>
-            <p className="font-semibold text-gray-700">€{farm.revenue.toLocaleString('el-GR')}</p>
+            <p className="font-medium text-gray-800">€{farm.revenue.toLocaleString('el-GR')}</p>
           </div>
           <div>
             <p className="text-gray-500">Κόστος</p>
-            <p className="font-semibold text-gray-700">€{farm.costs.toLocaleString('el-GR')}</p>
+            <p className="font-medium text-gray-800">€{farm.costs.toLocaleString('el-GR')}</p>
           </div>
         </div>
-      </div>
 
-      <div className="mt-3 text-xs text-gray-500 flex items-center justify-center gap-1">
-        <span>Κλικ για λεπτομέρειες</span>
-        <span className="group-hover:translate-x-1 transition-transform">→</span>
-      </div>
-    </Link>
-  )
+        <p className="mt-3 text-center text-xs text-gray-500">
+          Λεπτομέρειες ελαιώνα
+          <span className="inline-block transition-transform group-hover:translate-x-0.5" aria-hidden>
+            {' '}
+            →
+          </span>
+        </p>
+      </Link>
+    )
+  }
 
   return (
-    <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-6 shadow-sm border border-gray-100">
-      <h3 className="text-lg font-semibold text-gray-900 mb-6">{title}</h3>
+    <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+      <h3 className="mb-2 text-lg font-semibold text-gray-900">{title}</h3>
+      <p className="mb-6 text-sm text-gray-500">Σύγκριση μεταξύ ελαιώνων σας</p>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {data.best && (
-          <FarmCard
-            farm={data.best}
-            type="best"
-            icon={Trophy}
-            colorClass="bg-gradient-to-br from-yellow-400 to-yellow-500"
-            label="Καλύτερος ROI"
-          />
+          <FarmCard farm={data.best} kind="best" icon={Trophy} label="Καλύτερος ROI" />
         )}
-
         {data.mostEfficient && (
           <FarmCard
             farm={data.mostEfficient}
-            type="efficient"
+            kind="efficient"
             icon={Zap}
-            colorClass="bg-gradient-to-br from-blue-500 to-blue-600"
-            label="Πιο Αποδοτικός"
+            label="Πιο αποδοτικός"
           />
         )}
-
         {data.worst && data.worst.farmId !== data.best?.farmId && (
           <FarmCard
             farm={data.worst}
-            type="worst"
+            kind="worst"
             icon={TrendingDown}
-            colorClass="bg-gradient-to-br from-orange-500 to-red-500"
-            label="Χρειάζεται Προσοχή"
+            label="Χρειάζεται προσοχή"
           />
         )}
       </div>
 
-      {/* Tips Section */}
-      <div className="mt-6 pt-4 border-t border-gray-200">
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-          <p className="text-sm text-blue-900 font-medium mb-2">💡 Συμβουλή</p>
-          <p className="text-xs text-blue-700">
-            Συγκρίνετε τις πρακτικές μεταξύ των ελαιώνων σας για να βελτιώσετε τη συνολική απόδοση.
-            {data.best && data.worst && data.best.farmId !== data.worst.farmId && (
-              <span> Εξετάστε τι κάνει διαφορετικά ο ελαιώνας «{data.best.farmName}» από τον «{data.worst.farmName}».</span>
-            )}
-          </p>
-        </div>
-      </div>
+      {data.best && data.worst && data.best.farmId !== data.worst.farmId && (
+        <p className="mt-6 border-t border-gray-100 pt-4 text-sm text-gray-600">
+          Συγκρίνετε τις πρακτικές μεταξύ «{data.best.farmName}» και «{data.worst.farmName}» για
+          να βελτιώσετε τη συνολική απόδοση.
+        </p>
+      )}
     </div>
   )
 }

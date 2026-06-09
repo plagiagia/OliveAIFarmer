@@ -1,14 +1,10 @@
 'use client'
 
 import {
-  ActivityChart,
-  ActivityHeatmap,
-  CostBreakdownChart,
+  AnalyticsChartsTabs,
+  AnalyticsSummaryHero,
   EfficiencyMetrics,
-  FarmComparisonChart,
-  FarmPerformanceHighlights,
   HarvestChart,
-  MonthlyActivityChart,
   ProfitabilityChart,
   Recommendations,
   StatsCard,
@@ -29,15 +25,22 @@ import {
 import {
   Activity,
   ArrowLeft,
-  Euro,
   MapPin,
+  Package,
   Scale,
-  TreeDeciduous,
-  TrendingUp,
-  Wallet
+  TreeDeciduous
 } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+
+function formatHarvestKg(kg: number): { display: string; full: string } {
+  const full = `${kg.toLocaleString('el-GR')} kg`
+  if (kg >= 1000) {
+    const display = `${(kg / 1000).toLocaleString('el-GR', { maximumFractionDigits: 1 })} τ.`
+    return { display, full }
+  }
+  return { display: full, full }
+}
 
 interface AnalyticsData {
   summary: {
@@ -251,6 +254,8 @@ export default function AnalyticsPage() {
     recommendations
   } = data
 
+  const harvestKg = formatHarvestKg(summary.totalYield)
+
   // Export handlers
   const handleExportFarms = async () => {
     const response = await fetch('/api/export?type=farms')
@@ -277,7 +282,7 @@ export default function AnalyticsPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -291,7 +296,11 @@ export default function AnalyticsPage() {
           <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
             <div>
               <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-2">Αναλύσεις & Στατιστικά</h1>
-              <p className="text-sm sm:text-base text-gray-600">Εξελιγμένη ανάλυση για όλους τους ελαιώνες σας</p>
+              <p className="text-sm sm:text-base text-gray-600">
+                {summary.totalFarms === 1
+                  ? 'Σύνοψη για 1 ελαιώνα'
+                  : `Σύνοψη για ${summary.totalFarms} ελαιώνες`}
+              </p>
             </div>
             <div className="w-full sm:w-auto">
               <ExportDropdown
@@ -302,50 +311,45 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-        {/* Quick Stats Overview */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 sm:gap-4 mb-8">
-          <StatsCard
-            title="Ελαιώνες"
-            value={summary.totalFarms}
-            icon={MapPin}
-            color="green"
-          />
+        <AnalyticsSummaryHero
+          netProfit={summary.netProfit}
+          totalHarvestValue={summary.totalHarvestValue}
+          totalCosts={summary.totalCosts}
+          profitMargin={efficiencyMetrics.profitMargin}
+          profitabilityTimeline={profitabilityTimeline}
+          yearOverYearComparison={yearOverYearComparison}
+        />
+
+        {/* Inventory & activity counts */}
+        <div className="mb-8 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6">
+          <StatsCard title="Ελαιώνες" value={summary.totalFarms} icon={MapPin} />
           <StatsCard
             title="Δέντρα"
             value={summary.totalTrees.toLocaleString('el-GR')}
             icon={TreeDeciduous}
-            color="green"
           />
           <StatsCard
             title="Έκταση"
             value={`${summary.totalArea.toFixed(1)} στρ.`}
             icon={Scale}
-            color="blue"
           />
+          <StatsCard title="Δραστηριότητες" value={summary.totalActivities} icon={Activity} />
           <StatsCard
-            title="Δραστηριότητες"
-            value={summary.totalActivities}
-            icon={Activity}
-            color="purple"
-          />
-          <StatsCard
-            title="Έσοδα"
-            value={`€${summary.totalHarvestValue >= 1000 ? (summary.totalHarvestValue / 1000).toFixed(1) + 'k' : summary.totalHarvestValue.toLocaleString('el-GR')}`}
-            icon={Euro}
-            color="green"
+            title="Συγκομιδή"
+            value={harvestKg.display}
+            valueTitle={harvestKg.full}
+            icon={Package}
             trend={summary.yieldTrend || undefined}
           />
           <StatsCard
-            title="Έξοδα"
-            value={`€${summary.totalCosts >= 1000 ? (summary.totalCosts / 1000).toFixed(1) + 'k' : summary.totalCosts.toLocaleString('el-GR')}`}
-            icon={TrendingUp}
-            color="amber"
-          />
-          <StatsCard
-            title="Κέρδος"
-            value={`€${Math.abs(summary.netProfit) >= 1000 ? (summary.netProfit / 1000).toFixed(1) + 'k' : summary.netProfit.toLocaleString('el-GR')}`}
-            icon={Wallet}
-            color={summary.netProfit >= 0 ? 'green' : 'red'}
+            title="Μέση έκταση"
+            value={
+              summary.totalFarms > 0
+                ? `${(summary.totalArea / summary.totalFarms).toFixed(1)} στρ.`
+                : '—'
+            }
+            icon={Scale}
+            subtitle="ανά ελαιώνα"
           />
         </div>
 
@@ -365,16 +369,19 @@ export default function AnalyticsPage() {
           </ErrorBoundary>
         </div>
 
-        {/* Farm Performance Highlights */}
-        {summary.totalFarms > 1 && (
-          <div className="mb-8">
-            <ErrorBoundary>
-              <FarmPerformanceHighlights data={farmPerformance} />
-            </ErrorBoundary>
-          </div>
-        )}
+        {/* Primary charts — always visible */}
+        <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <ErrorBoundary>
+            <ProfitabilityChart
+              data={profitabilityTimeline}
+              title="Κερδοφορία ανά Έτος"
+            />
+          </ErrorBoundary>
+          <ErrorBoundary>
+            <HarvestChart data={harvestData} title="Παραγωγή & Αξία ανά Έτος" />
+          </ErrorBoundary>
+        </div>
 
-        {/* Year over Year Comparison */}
         {yearOverYearComparison && (
           <div className="mb-8">
             <ErrorBoundary>
@@ -383,140 +390,19 @@ export default function AnalyticsPage() {
           </div>
         )}
 
-        {/* Main Charts Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <ErrorBoundary>
-            <ProfitabilityChart
-              data={profitabilityTimeline}
-              title="Κερδοφορία ανά Έτος"
-            />
-          </ErrorBoundary>
-
-          <ErrorBoundary>
-            <HarvestChart
-              data={harvestData}
-              title="Παραγωγή & Αξία ανά Έτος"
-            />
-          </ErrorBoundary>
-
-          <ErrorBoundary>
-            <CostBreakdownChart
-              data={costBreakdown}
-              title="Κατανομή Κόστους ανά Δραστηριότητα"
-            />
-          </ErrorBoundary>
-
-          <ErrorBoundary>
-            <ActivityChart
-              data={activityData}
-              title="Δραστηριότητες ανά Τύπο"
-            />
-          </ErrorBoundary>
-
-          <ErrorBoundary>
-            <MonthlyActivityChart
-              data={monthlyActivityData}
-              title={`Μηνιαία Δραστηριότητα & Κόστος ${new Date().getFullYear()}`}
-            />
-          </ErrorBoundary>
-
-          <ErrorBoundary>
-            <ActivityHeatmap
-              data={activityHeatmapData}
-              title="Ένταση Δραστηριοτήτων"
-            />
-          </ErrorBoundary>
-
-          {summary.totalFarms > 1 && (
-            <ErrorBoundary>
-              <FarmComparisonChart
-                data={farmComparisonData}
-                title="Σύγκριση Απόδοσης Ελαιώνων"
-              />
-            </ErrorBoundary>
-          )}
+        {/* Secondary charts — tabbed */}
+        <div className="mb-8">
+          <AnalyticsChartsTabs
+            activityData={activityData}
+            monthlyActivityData={monthlyActivityData}
+            costBreakdown={costBreakdown}
+            activityHeatmapData={activityHeatmapData}
+            farmComparisonData={farmComparisonData}
+            farmPerformance={farmPerformance}
+            showFarmsTab={summary.totalFarms > 1}
+            currentYear={new Date().getFullYear()}
+          />
         </div>
-
-        {/* Additional Detailed Insights */}
-        {summary.totalFarms > 0 && (
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <h3 className="text-lg font-semibold text-gray-900 mb-6">Λεπτομερή Στοιχεία</h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {/* Basic Metrics */}
-              <div className="space-y-1">
-                <p className="text-sm text-gray-500">Μέση έκταση ανά ελαιώνα</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {(summary.totalArea / summary.totalFarms).toFixed(1)} <span className="text-base font-normal text-gray-600">στρ.</span>
-                </p>
-              </div>
-
-              <div className="space-y-1">
-                <p className="text-sm text-gray-500">Μέσος αριθμός δέντρων ανά ελαιώνα</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {Math.round(summary.totalTrees / summary.totalFarms)} <span className="text-base font-normal text-gray-600">δέντρα</span>
-                </p>
-              </div>
-
-              <div className="space-y-1">
-                <p className="text-sm text-gray-500">Συνολική παραγωγή</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {summary.totalYield.toLocaleString('el-GR')} <span className="text-base font-normal text-gray-600">kg</span>
-                </p>
-              </div>
-
-              <div className="space-y-1">
-                <p className="text-sm text-gray-500">Περιθώριο κέρδους</p>
-                <p className={`text-2xl font-bold ${efficiencyMetrics.profitMargin >= 40 ? 'text-green-600' :
-                    efficiencyMetrics.profitMargin >= 20 ? 'text-yellow-600' :
-                      'text-red-600'
-                  }`}>
-                  {efficiencyMetrics.profitMargin.toFixed(1)}%
-                </p>
-              </div>
-
-              <div className="space-y-1">
-                <p className="text-sm text-gray-500">Κόστος ανά κιλό</p>
-                <p className={`text-2xl font-bold ${efficiencyMetrics.costPerKg < 1.5 ? 'text-green-600' :
-                    efficiencyMetrics.costPerKg < 2.5 ? 'text-yellow-600' :
-                      'text-red-600'
-                  }`}>
-                  €{efficiencyMetrics.costPerKg.toFixed(2)}
-                </p>
-              </div>
-
-              <div className="space-y-1">
-                <p className="text-sm text-gray-500">Απόδοση ανά δέντρο</p>
-                <p className={`text-2xl font-bold ${efficiencyMetrics.yieldPerTree > 20 ? 'text-green-600' :
-                    efficiencyMetrics.yieldPerTree > 10 ? 'text-yellow-600' :
-                      'text-red-600'
-                  }`}>
-                  {efficiencyMetrics.yieldPerTree.toFixed(1)} <span className="text-base font-normal text-gray-600">kg</span>
-                </p>
-              </div>
-
-              <div className="space-y-1">
-                <p className="text-sm text-gray-500">Απόδοση ανά στρέμμα</p>
-                <p className={`text-2xl font-bold ${efficiencyMetrics.avgYieldPerStremma > 150 ? 'text-green-600' :
-                    efficiencyMetrics.avgYieldPerStremma > 100 ? 'text-yellow-600' :
-                      'text-red-600'
-                  }`}>
-                  {efficiencyMetrics.avgYieldPerStremma.toFixed(0)} <span className="text-base font-normal text-gray-600">kg</span>
-                </p>
-              </div>
-
-              <div className="space-y-1">
-                <p className="text-sm text-gray-500">ROI (Απόδοση Επένδυσης)</p>
-                <p className={`text-2xl font-bold ${efficiencyMetrics.roi > 30 ? 'text-green-600' :
-                    efficiencyMetrics.roi > 15 ? 'text-yellow-600' :
-                      'text-red-600'
-                  }`}>
-                  {efficiencyMetrics.roi.toFixed(1)}%
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Footer Info */}
         <div className="mt-8 text-center text-sm text-gray-500">
