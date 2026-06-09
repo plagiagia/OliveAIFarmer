@@ -1,6 +1,6 @@
 import { getWeatherHistory, prisma } from '@/lib/db'
 import { INACTIVE_FARM_MESSAGE } from '@/lib/farm-activation'
-import { checkRateLimit } from '@/lib/rate-limit'
+import { checkRateLimitAsync } from '@/lib/rate-limit'
 import {
   AIInsight,
   FarmContext,
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const rateLimit = checkRateLimit(`ai:generate:${userId}`, 10, 60 * 60 * 1000)
+    const rateLimit = await checkRateLimitAsync(`ai:generate:${userId}`, 10, 60 * 60 * 1000)
     if (!rateLimit.allowed) {
       return NextResponse.json(
         {

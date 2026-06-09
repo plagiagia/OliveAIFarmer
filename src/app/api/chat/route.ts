@@ -1,6 +1,6 @@
 import { getWeatherHistory, prisma } from '@/lib/db'
 import { INACTIVE_FARM_MESSAGE } from '@/lib/farm-activation'
-import { checkRateLimit } from '@/lib/rate-limit'
+import { checkRateLimitAsync } from '@/lib/rate-limit'
 import { recordAIUsage, checkMonthlyBudget } from '@/lib/ai/usage'
 import { chatRequestSchema } from '@/lib/ai/schemas'
 import {
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
   }
 
   // 30 messages / hour / user is generous for chat use.
-  const rl = checkRateLimit(`ai:chat:${userId}`, 30, 60 * 60 * 1000)
+  const rl = await checkRateLimitAsync(`ai:chat:${userId}`, 30, 60 * 60 * 1000)
   if (!rl.allowed) {
     return new Response(
       JSON.stringify({ error: 'Πάρα πολλά μηνύματα chat. Δοκιμάστε ξανά αργότερα.', retryAfterSeconds: rl.retryAfterSeconds }),

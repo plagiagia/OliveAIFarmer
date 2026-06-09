@@ -22,9 +22,9 @@ export function exportToCSV<T extends object>(
         ? getNestedValue(rowObj, key)
         : rowObj[key]
 
-      formattedRow[col.header] = col.format
-        ? col.format(value, row)
-        : formatValue(value)
+      formattedRow[col.header] = sanitizeForSpreadsheet(
+        col.format ? col.format(value, row) : formatValue(value)
+      )
     })
 
     return formattedRow
@@ -46,6 +46,19 @@ export function exportToCSV<T extends object>(
 
   // Download file
   downloadBlob(blob, `${filename}.csv`)
+}
+
+/**
+ * Excel/LibreOffice execute cells starting with = + - @ (or tab/CR) as
+ * formulas, so user-entered text (notes, titles) could become a formula
+ * injection vector. Prefix such cells with a single quote — except plain
+ * numbers (e.g. negative values), which are safe.
+ */
+function sanitizeForSpreadsheet(value: string): string {
+  if (/^[=+\-@\t\r]/.test(value) && !/^-?\d+(?:[.,]\d+)?$/.test(value)) {
+    return `'${value}`
+  }
+  return value
 }
 
 function getNestedValue(obj: Record<string, unknown>, path: string): unknown {

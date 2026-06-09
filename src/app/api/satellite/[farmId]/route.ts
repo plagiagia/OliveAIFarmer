@@ -9,6 +9,7 @@ import {
 } from '@/lib/satellite'
 import { getUserPlanByClerkId } from '@/lib/subscription'
 import { hasFeature, requiresPlanMessage } from '@/lib/plans'
+import { checkRateLimitAsync } from '@/lib/rate-limit'
 import { auth } from '@clerk/nextjs/server'
 import { SatelliteSource } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
@@ -220,6 +221,15 @@ export async function POST(request: NextRequest, context: RouteContext) {
       return NextResponse.json(
         { error: requiresPlanMessage('PRODUCER', { subject: 'Τα δορυφορικά δεδομένα', verb: 'απαιτούν' }) },
         { status: 403 }
+      )
+    }
+
+    // Each refresh hits the external Copernicus API — keep it bounded per user.
+    const rl = await checkRateLimitAsync(`satellite:refresh:${userId}`, 10, 60 * 60 * 1000)
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: 'Πάρα πολλές ανανεώσεις δορυφορικών δεδομένων. Δοκιμάστε ξανά αργότερα.' },
+        { status: 429, headers: { 'Retry-After': String(rl.retryAfterSeconds) } }
       )
     }
 
