@@ -270,31 +270,37 @@ export default function CalendarActivityModal({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden m-4 flex flex-col">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 sm:p-4">
+      <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-5xl max-h-[92vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
+        {/* Drag handle (mobile bottom sheet) */}
+        <div className="sm:hidden shrink-0 pt-3 flex justify-center" aria-hidden="true">
+          <div className="h-1.5 w-12 rounded-full bg-gray-300" />
+        </div>
+
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 shrink-0">
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 shrink-0">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
               Νέα Δραστηριότητα
             </h2>
-            <p className="text-gray-500 mt-1 flex items-center gap-2">
+            <p className="text-gray-500 mt-1 flex items-center gap-2 text-sm sm:text-base">
               <Calendar className="w-4 h-4" />
               {format(selectedDate, 'EEEE, d MMMM yyyy', { locale: el })}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="touch-target flex items-center justify-center p-2.5 hover:bg-gray-100 rounded-lg transition-colors"
             disabled={isSubmitting}
+            aria-label="Κλείσιμο"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto">
-          <form onSubmit={handleSubmit} className="p-6">
+        <div className="flex-1 overflow-y-auto overscroll-contain">
+          <form onSubmit={handleSubmit} className="p-4 sm:p-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Left Column - Activity Details */}
               <div className="lg:col-span-2 space-y-6">
@@ -367,6 +373,7 @@ export default function CalendarActivityModal({
                     </label>
                     <input
                       type="number"
+                      inputMode="numeric"
                       value={duration}
                       onChange={(e) => setDuration(e.target.value)}
                       className={`w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-olive-500 focus:border-transparent ${
@@ -386,6 +393,7 @@ export default function CalendarActivityModal({
                     </label>
                     <input
                       type="number"
+                      inputMode="decimal"
                       value={cost}
                       onChange={(e) => setCost(e.target.value)}
                       className={`w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-olive-500 focus:border-transparent ${
@@ -606,19 +614,19 @@ export default function CalendarActivityModal({
               </div>
             )}
 
-            {/* Action Buttons */}
-            <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-gray-200">
+            {/* Action Buttons - sticky so the CTA stays reachable on mobile */}
+            <div className="sticky bottom-0 z-10 -mx-4 sm:-mx-6 -mb-4 sm:-mb-6 mt-6 flex justify-end gap-3 border-t border-gray-200 bg-white px-4 sm:px-6 pt-4 pb-safe-4">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-5 py-2.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+                className="flex-1 sm:flex-none px-5 py-3 sm:py-2.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors active:scale-[0.98]"
                 disabled={isSubmitting}
               >
                 Ακύρωση
               </button>
               <button
                 type="submit"
-                className="px-6 py-2.5 bg-gradient-to-r from-olive-600 to-olive-500 hover:from-olive-700 hover:to-olive-600 text-white rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 font-medium"
+                className="flex-1 sm:flex-none justify-center px-6 py-3 sm:py-2.5 bg-gradient-to-r from-olive-600 to-olive-500 hover:from-olive-700 hover:to-olive-600 text-white rounded-xl transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 font-medium"
                 disabled={isSubmitting}
               >
                 {isSubmitting && (

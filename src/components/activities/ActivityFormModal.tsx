@@ -248,24 +248,30 @@ export default function ActivityFormModal({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto m-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 sm:p-4">
+      <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-2xl w-full max-w-4xl max-h-[92vh] sm:max-h-[90vh] overflow-y-auto overscroll-contain">
+        {/* Drag handle (mobile bottom sheet) */}
+        <div className="sm:hidden pt-3 flex justify-center" aria-hidden="true">
+          <div className="h-1.5 w-12 rounded-full bg-gray-300" />
+        </div>
+
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-900">
+        <div className="sticky top-0 z-10 bg-white flex items-center justify-between p-4 sm:p-6 border-b border-gray-200">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
             {activity ? 'Επεξεργασία Δραστηριότητας' : 'Νέα Δραστηριότητα'}
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="touch-target flex items-center justify-center p-2.5 hover:bg-gray-100 rounded-lg transition-colors"
             disabled={isLoading}
+            aria-label="Κλείσιμο"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-6">
           {/* Activity Type */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -344,6 +350,7 @@ export default function ActivityFormModal({
               </label>
               <input
                 type="number"
+                inputMode="numeric"
                 value={formData.duration}
                 onChange={(e) => setFormData(prev => ({ ...prev, duration: e.target.value }))}
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${
@@ -366,6 +373,7 @@ export default function ActivityFormModal({
               </label>
               <input
                 type="number"
+                inputMode="decimal"
                 value={formData.cost}
                 onChange={(e) => setFormData(prev => ({ ...prev, cost: e.target.value }))}
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${
@@ -446,19 +454,19 @@ export default function ActivityFormModal({
             </label>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+          {/* Action Buttons - sticky so the CTA stays reachable on mobile */}
+          <div className="sticky bottom-0 z-10 -mx-4 sm:-mx-6 -mb-4 sm:-mb-6 mt-2 flex justify-end space-x-3 border-t border-gray-200 bg-white px-4 sm:px-6 pt-4 pb-safe-4">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              className="flex-1 sm:flex-none px-4 py-3 sm:py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors active:scale-[0.98]"
               disabled={isLoading}
             >
               Ακύρωση
             </button>
             <button
               type="submit"
-              className="px-6 py-2 bg-green-600 text-white hover:bg-green-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+              className="flex-1 sm:flex-none justify-center px-6 py-3 sm:py-2 bg-green-600 text-white hover:bg-green-700 rounded-lg transition-colors active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
               disabled={isLoading}
             >
               {isLoading && (

@@ -152,7 +152,7 @@ export default function FarmEditModal({ farm, onClose, onSuccess }: FarmEditModa
   const isFormValid = formData.name.trim() && formData.location.trim() && formData.treeCount.trim() && parseInt(formData.treeCount) > 0
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4">
       {showDeleteConfirm && (
         <div
           className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 p-4"
@@ -207,9 +207,14 @@ export default function FarmEditModal({ farm, onClose, onSuccess }: FarmEditModa
         </div>
       )}
 
-      <div className="relative z-0 max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-xl bg-white shadow-2xl">
+      <div className="relative z-0 max-h-[92vh] sm:max-h-[90vh] w-full max-w-4xl overflow-y-auto overscroll-contain rounded-t-2xl sm:rounded-xl bg-white shadow-2xl">
+        {/* Drag handle (mobile bottom sheet) */}
+        <div className="sm:hidden bg-gray-50 pt-3 flex justify-center rounded-t-2xl" aria-hidden="true">
+          <div className="h-1.5 w-12 rounded-full bg-gray-300" />
+        </div>
+
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gray-50 rounded-t-xl">
+        <div className="sticky top-0 z-10 flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 bg-gray-50 sm:rounded-t-xl">
           <div className="flex items-center space-x-3">
             <OliveIcon size="md" className="text-olive-600" />
             <div>
@@ -219,7 +224,8 @@ export default function FarmEditModal({ farm, onClose, onSuccess }: FarmEditModa
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg"
+            className="touch-target flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors p-2.5 hover:bg-gray-100 rounded-lg"
+            aria-label="Κλείσιμο"
           >
             <X className="w-6 h-6" />
           </button>
@@ -239,7 +245,7 @@ export default function FarmEditModal({ farm, onClose, onSuccess }: FarmEditModa
         )}
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Left Column - Form Fields */}
             <div className="space-y-6">
@@ -294,6 +300,7 @@ export default function FarmEditModal({ farm, onClose, onSuccess }: FarmEditModa
                   {/* Area Value Input */}
                   <input
                     type="number"
+                    inputMode="decimal"
                     step="0.1"
                     min="0"
                     value={formData.totalArea}
@@ -332,6 +339,7 @@ export default function FarmEditModal({ farm, onClose, onSuccess }: FarmEditModa
                 </label>
                 <input
                   type="number"
+                  inputMode="numeric"
                   required
                   min="1"
                   value={formData.treeCount}
@@ -351,6 +359,7 @@ export default function FarmEditModal({ farm, onClose, onSuccess }: FarmEditModa
                 </label>
                 <input
                   type="number"
+                  inputMode="numeric"
                   min="0"
                   max="1000"
                   value={formData.treeAge}
@@ -448,8 +457,8 @@ export default function FarmEditModal({ farm, onClose, onSuccess }: FarmEditModa
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-8 mt-8 border-t border-gray-200">
+          {/* Action Buttons - sticky so the CTA stays reachable on mobile */}
+          <div className="sticky bottom-0 z-10 -mx-4 sm:-mx-6 -mb-4 sm:-mb-6 mt-8 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 border-t border-gray-200 bg-white px-4 sm:px-6 pt-4 pb-safe-4">
             {/* Delete Button */}
             <button
               type="button"
@@ -458,7 +467,7 @@ export default function FarmEditModal({ farm, onClose, onSuccess }: FarmEditModa
                 setShowDeleteConfirm(true)
               }}
               disabled={isDeleting}
-              className="flex items-center space-x-2 text-red-600 hover:text-red-700 hover:bg-red-50 px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+              className="flex items-center justify-center sm:justify-start space-x-2 text-red-600 hover:text-red-700 hover:bg-red-50 px-4 py-2.5 rounded-lg transition-colors disabled:opacity-50"
             >
               <Trash2 className="w-4 h-4" />
               <span>Διαγραφή Ελαιώνα</span>
@@ -469,14 +478,14 @@ export default function FarmEditModal({ farm, onClose, onSuccess }: FarmEditModa
               <button
                 type="button"
                 onClick={onClose}
-                className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex-1 sm:flex-none px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors active:scale-[0.98]"
               >
                 Ακύρωση
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting || !isFormValid}
-                className="flex items-center space-x-2 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 sm:flex-none flex items-center justify-center space-x-2 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? (
                   <>

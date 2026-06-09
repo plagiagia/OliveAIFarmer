@@ -164,7 +164,7 @@ function OnboardingView({ user }: { user: User | null }) {
             onClick={() => {
               window.location.href = '/dashboard/farms/new'
             }}
-            className="bg-gradient-to-r from-olive-700 to-olive-600 hover:from-olive-800 hover:to-olive-700 text-white py-3 px-8 rounded-2xl font-semibold transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 flex items-center gap-2 mx-auto"
+            className="bg-gradient-to-r from-olive-700 to-olive-600 hover:from-olive-800 hover:to-olive-700 text-white py-3 px-8 rounded-2xl font-semibold transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] flex items-center gap-2 mx-auto"
           >
             <Plus className="w-5 h-5" />
             Δημιουργήστε τον πρώτο σας ελαιώνα
@@ -314,7 +314,7 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
             {canUseAiGeoponos ? (
               <Link
                 href="/dashboard/ai-geoponos"
-                className="flex-1 sm:flex-none justify-center bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white py-2 px-3 sm:px-4 rounded-xl font-semibold text-sm transition-all duration-200 hover:shadow-lg flex items-center gap-2"
+                className="flex-1 sm:flex-none justify-center bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white py-2.5 sm:py-2 px-3 sm:px-4 rounded-xl font-semibold text-sm transition-all duration-200 hover:shadow-lg active:scale-[0.98] flex items-center gap-2"
               >
                 <Sparkles className="w-4 h-4" />
                 <span className="whitespace-nowrap">AI Γεωπόνος</span>
@@ -324,7 +324,7 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
                 type="button"
                 onClick={() => setShowPricingModal(true)}
                 title="Απαιτείται πλάνο Αγρότης — αναβαθμίστε για πρόσβαση"
-                className="flex-1 sm:flex-none justify-center bg-gray-100 border border-gray-200 text-gray-500 opacity-75 hover:opacity-90 py-2 px-3 sm:px-4 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center gap-2 cursor-pointer"
+                className="flex-1 sm:flex-none justify-center bg-gray-100 border border-gray-200 text-gray-500 opacity-75 hover:opacity-90 py-2.5 sm:py-2 px-3 sm:px-4 rounded-xl font-semibold text-sm transition-all duration-200 active:scale-[0.98] flex items-center gap-2 cursor-pointer"
               >
                 <Lock className="w-4 h-4" />
                 <span className="whitespace-nowrap">AI Γεωπόνος</span>
@@ -332,7 +332,7 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
             )}
             <Link
               href="/dashboard/analytics"
-              className="flex-1 sm:flex-none justify-center bg-white border border-gray-200 hover:border-olive-300 text-gray-700 hover:text-olive-700 py-2 px-3 sm:px-4 rounded-xl font-medium text-sm transition-all duration-200 hover:shadow-md flex items-center gap-2"
+              className="flex-1 sm:flex-none justify-center bg-white border border-gray-200 hover:border-olive-300 text-gray-700 hover:text-olive-700 py-2.5 sm:py-2 px-3 sm:px-4 rounded-xl font-medium text-sm transition-all duration-200 hover:shadow-md active:scale-[0.98] flex items-center gap-2"
             >
               <BarChart3 className="w-4 h-4" />
               <span className="whitespace-nowrap">Αναλύσεις</span>
@@ -342,7 +342,7 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
                 onClick={() => {
                   window.location.href = '/dashboard/farms/new'
                 }}
-                className="w-full sm:w-auto justify-center bg-gradient-to-r from-olive-700 to-olive-600 hover:from-olive-800 hover:to-olive-700 text-white py-2 px-3 sm:px-4 rounded-xl font-semibold text-sm transition-all duration-200 hover:shadow-lg flex items-center gap-2"
+                className="w-full sm:w-auto justify-center bg-gradient-to-r from-olive-700 to-olive-600 hover:from-olive-800 hover:to-olive-700 text-white py-2.5 sm:py-2 px-3 sm:px-4 rounded-xl font-semibold text-sm transition-all duration-200 hover:shadow-lg active:scale-[0.98] flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
                 <span className="whitespace-nowrap">Νέος Ελαιώνας</span>
@@ -426,20 +426,20 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
                 <div className="relative">
                   <button
                     onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-                    className={`p-2 rounded-lg transition-colors ${activityTypeFilter !== 'ALL'
+                    className={`touch-target flex items-center justify-center p-2.5 rounded-lg transition-colors active:scale-95 ${activityTypeFilter !== 'ALL'
                         ? 'bg-olive-100 text-olive-700'
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                       }`}
                     title="Φίλτρο δραστηριοτήτων"
                   >
-                    <Filter className="w-4 h-4" />
+                    <Filter className="w-5 h-5" />
                   </button>
 
                   {showFilterDropdown && (
                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-20">
                       <button
                         onClick={() => { setActivityTypeFilter('ALL'); setShowFilterDropdown(false) }}
-                        className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 ${activityTypeFilter === 'ALL' ? 'text-olive-700 font-medium' : 'text-gray-700'
+                        className={`w-full px-4 py-2.5 text-left text-sm hover:bg-gray-50 ${activityTypeFilter === 'ALL' ? 'text-olive-700 font-medium' : 'text-gray-700'
                           }`}
                       >
                         Όλα
@@ -448,7 +448,7 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
                         <button
                           key={type}
                           onClick={() => { setActivityTypeFilter(type as ActivityType); setShowFilterDropdown(false) }}
-                          className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 ${activityTypeFilter === type ? 'text-olive-700 font-medium' : 'text-gray-700'
+                          className={`w-full px-4 py-2.5 text-left text-sm hover:bg-gray-50 flex items-center gap-2 ${activityTypeFilter === type ? 'text-olive-700 font-medium' : 'text-gray-700'
                             }`}
                         >
                           <span>{icon}</span>
@@ -497,6 +497,21 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
         </div>
       </div>
 
+      {/* Quick-add activity FAB (mobile only) */}
+      {activeFarms.length > 0 && (
+        <button
+          type="button"
+          onClick={() => {
+            setSelectedDate(new Date())
+            setShowActivityModal(true)
+          }}
+          aria-label="Νέα δραστηριότητα"
+          className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-r from-olive-700 to-olive-600 text-white shadow-lg shadow-olive-700/30 transition-transform active:scale-90 md:hidden"
+        >
+          <Plus className="h-7 w-7" />
+        </button>
+      )}
+
       {/* Edit Modal */}
       {editingFarm && (
         <FarmEditModal
@@ -536,7 +551,7 @@ function FarmCard({ farm, onEdit: _onEdit }: { farm: Farm; onEdit: (farm: Farm |
 
   return (
     <div
-      className={`rounded-2xl shadow-sm transition-all duration-200 overflow-hidden group ${
+      className={`rounded-2xl shadow-sm transition-all duration-200 overflow-hidden group active:scale-[0.99] ${
         isInactive
           ? 'bg-gray-50 border border-gray-200 opacity-75 cursor-pointer'
           : 'bg-white hover:shadow-md cursor-pointer'
@@ -571,15 +586,15 @@ function FarmCard({ farm, onEdit: _onEdit }: { farm: Farm; onEdit: (farm: Farm |
           </div>
         )}
 
-        <h3 className={`text-xl font-bold mb-2 transition-colors ${
+        <h3 className={`text-xl font-bold mb-2 transition-colors line-clamp-2 break-words ${
           isInactive ? 'text-gray-500' : 'text-gray-900 group-hover:text-olive-700'
         }`}>
           {farm.name}
         </h3>
 
-        <div className="flex items-center text-gray-600 mb-4">
-          <MapPin className="w-4 h-4 mr-2" />
-          <span className="text-sm">{farm.location}</span>
+        <div className="flex items-center text-gray-600 mb-4 min-w-0">
+          <MapPin className="w-4 h-4 mr-2 flex-shrink-0" />
+          <span className="text-sm truncate">{farm.location}</span>
         </div>
 
         {farm.totalArea && (

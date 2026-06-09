@@ -80,7 +80,7 @@ export default function ActivityCard({
     <div className={`bg-white rounded-xl shadow-sm border transition-all duration-200 hover:shadow-md ${
       activity.completed ? 'border-green-200 bg-green-50/30' : 'border-gray-200'
     }`}>
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center space-x-3">
@@ -89,12 +89,12 @@ export default function ActivityCard({
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <h3 className="text-lg font-semibold text-gray-900">{activity.title}</h3>
+                <h3 className="text-lg font-semibold text-gray-900 break-words">{activity.title}</h3>
                 {!readOnly && (
                   <button
                     onClick={handleToggleComplete}
                     disabled={isUpdating || isLoading}
-                    className={`transition-colors ${
+                    className={`p-2 -m-1 rounded-full transition-colors ${
                       activity.completed 
                         ? 'text-green-600 hover:text-green-700' 
                         : 'text-gray-400 hover:text-green-600'
@@ -129,17 +129,18 @@ export default function ActivityCard({
           <div className="relative">
             <button
               onClick={() => setShowMenu(!showMenu)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="touch-target flex items-center justify-center p-2.5 hover:bg-gray-100 rounded-lg transition-colors"
               disabled={isLoading}
+              aria-label="Περισσότερες ενέργειες"
             >
-              <MoreVertical className="w-4 h-4 text-gray-500" />
+              <MoreVertical className="w-5 h-5 text-gray-500" />
             </button>
 
             {showMenu && (
               <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[150px]">
                 <button
                   onClick={handleEdit}
-                  className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  className="w-full flex items-center space-x-2 px-3 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                   disabled={isLoading}
                 >
                   <Edit className="w-4 h-4" />
@@ -147,7 +148,7 @@ export default function ActivityCard({
                 </button>
                 <button
                   onClick={handleDelete}
-                  className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                  className="w-full flex items-center space-x-2 px-3 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
                   disabled={isLoading}
                 >
                   <Trash2 className="w-4 h-4" />

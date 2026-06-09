@@ -99,7 +99,26 @@ export function EfficiencyMetrics({ data, title = 'Δείκτες Απόδοση
         Σύγκριση με τυπικά όρια για ελαιοπαραγωγή στην Ελλάδα
       </p>
 
-      <div className="mt-6 overflow-x-auto">
+      {/* Mobile: stacked cards instead of a table */}
+      <div className="mt-6 space-y-3 sm:hidden">
+        {rows.map((row) => (
+          <div key={row.label} className="rounded-xl border border-gray-100 bg-gray-50/60 p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="font-medium text-gray-900">{row.label}</p>
+                <p className="mt-0.5 text-xs text-gray-500">{row.hint}</p>
+              </div>
+              <p className="shrink-0 text-lg font-semibold tabular-nums text-gray-900">{row.value}</p>
+            </div>
+            <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">
+              <StatusDot status={row.status} />
+              <span>{statusLabel[row.status]}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-6 hidden overflow-x-auto sm:block">
         <table className="w-full min-w-[320px] text-sm">
           <thead>
             <tr className="border-b border-gray-200 text-left text-xs font-medium uppercase tracking-wide text-gray-500">

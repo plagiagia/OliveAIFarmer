@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { OfflineIndicator } from '@/components/ui/OfflineIndicator'
 import BrandLogo from '@/components/ui/BrandLogo'
+import BottomNav from '@/components/navigation/BottomNav'
 import UserMenuButton from '@/components/auth/UserMenuButton'
 import Link from 'next/link'
 
@@ -72,7 +73,7 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="el" className={inter.variable}>
         <head>
-          <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
+          <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes, viewport-fit=cover" />
           <link rel="icon" href="/images/logo-monogram.png" type="image/png" />
           <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         </head>
@@ -84,7 +85,7 @@ export default function RootLayout({
           
           {/* Show app content when signed in */}
           <SignedIn>
-            <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+            <header className="bg-white border-b border-gray-200 sticky top-0 z-50 pt-safe">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-16">
                   <Link href="/dashboard" className="flex items-center space-x-2 sm:space-x-3 text-olive-800 hover:text-olive-900 transition-colors">
@@ -96,6 +97,7 @@ export default function RootLayout({
               </div>
             </header>
             {children}
+            <BottomNav />
             <OfflineIndicator />
           </SignedIn>
         </body>
