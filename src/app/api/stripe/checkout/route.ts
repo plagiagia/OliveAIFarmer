@@ -8,6 +8,10 @@ import Stripe from 'stripe'
 const STRIPE_NOT_CONFIGURED_MSG =
   'Το Stripe δεν είναι ρυθμισμένο. Προσθέστε έγκυρο STRIPE_SECRET_KEY από το Stripe Dashboard στο .env.local και κάντε restart τον dev server.'
 
+// Plans purchasable via self-serve checkout. VIEWER_SEAT is an add-on price,
+// not a plan, and MILL is enterprise-only — neither may be checked out here.
+const SELF_SERVE_PLANS = ['GROWER', 'PRODUCER'] as const satisfies readonly Plan[]
+
 // POST /api/stripe/checkout
 // Body: { plan: Plan, returnUrl?: string }
 export async function POST(req: NextRequest) {
@@ -31,6 +35,10 @@ export async function POST(req: NextRequest) {
   // Mill is enterprise-only — not available for self-serve checkout
   if (plan === 'MILL') {
     return NextResponse.json({ error: 'Το πλάνο Ελαιουργείο δεν είναι διαθέσιμο online.' }, { status: 400 })
+  }
+
+  if (!SELF_SERVE_PLANS.includes(plan as (typeof SELF_SERVE_PLANS)[number])) {
+    return NextResponse.json({ error: 'Μη έγκυρο πλάνο.' }, { status: 400 })
   }
 
   const priceId = STRIPE_PRICE_IDS[plan as keyof typeof STRIPE_PRICE_IDS]

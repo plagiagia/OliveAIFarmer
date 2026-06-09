@@ -64,6 +64,23 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ received: true })
 }
 
+// Since Stripe API 2025-03-31 (Basil) current_period_start/end live on the
+// subscription item, not the subscription. Fall back to the legacy top-level
+// fields for webhook endpoints pinned to older API versions.
+function getBillingPeriod(stripeSubscription: Stripe.Subscription): {
+  periodStart: Date | null
+  periodEnd: Date | null
+} {
+  const item = stripeSubscription.items.data[0] as unknown as Record<string, number> | undefined
+  const legacy = stripeSubscription as unknown as Record<string, number>
+  const start = item?.['current_period_start'] ?? legacy['current_period_start']
+  const end = item?.['current_period_end'] ?? legacy['current_period_end']
+  return {
+    periodStart: start ? new Date(start * 1000) : null,
+    periodEnd: end ? new Date(end * 1000) : null,
+  }
+}
+
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const userId = session.metadata?.userId
   if (!userId) return
@@ -74,10 +91,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
   const stripeSubscription = await stripe.subscriptions.retrieve(stripeSubscriptionId)
   const priceId = stripeSubscription.items.data[0]?.price.id ?? null
-  // Billing period fields may be absent in newer Stripe API versions
-  const sub = stripeSubscription as unknown as Record<string, number>
-  const periodStart = sub['current_period_start'] ? new Date(sub['current_period_start'] * 1000) : null
-  const periodEnd = sub['current_period_end'] ? new Date(sub['current_period_end'] * 1000) : null
+  const { periodStart, periodEnd } = getBillingPeriod(stripeSubscription)
 
   await prisma.subscription.upsert({
     where: { userId },
@@ -128,14 +142,14 @@ async function handleSubscriptionUpdated(stripeSubscription: Stripe.Subscription
     paused: 'PAST_DUE',
   }
 
-  const updSub = stripeSubscription as unknown as Record<string, number>
+  const { periodStart, periodEnd } = getBillingPeriod(stripeSubscription)
   await prisma.subscription.update({
     where: { stripeSubscriptionId: stripeSubId },
     data: {
       plan,
       status: statusMap[stripeSubscription.status] ?? 'ACTIVE',
-      currentPeriodStart: updSub['current_period_start'] ? new Date(updSub['current_period_start'] * 1000) : undefined,
-      currentPeriodEnd: updSub['current_period_end'] ? new Date(updSub['current_period_end'] * 1000) : undefined,
+      currentPeriodStart: periodStart ?? undefined,
+      currentPeriodEnd: periodEnd ?? undefined,
       cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end,
       stripePriceId: stripeSubscription.items.data[0]?.price.id ?? null,
     },
@@ -167,7 +181,14 @@ async function handleSubscriptionDeleted(stripeSubscription: Stripe.Subscription
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
-  const stripeSubId = (invoice as unknown as { subscription?: string }).subscription ?? null
+  // Since Stripe API 2025-03-31 (Basil) the subscription reference lives at
+  // invoice.parent.subscription_details.subscription; keep the legacy
+  // top-level invoice.subscription as a fallback for older API versions.
+  const subRef =
+    invoice.parent?.subscription_details?.subscription ??
+    (invoice as unknown as { subscription?: string | Stripe.Subscription }).subscription ??
+    null
+  const stripeSubId = typeof subRef === 'string' ? subRef : subRef?.id ?? null
   if (!stripeSubId) return
 
   await prisma.subscription.updateMany({
