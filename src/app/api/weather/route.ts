@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getWeatherIntelligence } from '@/lib/weather'
 import { prisma, saveWeatherRecord } from '@/lib/db'
 import { hasFeature } from '@/lib/plans'
-import { checkRateLimit } from '@/lib/rate-limit'
+import { checkRateLimitAsync } from '@/lib/rate-limit'
 import { getUserPlanByClerkId } from '@/lib/subscription'
 import { auth } from '@clerk/nextjs/server'
 
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 60 requests per minute per user.
-    const rateLimit = checkRateLimit(`weather:${userId}`, 60, 60_000)
+    const rateLimit = await checkRateLimitAsync(`weather:${userId}`, 60, 60_000)
     if (!rateLimit.allowed) {
       return NextResponse.json(
         {

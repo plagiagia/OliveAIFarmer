@@ -62,6 +62,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'At least one farm is required' }, { status: 400 })
     }
 
+    if (farmIds.length > 100 || farmIds.some((id) => typeof id !== 'string')) {
+      return NextResponse.json({ error: 'Invalid farm list' }, { status: 400 })
+    }
+
     if (!type || !title || !date) {
       return NextResponse.json({ error: 'Type, title, and date are required' }, { status: 400 })
     }

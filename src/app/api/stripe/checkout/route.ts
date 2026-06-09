@@ -20,7 +20,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: STRIPE_NOT_CONFIGURED_MSG }, { status: 503 })
   }
 
-  const body = await req.json()
+  let body: unknown
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
+  }
   const { plan, returnUrl } = body as { plan: Plan; returnUrl?: string }
 
   // Mill is enterprise-only — not available for self-serve checkout
@@ -51,8 +56,12 @@ export async function POST(req: NextRequest) {
   }
 
   const origin = req.headers.get('origin') ?? process.env.NEXT_PUBLIC_APP_URL ?? ''
-  const successUrl = returnUrl
-    ? `${origin}${returnUrl}`
+  // Only accept same-origin relative paths; anything else (e.g. "@evil.com",
+  // "//evil.com") could turn the Stripe success_url into an open redirect.
+  const safeReturnPath =
+    typeof returnUrl === 'string' && /^\/(?![\/\\])/.test(returnUrl) ? returnUrl : null
+  const successUrl = safeReturnPath
+    ? `${origin}${safeReturnPath}`
     : `${origin}/dashboard?upgrade=success`
   const cancelUrl = `${origin}/pricing`
 

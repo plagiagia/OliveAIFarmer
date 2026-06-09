@@ -5,7 +5,7 @@ import {
   getCurrentSeason,
   AI_MODEL,
 } from '@/lib/openai'
-import { checkRateLimit } from '@/lib/rate-limit'
+import { checkRateLimitAsync } from '@/lib/rate-limit'
 import { recordAIUsage, checkMonthlyBudget } from '@/lib/ai/usage'
 import { ruleBasedDashboardInsights } from '@/lib/ai/fallback'
 import { getUserPlanByClerkId } from '@/lib/subscription'
@@ -154,7 +154,7 @@ export async function POST() {
       )
     }
 
-    const rateLimit = checkRateLimit(`ai:dashboard:${userId}`, 6, 60 * 60 * 1000)
+    const rateLimit = await checkRateLimitAsync(`ai:dashboard:${userId}`, 6, 60 * 60 * 1000)
     if (!rateLimit.allowed) {
       return NextResponse.json(
         {
