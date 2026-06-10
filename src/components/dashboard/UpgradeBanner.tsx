@@ -2,18 +2,14 @@
 
 import { usePlan } from '@/hooks/usePlan'
 import type { Plan } from '@/lib/plans'
-import { formatMonthlyPrice, PLANS } from '@/lib/plans'
+import { formatAnnualPrice, PLANS } from '@/lib/plans'
 import { ArrowUpRight, X } from 'lucide-react'
 import { useState } from 'react'
 
 const UPGRADE_HINTS: Partial<Record<Plan, { desc: string; target: Plan }>> = {
   FREE: {
-    desc: 'Ξεκλειδώστε AI Γεωπόνο, ειδοποιήσεις Δάκου και εξαγωγή PDF.',
+    desc: 'Ξεκλειδώστε ειδοποιήσεις Δάκου, AI Γεωπόνο και εξαγωγή PDF.',
     target: 'GROWER',
-  },
-  GROWER: {
-    desc: 'Αποκτήστε δορυφορικό NDVI, κόστος ανά λίτρο και θέσεις απόδημων.',
-    target: 'PRODUCER',
   },
 }
 
@@ -37,7 +33,7 @@ export default function UpgradeBanner() {
           onClick={() => upgrade(hint.target)}
           className="flex items-center gap-1.5 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-olive-800 hover:bg-olive-50 transition-colors"
         >
-          {formatMonthlyPrice(target.priceMonthly)} <ArrowUpRight className="h-4 w-4" />
+          {formatAnnualPrice(target.priceAnnual)} <ArrowUpRight className="h-4 w-4" />
         </button>
         <button
           onClick={() => setDismissed(true)}

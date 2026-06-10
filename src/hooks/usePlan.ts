@@ -1,6 +1,6 @@
 'use client'
 
-import type { Plan, PlanConfig } from '@/lib/plans'
+import type { BillingInterval, Plan, PlanConfig } from '@/lib/plans'
 import { getPlanConfig, hasFeature } from '@/lib/plans'
 import { useEffect, useState } from 'react'
 
@@ -32,7 +32,7 @@ const DEFAULT_STATE: PlanState = {
  *
  * Usage:
  *   const { plan, config, can } = usePlan()
- *   if (!can('satellite')) return <UpgradePrompt feature="satellite" />
+ *   if (!can('aiGeoponos')) return <UpgradePrompt feature="aiGeoponos" />
  */
 export function usePlan() {
   const [state, setState] = useState<PlanState>(DEFAULT_STATE)
@@ -64,13 +64,13 @@ export function usePlan() {
   const can = (feature: Parameters<typeof hasFeature>[1]) =>
     hasFeature(state.plan, feature)
 
-  /** Redirect to Stripe checkout for a given plan. */
-  const upgrade = async (plan: Plan): Promise<UpgradeResult> => {
+  /** Redirect to Stripe checkout for a given plan (annual by default). */
+  const upgrade = async (plan: Plan, interval: BillingInterval = 'year'): Promise<UpgradeResult> => {
     try {
       const res = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan }),
+        body: JSON.stringify({ plan, interval }),
       })
       const data = (await res.json()) as { url?: string; error?: string }
       if (res.ok && data.url) {

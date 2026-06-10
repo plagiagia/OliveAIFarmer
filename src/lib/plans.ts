@@ -2,28 +2,30 @@
  * OliveIQ SaaS plan definitions.
  * Single source of truth for plan limits and feature flags.
  * Used by both server-side enforcement (API routes) and client-side gating (UI).
+ *
+ * Two tiers only:
+ *   FREE   — the digital field logbook (1 grove, activities, harvests, weather)
+ *   GROWER — "Pro": δάκος alerts, AI Γεωπόνος, unlimited groves, PDF logbook export
+ *
+ * Pricing is annual-first: olive income is seasonal and lumpy, so the paid
+ * tier is framed as a per-season price with a monthly option.
  */
 
-export type Plan = 'FREE' | 'GROWER' | 'PRODUCER' | 'MILL'
+export type Plan = 'FREE' | 'GROWER'
 
 export interface PlanConfig {
   name: string
   nameEl: string // Greek name
   priceMonthly: number // EUR, 0 = free
+  priceAnnual: number // EUR per year, 0 = free
   maxFarms: number // -1 = unlimited
   maxTreesTotal: number // -1 = unlimited
-  maxViewerSeats: number // 0 = not allowed; -1 = unlimited
   features: {
-    aiGeoponos: boolean // AI agronomist chat
-    satellite: boolean // Sentinel-2 NDVI
-    oliveFlyAlerts: boolean // Βακτήριο/Δάκος outbreak alerts
+    aiGeoponos: boolean // AI agronomist insights
+    oliveFlyAlerts: boolean // Δάκος / peacock-spot risk alerts
     costPerLiter: boolean // Oil cost & yield reporting
     multiGrove: boolean // More than 1 farm
-    agronomistSharing: boolean // Invite agronomist collaborator
-    exportPdf: boolean // PDF export
-    millRollup: boolean // Multi-producer mill aggregation
-    traceability: boolean // Traceability certificate export
-    viewerSeats: boolean // Diaspora viewer add-on
+    exportPdf: boolean // PDF logbook export (OPEKEPE-ready)
   }
 }
 
@@ -32,88 +34,46 @@ export const PLANS: Record<Plan, PlanConfig> = {
     name: 'Free',
     nameEl: 'Δωρεάν',
     priceMonthly: 0,
+    priceAnnual: 0,
     maxFarms: 1,
     maxTreesTotal: -1,
-    maxViewerSeats: 0,
     features: {
       aiGeoponos: false,
-      satellite: false,
       oliveFlyAlerts: false,
       costPerLiter: false,
       multiGrove: false,
-      agronomistSharing: false,
       exportPdf: false,
-      millRollup: false,
-      traceability: false,
-      viewerSeats: false,
     },
   },
 
   GROWER: {
-    name: 'Small Grove',
-    nameEl: 'Μικρός Ελαιώνας',
-    priceMonthly: 14,
-    maxFarms: 3,
-    maxTreesTotal: -1,
-    maxViewerSeats: 0,
-    features: {
-      aiGeoponos: true,
-      satellite: false,
-      oliveFlyAlerts: true,
-      costPerLiter: false,
-      multiGrove: false,
-      agronomistSharing: false,
-      exportPdf: true,
-      millRollup: false,
-      traceability: false,
-      viewerSeats: false,
-    },
-  },
-
-  PRODUCER: {
-    name: 'Producer',
-    nameEl: 'Παραγωγός',
-    priceMonthly: 34,
+    name: 'Pro',
+    nameEl: 'Pro',
+    priceMonthly: 6,
+    priceAnnual: 49,
     maxFarms: -1,
     maxTreesTotal: -1,
-    maxViewerSeats: -1,
     features: {
       aiGeoponos: true,
-      satellite: true,
       oliveFlyAlerts: true,
       costPerLiter: true,
       multiGrove: true,
-      agronomistSharing: true,
       exportPdf: true,
-      millRollup: false,
-      traceability: false,
-      viewerSeats: true,
-    },
-  },
-
-  MILL: {
-    name: 'Mill / Coop',
-    nameEl: 'Ελαιουργείο / Συνεταιρισμός',
-    priceMonthly: 149,
-    maxFarms: -1,
-    maxTreesTotal: -1,
-    maxViewerSeats: -1,
-    features: {
-      aiGeoponos: true,
-      satellite: true,
-      oliveFlyAlerts: true,
-      costPerLiter: true,
-      multiGrove: true,
-      agronomistSharing: true,
-      exportPdf: true,
-      millRollup: true,
-      traceability: true,
-      viewerSeats: true,
     },
   },
 }
 
-export const VIEWER_SEAT_PRICE_MONTHLY = 9 // EUR per seat per month
+/** Billing interval for the paid tier. Annual is the promoted default. */
+export type BillingInterval = 'year' | 'month'
+
+/**
+ * Normalize any stored/legacy plan value to the current two-tier ladder.
+ * Legacy PRODUCER/MILL subscribers keep paid features as GROWER.
+ */
+export function normalizePlan(value: string | null | undefined): Plan {
+  if (value === 'GROWER' || value === 'PRODUCER' || value === 'MILL') return 'GROWER'
+  return 'FREE'
+}
 
 /** Returns the config for a given plan (defaults to FREE). */
 export function getPlanConfig(plan: Plan | null | undefined): PlanConfig {
@@ -156,11 +116,16 @@ export function formatMonthlyPrice(priceMonthly: number): string {
   return priceMonthly === 0 ? 'Δωρεάν' : `€${priceMonthly}/μήνα`
 }
 
+/** Formatted annual price for UI (Greek). */
+export function formatAnnualPrice(priceAnnual: number): string {
+  return priceAnnual === 0 ? 'Δωρεάν' : `€${priceAnnual}/έτος`
+}
+
 /** User-facing message when a feature requires a minimum plan tier. */
 export function requiresPlanMessage(
   minPlan: Plan,
   options: { subject: string; verb?: 'απαιτεί' | 'απαιτούν' }
 ): string {
   const verb = options.verb ?? 'απαιτεί'
-  return `${options.subject} ${verb} πλάνο ${planLabel(minPlan)} ή ανώτερο.`
+  return `${options.subject} ${verb} πλάνο ${planLabel(minPlan)}.`
 }

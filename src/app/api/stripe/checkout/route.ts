@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/db'
-import type { Plan } from '@/lib/plans'
-import { isStripeSecretKeyConfigured, stripe, STRIPE_PRICE_IDS } from '@/lib/stripe'
+import type { BillingInterval, Plan } from '@/lib/plans'
+import { getGrowerPriceId, isStripeSecretKeyConfigured, stripe } from '@/lib/stripe'
 import { auth } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
@@ -8,12 +8,9 @@ import Stripe from 'stripe'
 const STRIPE_NOT_CONFIGURED_MSG =
   'Το Stripe δεν είναι ρυθμισμένο. Προσθέστε έγκυρο STRIPE_SECRET_KEY από το Stripe Dashboard στο .env.local και κάντε restart τον dev server.'
 
-// Plans purchasable via self-serve checkout. VIEWER_SEAT is an add-on price,
-// not a plan, and MILL is enterprise-only — neither may be checked out here.
-const SELF_SERVE_PLANS = ['GROWER', 'PRODUCER'] as const satisfies readonly Plan[]
-
 // POST /api/stripe/checkout
-// Body: { plan: Plan, returnUrl?: string }
+// Body: { plan: 'GROWER', interval?: 'year' | 'month', returnUrl?: string }
+// Annual is the promoted default; monthly is offered as a fallback.
 export async function POST(req: NextRequest) {
   const { userId } = await auth()
   if (!userId) {
@@ -30,26 +27,25 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
   }
-  const { plan, returnUrl } = body as { plan: Plan; returnUrl?: string }
-
-  // Mill is enterprise-only — not available for self-serve checkout
-  if (plan === 'MILL') {
-    return NextResponse.json({ error: 'Το πλάνο Ελαιουργείο δεν είναι διαθέσιμο online.' }, { status: 400 })
+  const { plan, interval, returnUrl } = body as {
+    plan: Plan
+    interval?: BillingInterval
+    returnUrl?: string
   }
 
-  if (!SELF_SERVE_PLANS.includes(plan as (typeof SELF_SERVE_PLANS)[number])) {
+  if (plan !== 'GROWER') {
     return NextResponse.json({ error: 'Μη έγκυρο πλάνο.' }, { status: 400 })
   }
 
-  const priceId = STRIPE_PRICE_IDS[plan as keyof typeof STRIPE_PRICE_IDS]
+  // Annual is the default; fall back to monthly if no annual price is configured.
+  const requestedInterval: BillingInterval = interval === 'month' ? 'month' : 'year'
+  let priceId = getGrowerPriceId(requestedInterval)
+  if (!priceId && requestedInterval === 'year') {
+    priceId = getGrowerPriceId('month')
+  }
   if (!priceId) {
     return NextResponse.json(
-      {
-        error:
-          plan === 'FREE'
-            ? 'Μη έγκυρο πλάνο.'
-            : 'Η online πληρωμή δεν είναι διαθέσιμη αυτή τη στιγμή. Επικοινωνήστε με την υποστήριξη.',
-      },
+      { error: 'Η online πληρωμή δεν είναι διαθέσιμη αυτή τη στιγμή. Επικοινωνήστε με την υποστήριξη.' },
       { status: 503 },
     )
   }

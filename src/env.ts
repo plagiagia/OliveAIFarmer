@@ -48,17 +48,11 @@ const serverSchema = z.object({
   STRIPE_SECRET_KEY: requiredInProd(z.string().min(1)),
   STRIPE_WEBHOOK_SECRET: requiredInProd(z.string().min(1)),
   STRIPE_PRICE_GROWER: z.string().optional(),
-  STRIPE_PRICE_PRODUCER: z.string().optional(),
-  STRIPE_PRICE_MILL: z.string().optional(),
-  STRIPE_PRICE_VIEWER_SEAT: z.string().optional(),
+  STRIPE_PRICE_GROWER_ANNUAL: z.string().optional(),
 
   // Upstash REST (optional distributed rate limiter; falls back to in-memory).
   UPSTASH_REDIS_REST_URL: z.string().url().optional(),
   UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
-
-  // Copernicus (satellite)
-  COPERNICUS_CLIENT_ID: requiredInProd(z.string().min(1)),
-  COPERNICUS_CLIENT_SECRET: requiredInProd(z.string().min(1)),
 
   // Dev-only escape hatch for cron auth
   ALLOW_INSECURE_CRON: z.string().optional(),
@@ -85,13 +79,9 @@ const parsed = merged.safeParse({
   STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
   STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
   STRIPE_PRICE_GROWER: process.env.STRIPE_PRICE_GROWER,
-  STRIPE_PRICE_PRODUCER: process.env.STRIPE_PRICE_PRODUCER,
-  STRIPE_PRICE_MILL: process.env.STRIPE_PRICE_MILL,
-  STRIPE_PRICE_VIEWER_SEAT: process.env.STRIPE_PRICE_VIEWER_SEAT,
+  STRIPE_PRICE_GROWER_ANNUAL: process.env.STRIPE_PRICE_GROWER_ANNUAL,
   UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
   UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
-  COPERNICUS_CLIENT_ID: process.env.COPERNICUS_CLIENT_ID,
-  COPERNICUS_CLIENT_SECRET: process.env.COPERNICUS_CLIENT_SECRET,
   ALLOW_INSECURE_CRON: process.env.ALLOW_INSECURE_CRON,
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
   NEXT_PUBLIC_CLERK_SIGN_IN_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL,
