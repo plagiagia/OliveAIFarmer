@@ -190,7 +190,7 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
   showSuccessMessage: boolean;
   showDeleteMessage: boolean;
 }) {
-  const { plan, isLoading: isPlanLoading, can } = usePlan()
+  const { plan, isLoading: isPlanLoading } = usePlan()
   const [editingFarm, setEditingFarm] = useState<Farm | null>(null)
   const [showPricingModal, setShowPricingModal] = useState(false)
   // Note: farms state is intentionally unused - using user.farms directly, reload for updates

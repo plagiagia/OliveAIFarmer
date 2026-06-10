@@ -271,7 +271,13 @@ export async function getAllFarmsWithCoordinates() {
         name: true,
         coordinates: true,
         latitude: true,
-        longitude: true
+        longitude: true,
+        userId: true,
+        user: {
+          select: {
+            subscription: { select: { plan: true } }
+          }
+        }
       }
     })
 

@@ -29,6 +29,9 @@ model User {
   // Subscription (one per user)
   subscription Subscription?
 
+  // Web push subscriptions (one per browser/device)
+  pushSubscriptions PushSubscription[]
+
   @@map("users")
 }
 
@@ -298,6 +301,26 @@ enum WeatherDataSource {
   API_FORECAST  // From forecast API
   CRON_DAILY    // From daily cron job
   MANUAL        // Manually entered
+}
+
+// ===== WEB PUSH NOTIFICATIONS =====
+
+// One row per browser/device push registration. Used for δάκος risk alerts.
+model PushSubscription {
+  id        String   @id @default(cuid())
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  endpoint  String   @unique // Push service URL (also the natural identity)
+  p256dh    String   // Client public key
+  auth      String   // Client auth secret
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("push_subscriptions")
 }
 
 // ===== SAAS: SUBSCRIPTION & BILLING =====

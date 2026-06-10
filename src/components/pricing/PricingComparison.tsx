@@ -1,7 +1,7 @@
 'use client'
 
 import { usePlan } from '@/hooks/usePlan'
-import type { BillingInterval, Plan } from '@/lib/plans'
+import type { BillingInterval } from '@/lib/plans'
 import { PLANS } from '@/lib/plans'
 import { useAuth } from '@clerk/nextjs'
 import { Check, Loader2 } from 'lucide-react'
