@@ -5,6 +5,7 @@ import { Activity, CheckCircle2, Clock, Filter, Plus, Search } from 'lucide-reac
 import { useEffect, useState } from 'react'
 import ActivityCard from '../activities/ActivityCard'
 import ActivityFormModal from '../activities/ActivityFormModal'
+import LogbookExportButton from '../export/LogbookExportButton'
 
 interface FarmActivitiesProps {
   farm: any
@@ -204,15 +205,22 @@ export default function FarmActivities({ farm, readOnly = false }: FarmActivitie
           <h2 className="text-2xl font-bold text-gray-900">Δραστηριότητες</h2>
           <p className="text-gray-600">Καταγραφή και διαχείριση εργασιών στον ελαιώνα</p>
         </div>
-        {!readOnly && (
-          <button 
-            onClick={handleNewActivity}
-            className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Νέα Δραστηριότητα</span>
-          </button>
-        )}
+        <div className="flex flex-wrap items-center gap-2">
+          <LogbookExportButton
+            farm={farm}
+            activities={activities}
+            harvests={farm.harvests ?? []}
+          />
+          {!readOnly && (
+            <button
+              onClick={handleNewActivity}
+              className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Νέα Δραστηριότητα</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Statistics */}
