@@ -5,7 +5,7 @@
 import { prisma } from '@/lib/db'
 import { ForbiddenError, NotFoundError } from '@/lib/errors'
 import type { Plan } from '@/lib/plans'
-import { getPlanConfig } from '@/lib/plans'
+import { getPlanConfig, normalizePlan } from '@/lib/plans'
 
 export const INACTIVE_FARM_MESSAGE =
   'Αυτός ο ελαιώνας είναι ανενεργός λόγω ορίων προγράμματος. Αναβαθμίστε για να τον ενεργοποιήσετε ξανά.'
@@ -71,18 +71,24 @@ export async function reconcileFarmActivationForUser(
 
 /** Reconcile farms for a Clerk user using their current subscription plan. */
 export async function reconcileFarmActivationByClerkId(clerkId: string): Promise<void> {
-  const user = await prisma.user.findUnique({
-    where: { clerkId },
-    select: {
-      id: true,
-      subscription: { select: { plan: true } },
-    },
-  })
+  // Reconciliation is best-effort housekeeping — it must never take the
+  // dashboard down (e.g. legacy enum values in an un-migrated database).
+  try {
+    const user = await prisma.user.findUnique({
+      where: { clerkId },
+      select: {
+        id: true,
+        subscription: { select: { plan: true } },
+      },
+    })
 
-  if (!user) return
+    if (!user) return
 
-  const plan = (user.subscription?.plan ?? 'FREE') as Plan
-  await reconcileFarmActivationForUser(user.id, plan)
+    const plan = normalizePlan(user.subscription?.plan)
+    await reconcileFarmActivationForUser(user.id, plan)
+  } catch (err) {
+    console.error('[farm-activation] reconcile skipped due to error:', err)
+  }
 }
 
 /** Load an owned farm; optionally require it to be active. */

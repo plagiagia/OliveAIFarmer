@@ -5,7 +5,7 @@
  */
 import { prisma } from '@/lib/db'
 import type { Plan, PlanConfig } from '@/lib/plans'
-import { getPlanConfig } from '@/lib/plans'
+import { getPlanConfig, normalizePlan } from '@/lib/plans'
 import { auth } from '@clerk/nextjs/server'
 
 export interface UserPlan {
@@ -27,28 +27,7 @@ export async function getCurrentUserPlan(): Promise<UserPlan> {
   if (!userId) {
     return freePlan()
   }
-
-  const user = await prisma.user.findUnique({
-    where: { clerkId: userId },
-    select: { id: true, subscription: true },
-  })
-
-  if (!user?.subscription) {
-    return freePlan()
-  }
-
-  const sub = user.subscription
-  const plan = sub.plan as Plan
-
-  return {
-    plan,
-    config: getPlanConfig(plan),
-    status: sub.status,
-    cancelAtPeriodEnd: sub.cancelAtPeriodEnd,
-    currentPeriodEnd: sub.currentPeriodEnd,
-    stripeCustomerId: sub.stripeCustomerId,
-    stripeSubscriptionId: sub.stripeSubscriptionId,
-  }
+  return getUserPlanByClerkId(userId)
 }
 
 /**
@@ -56,17 +35,25 @@ export async function getCurrentUserPlan(): Promise<UserPlan> {
  * Useful in API routes where you already have the clerkId.
  */
 export async function getUserPlanByClerkId(clerkId: string): Promise<UserPlan> {
-  const user = await prisma.user.findUnique({
-    where: { clerkId },
-    select: { id: true, subscription: true },
-  })
+  // A failed plan lookup (e.g. a legacy enum value in an un-migrated
+  // database) must degrade to FREE, never crash the page render.
+  let user
+  try {
+    user = await prisma.user.findUnique({
+      where: { clerkId },
+      select: { id: true, subscription: true },
+    })
+  } catch (err) {
+    console.error('[subscription] plan lookup failed, defaulting to FREE:', err)
+    return freePlan()
+  }
 
   if (!user?.subscription) {
     return freePlan()
   }
 
   const sub = user.subscription
-  const plan = sub.plan as Plan
+  const plan = normalizePlan(sub.plan)
 
   return {
     plan,
