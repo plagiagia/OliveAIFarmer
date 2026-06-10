@@ -81,7 +81,7 @@ export default function LandingPage() {
         <div className="relative z-10 mx-auto max-w-6xl px-4 pb-16 pt-16 text-center sm:pb-24 sm:pt-20">
           <div className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full border border-olive-200 bg-white/90 px-4 py-1.5 text-sm text-olive-700 shadow-sm backdrop-blur-sm">
             <OliveIcon size="sm" className="shrink-0 text-olive-700" aria-hidden />
-            <span>Για Έλληνες ελαιοπαραγωγούς & απόδημους ιδιοκτήτες</span>
+            <span>Για Έλληνες ελαιοπαραγωγούς</span>
           </div>
           <h1 className="mb-6 text-5xl font-extrabold tracking-tight text-gray-900 sm:text-6xl">
             Ο ελαιώνας σας,{' '}

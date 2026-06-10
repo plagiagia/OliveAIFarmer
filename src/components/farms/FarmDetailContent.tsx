@@ -29,7 +29,7 @@ type FarmTabId = 'overview' | 'activities' | 'harvests' | 'ai-geoponos'
 const LOCKED_TAB_HINTS: Partial<Record<FarmTabId, { title: string; tooltip: string }>> = {
   'ai-geoponos': {
     title: 'Ξεκλειδώστε τον AI Γεωπόνο',
-    tooltip: 'Απαιτείται πλάνο Αγρότης — αναβαθμίστε για πρόσβαση',
+    tooltip: 'Απαιτείται πλάνο Pro — αναβαθμίστε για πρόσβαση',
   },
 }
 
