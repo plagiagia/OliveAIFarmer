@@ -136,58 +136,123 @@ export interface WeatherRecordInput {
   source?: WeatherDataSource
 }
 
-// Save or update a weather record (upsert)
+// Running mean of two values where either may be missing.
+function meanWith(prev: number | null | undefined, next: number | null | undefined, n: number): number | null {
+  if (next == null) return prev ?? null
+  if (prev == null) return next
+  return (prev * n + next) / (n + 1)
+}
+
+function maxWith(prev: number | null | undefined, next: number | null | undefined): number | null {
+  if (prev == null) return next ?? null
+  if (next == null) return prev
+  return Math.max(prev, next)
+}
+
+function roundOrNull(value: number | null): number | null {
+  return value == null ? null : Math.round(value)
+}
+
+// The day's already-aggregated values needed to fold in a new sample.
+export interface WeatherDayAggregate {
+  tempHigh: number
+  tempLow: number
+  tempAvg: number
+  sampleCount: number
+  humidity: number
+  rainfall: number
+  windSpeed: number
+  windGust?: number | null
+  windDirection?: number | null
+  pressure?: number | null
+  clouds?: number | null
+  uvIndex?: number | null
+  icon?: string | null
+  source?: WeatherDataSource
+}
+
+/**
+ * Pure aggregation: fold one sample into the day's running averages.
+ * `tempAvg` in the sample is the instantaneous reading; `tempHigh`/`tempLow`
+ * are candidate daily extremes (e.g. forecast) used to widen the range.
+ * Exported so the math can be unit-tested without a database.
+ */
+export function foldWeatherSample(existing: WeatherDayAggregate, sample: WeatherRecordInput) {
+  const n = existing.sampleCount
+  return {
+    tempHigh: Math.max(existing.tempHigh, sample.tempHigh, sample.tempAvg),
+    tempLow: Math.min(existing.tempLow, sample.tempLow, sample.tempAvg),
+    tempAvg: (existing.tempAvg * n + sample.tempAvg) / (n + 1),
+    sampleCount: n + 1,
+    humidity: Math.round((existing.humidity * n + sample.humidity) / (n + 1)),
+    // Rainfall is a daily total from the forecast, so keep the largest reported
+    // value rather than summing irregular samples.
+    rainfall: Math.max(existing.rainfall, sample.rainfall),
+    windSpeed: (existing.windSpeed * n + sample.windSpeed) / (n + 1),
+    windGust: maxWith(existing.windGust, sample.windGust),
+    windDirection: sample.windDirection ?? existing.windDirection ?? null,
+    pressure: roundOrNull(meanWith(existing.pressure, sample.pressure, n)),
+    clouds: roundOrNull(meanWith(existing.clouds, sample.clouds, n)),
+    uvIndex: maxWith(existing.uvIndex, sample.uvIndex),
+    icon: sample.icon ?? existing.icon ?? null,
+    source: sample.source || existing.source || ('API_CURRENT' as WeatherDataSource),
+  }
+}
+
+/**
+ * Record a single weather sample for a farm's day, maintaining true daily
+ * averages. The first sample of the day creates the record; every later sample
+ * folds into the running mean (tempAvg, humidity, windSpeed, clouds, pressure),
+ * widens the observed range (tempHigh/tempLow), and keeps the peak gust/UV and
+ * best-known rainfall total. Call this as often as you like (hourly cron plus
+ * opportunistic saves) — the more samples, the more accurate the average.
+ *
+ * In this sample model `tempAvg` is the instantaneous reading, while
+ * `tempHigh`/`tempLow` are the candidate daily extremes (e.g. from the
+ * forecast) used to widen the observed range.
+ */
 export async function saveWeatherRecord(data: WeatherRecordInput) {
   try {
     // Normalize date to midnight UTC
     const normalizedDate = new Date(data.date)
     normalizedDate.setUTCHours(0, 0, 0, 0)
 
-    const record = await prisma.weatherRecord.upsert({
-      where: {
-        farmId_date: {
-          farmId: data.farmId,
-          date: normalizedDate
-        }
-      },
-      update: {
-        tempHigh: data.tempHigh,
-        tempLow: data.tempLow,
-        tempAvg: data.tempAvg,
-        humidity: data.humidity,
-        rainfall: data.rainfall,
-        windSpeed: data.windSpeed,
-        windGust: data.windGust,
-        windDirection: data.windDirection,
-        pressure: data.pressure,
-        clouds: data.clouds,
-        uvIndex: data.uvIndex,
-        condition: data.condition,
-        icon: data.icon,
-        source: data.source || 'API_CURRENT',
-        recordedAt: new Date()
-      },
-      create: {
-        farmId: data.farmId,
-        date: normalizedDate,
-        tempHigh: data.tempHigh,
-        tempLow: data.tempLow,
-        tempAvg: data.tempAvg,
-        humidity: data.humidity,
-        rainfall: data.rainfall,
-        windSpeed: data.windSpeed,
-        windGust: data.windGust,
-        windDirection: data.windDirection,
-        pressure: data.pressure,
-        clouds: data.clouds,
-        uvIndex: data.uvIndex,
-        condition: data.condition,
-        icon: data.icon,
-        source: data.source || 'API_CURRENT'
-      }
+    const existing = await prisma.weatherRecord.findUnique({
+      where: { farmId_date: { farmId: data.farmId, date: normalizedDate } },
     })
 
-    return record
+    if (!existing) {
+      return await prisma.weatherRecord.create({
+        data: {
+          farmId: data.farmId,
+          date: normalizedDate,
+          tempHigh: Math.max(data.tempHigh, data.tempAvg),
+          tempLow: Math.min(data.tempLow, data.tempAvg),
+          tempAvg: data.tempAvg,
+          sampleCount: 1,
+          humidity: data.humidity,
+          rainfall: data.rainfall,
+          windSpeed: data.windSpeed,
+          windGust: data.windGust,
+          windDirection: data.windDirection,
+          pressure: data.pressure,
+          clouds: data.clouds,
+          uvIndex: data.uvIndex,
+          condition: data.condition,
+          icon: data.icon,
+          source: data.source || 'API_CURRENT',
+        },
+      })
+    }
+
+    return await prisma.weatherRecord.update({
+      where: { id: existing.id },
+      data: {
+        ...foldWeatherSample(existing, data),
+        condition: data.condition,
+        recordedAt: new Date(),
+      },
+    })
   } catch (error) {
     console.error('Error saving weather record:', error)
     throw error

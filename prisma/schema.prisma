@@ -261,12 +261,16 @@ model WeatherRecord {
   recordedAt  DateTime @default(now()) // When this record was created/updated
 
   // Temperature (Celsius)
-  tempHigh    Float    // Highest temperature of the day
-  tempLow     Float    // Lowest temperature of the day
-  tempAvg     Float    // Average temperature
+  tempHigh    Float    // Highest temperature observed during the day
+  tempLow     Float    // Lowest temperature observed during the day
+  tempAvg     Float    // Running mean of all samples taken during the day
+
+  // How many samples have been folded into this day's averages.
+  // Lets each new reading update the running mean correctly.
+  sampleCount Int      @default(1)
 
   // Humidity (percentage)
-  humidity    Int      // Average humidity
+  humidity    Int      // Running mean humidity
 
   // Precipitation (mm)
   rainfall    Float    @default(0) // Total rainfall in mm

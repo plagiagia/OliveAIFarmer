@@ -11,6 +11,11 @@ export const dynamic = 'force-dynamic'
 const OPENWEATHER_API_KEY = process.env.OPENWEATHER_API_KEY
 const OPENWEATHER_BASE_URL = 'https://api.openweathermap.org/data/2.5'
 
+// The cron samples weather hourly to build a true daily average, but δάκος
+// alerts should be evaluated once per day at a sensible local hour (so pushes
+// don't arrive overnight). 06:00 UTC ≈ 08:00–09:00 in Greece.
+const ALERT_UTC_HOUR = 6
+
 // Vercel cron job security
 // This endpoint should only be called by Vercel's cron system
 export async function GET(request: NextRequest) {
@@ -56,6 +61,9 @@ export async function GET(request: NextRequest) {
       dakosAlerts: 0,
       errors: [] as string[]
     }
+
+    // Sample weather every run, but only evaluate δάκος alerts once a day.
+    const runAlerts = new Date().getUTCHours() === ALERT_UTC_HOUR
 
     // Process each farm (with rate limiting consideration)
     for (const farm of farms) {
@@ -133,7 +141,7 @@ export async function GET(request: NextRequest) {
 
         // Δάκος risk alert (paid plans only) based on the stored history.
         const plan = normalizePlan(farm.user?.subscription?.plan)
-        if (hasFeature(plan, 'oliveFlyAlerts')) {
+        if (runAlerts && hasFeature(plan, 'oliveFlyAlerts')) {
           try {
             const alert = await maybeSendDakosAlert(farm)
             if (alert.alerted) results.dakosAlerts++
