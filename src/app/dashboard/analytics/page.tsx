@@ -1,14 +1,11 @@
 'use client'
 
 import {
-  AnalyticsChartsTabs,
   AnalyticsSummaryHero,
-  EfficiencyMetrics,
+  CostBreakdownChart,
   HarvestChart,
   ProfitabilityChart,
-  Recommendations,
-  StatsCard,
-  YearOverYearComparison
+  StatsCard
 } from '@/components/analytics'
 import { ExportDropdown } from '@/components/export/ExportButton'
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
@@ -23,7 +20,6 @@ import {
   type HarvestExportData
 } from '@/lib/export/csv'
 import {
-  Activity,
   ArrowLeft,
   MapPin,
   Package,
@@ -67,26 +63,6 @@ interface AnalyticsData {
     totalValue: number
     yieldPerStremma: number
   }>
-  activityData: Array<{
-    type: string
-    typeLabel: string
-    count: number
-    totalCost: number
-    totalDuration: number
-  }>
-  monthlyActivityData: Array<{
-    month: string
-    monthNumber: number
-    activities: number
-    costs: number
-  }>
-  farmComparisonData: Array<{
-    farmName: string
-    totalArea: number
-    treeCount: number
-    totalYield: number
-    yieldPerStremma: number
-  }>
   costBreakdown: Array<{
     type: string
     typeLabel: string
@@ -107,72 +83,6 @@ interface AnalyticsData {
     costChange: number
     activityChange: number
   } | null
-  farmPerformance: {
-    all: Array<{
-      farmId: string
-      farmName: string
-      totalYield: number
-      revenue: number
-      costs: number
-      profit: number
-      roi: number
-      yieldPerStremma: number
-      yieldPerTree: number
-      efficiency: number
-    }>
-    best: {
-      farmId: string
-      farmName: string
-      totalYield: number
-      revenue: number
-      costs: number
-      profit: number
-      roi: number
-      yieldPerStremma: number
-      yieldPerTree: number
-      efficiency: number
-    } | null
-    worst: {
-      farmId: string
-      farmName: string
-      totalYield: number
-      revenue: number
-      costs: number
-      profit: number
-      roi: number
-      yieldPerStremma: number
-      yieldPerTree: number
-      efficiency: number
-    } | null
-    mostEfficient: {
-      farmId: string
-      farmName: string
-      totalYield: number
-      revenue: number
-      costs: number
-      profit: number
-      roi: number
-      yieldPerStremma: number
-      yieldPerTree: number
-      efficiency: number
-    } | null
-  }
-  activityHeatmapData: Array<{
-    date: string
-    count: number
-  }>
-  recommendations: Array<{
-    type: 'success' | 'warning' | 'info' | 'error'
-    category: string
-    message: string
-    priority: 'high' | 'medium' | 'low'
-  }>
-  seasonalData: {
-    winter: { activities: number; costs: number }
-    spring: { activities: number; costs: number }
-    summer: { activities: number; costs: number }
-    autumn: { activities: number; costs: number }
-  }
 }
 
 export default function AnalyticsPage() {
@@ -211,8 +121,6 @@ export default function AnalyticsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
             <SkeletonChart />
             <SkeletonChart />
-            <SkeletonChart />
-            <SkeletonChart />
           </div>
         </div>
       </div>
@@ -243,15 +151,9 @@ export default function AnalyticsPage() {
     summary,
     efficiencyMetrics,
     harvestData,
-    activityData,
-    monthlyActivityData,
-    farmComparisonData,
     costBreakdown,
     profitabilityTimeline,
-    yearOverYearComparison,
-    farmPerformance,
-    activityHeatmapData,
-    recommendations
+    yearOverYearComparison
   } = data
 
   const harvestKg = formatHarvestKg(summary.totalYield)
@@ -295,11 +197,11 @@ export default function AnalyticsPage() {
           </Link>
           <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
             <div>
-              <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-2">Αναλύσεις & Στατιστικά</h1>
+              <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-2">Η Χρονιά μου</h1>
               <p className="text-sm sm:text-base text-gray-600">
                 {summary.totalFarms === 1
-                  ? 'Σύνοψη για 1 ελαιώνα'
-                  : `Σύνοψη για ${summary.totalFarms} ελαιώνες`}
+                  ? 'Παραγωγή, έσοδα και κόστος για 1 ελαιώνα'
+                  : `Παραγωγή, έσοδα και κόστος για ${summary.totalFarms} ελαιώνες`}
               </p>
             </div>
             <div className="w-full sm:w-auto">
@@ -311,6 +213,7 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
+        {/* The money answer: profit, revenue, costs, vs. last year */}
         <AnalyticsSummaryHero
           netProfit={summary.netProfit}
           totalHarvestValue={summary.totalHarvestValue}
@@ -320,8 +223,8 @@ export default function AnalyticsPage() {
           yearOverYearComparison={yearOverYearComparison}
         />
 
-        {/* Inventory & activity counts */}
-        <div className="mb-8 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6">
+        {/* Inventory counts */}
+        <div className="mb-8 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
           <StatsCard title="Ελαιώνες" value={summary.totalFarms} icon={MapPin} />
           <StatsCard
             title="Δέντρα"
@@ -333,7 +236,6 @@ export default function AnalyticsPage() {
             value={`${summary.totalArea.toFixed(1)} στρ.`}
             icon={Scale}
           />
-          <StatsCard title="Δραστηριότητες" value={summary.totalActivities} icon={Activity} />
           <StatsCard
             title="Συγκομιδή"
             value={harvestKg.display}
@@ -341,35 +243,9 @@ export default function AnalyticsPage() {
             icon={Package}
             trend={summary.yieldTrend || undefined}
           />
-          <StatsCard
-            title="Μέση έκταση"
-            value={
-              summary.totalFarms > 0
-                ? `${(summary.totalArea / summary.totalFarms).toFixed(1)} στρ.`
-                : '—'
-            }
-            icon={Scale}
-            subtitle="ανά ελαιώνα"
-          />
         </div>
 
-        {/* Recommendations Section */}
-        {recommendations && recommendations.length > 0 && (
-          <div className="mb-8">
-            <ErrorBoundary>
-              <Recommendations data={recommendations} />
-            </ErrorBoundary>
-          </div>
-        )}
-
-        {/* Efficiency Metrics */}
-        <div className="mb-8">
-          <ErrorBoundary>
-            <EfficiencyMetrics data={efficiencyMetrics} />
-          </ErrorBoundary>
-        </div>
-
-        {/* Primary charts — always visible */}
+        {/* Charts: profitability per year, yield per year, where the money went */}
         <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
           <ErrorBoundary>
             <ProfitabilityChart
@@ -382,26 +258,10 @@ export default function AnalyticsPage() {
           </ErrorBoundary>
         </div>
 
-        {yearOverYearComparison && (
-          <div className="mb-8">
-            <ErrorBoundary>
-              <YearOverYearComparison data={yearOverYearComparison} />
-            </ErrorBoundary>
-          </div>
-        )}
-
-        {/* Secondary charts — tabbed */}
         <div className="mb-8">
-          <AnalyticsChartsTabs
-            activityData={activityData}
-            monthlyActivityData={monthlyActivityData}
-            costBreakdown={costBreakdown}
-            activityHeatmapData={activityHeatmapData}
-            farmComparisonData={farmComparisonData}
-            farmPerformance={farmPerformance}
-            showFarmsTab={summary.totalFarms > 1}
-            currentYear={new Date().getFullYear()}
-          />
+          <ErrorBoundary>
+            <CostBreakdownChart data={costBreakdown} title="Πού πήγαν τα χρήματα" />
+          </ErrorBoundary>
         </div>
 
         {/* Footer Info */}
