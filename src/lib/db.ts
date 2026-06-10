@@ -250,6 +250,73 @@ export async function getWeatherHistory(farmId: string, options?: {
   }
 }
 
+// ===== Olive fruit fly (δάκος) trap readings =====
+
+export interface TrapReadingInput {
+  farmId: string
+  date: Date
+  trapType?: 'MCPHAIL' | 'YELLOW_STICKY' | 'DACUS_TRAP' | 'OTHER'
+  trapCount?: number
+  totalCatch: number
+  femaleCatch?: number | null
+  daysSincePrev?: number | null
+  notes?: string | null
+}
+
+// Record a trap inspection. When daysSincePrev is not supplied we derive it
+// from the most recent prior reading so flies/trap/day stays meaningful.
+export async function createTrapReading(data: TrapReadingInput) {
+  try {
+    let daysSincePrev = data.daysSincePrev ?? null
+    if (daysSincePrev == null) {
+      const prev = await prisma.trapReading.findFirst({
+        where: { farmId: data.farmId, date: { lt: data.date } },
+        orderBy: { date: 'desc' },
+        select: { date: true },
+      })
+      if (prev) {
+        const diff = Math.round(
+          (data.date.getTime() - prev.date.getTime()) / (24 * 60 * 60 * 1000)
+        )
+        daysSincePrev = diff > 0 ? diff : null
+      }
+    }
+
+    return await prisma.trapReading.create({
+      data: {
+        farmId: data.farmId,
+        date: data.date,
+        trapType: data.trapType ?? 'MCPHAIL',
+        trapCount: data.trapCount && data.trapCount > 0 ? data.trapCount : 1,
+        totalCatch: data.totalCatch,
+        femaleCatch: data.femaleCatch ?? null,
+        daysSincePrev,
+        notes: data.notes ?? null,
+      },
+    })
+  } catch (error) {
+    console.error('Error creating trap reading:', error)
+    throw error
+  }
+}
+
+export async function getTrapReadings(farmId: string, options?: { startDate?: Date; limit?: number }) {
+  try {
+    const where: { farmId: string; date?: { gte?: Date } } = { farmId }
+    if (options?.startDate) {
+      where.date = { gte: options.startDate }
+    }
+    return await prisma.trapReading.findMany({
+      where,
+      orderBy: { date: 'desc' },
+      take: options?.limit ?? 30,
+    })
+  } catch (error) {
+    console.error('Error getting trap readings:', error)
+    throw error
+  }
+}
+
 // Get all farms with coordinates for cron job
 export async function getAllFarmsWithCoordinates() {
   try {

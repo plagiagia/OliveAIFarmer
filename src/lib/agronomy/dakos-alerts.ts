@@ -6,8 +6,9 @@
  * An alert fires when δάκος risk is HIGH/EXTREME, at most once per
  * ALERT_COOLDOWN_DAYS per farm, and only for plans with oliveFlyAlerts.
  */
-import { getWeatherHistory, prisma } from '@/lib/db'
+import { getTrapReadings, getWeatherHistory, prisma } from '@/lib/db'
 import { computePestRisk, type RiskLevel } from '@/lib/agronomy/pest-risk'
+import { computeTrapPressure, maxLevel } from '@/lib/agronomy/trap-pressure'
 import { sendPushToUser } from '@/lib/push'
 
 const ALERT_COOLDOWN_DAYS = 3
@@ -36,13 +37,25 @@ export async function maybeSendDakosAlert(farm: {
   name: string
   userId: string
 }): Promise<DakosAlertResult> {
-  const records = await getWeatherHistory(farm.id, {
-    startDate: new Date(Date.now() - ALERT_WINDOW_DAYS * 24 * 60 * 60 * 1000),
-    limit: ALERT_WINDOW_DAYS,
-  })
+  const since = new Date(Date.now() - ALERT_WINDOW_DAYS * 24 * 60 * 60 * 1000)
+  const [records, trapReadings] = await Promise.all([
+    getWeatherHistory(farm.id, { startDate: since, limit: ALERT_WINDOW_DAYS }),
+    getTrapReadings(farm.id, { startDate: since, limit: ALERT_WINDOW_DAYS }),
+  ])
 
   const risk = computePestRisk(records)
-  const level = risk.dakos.level
+  const trapPressure = computeTrapPressure(
+    trapReadings.map((t) => ({
+      date: t.date,
+      trapCount: t.trapCount,
+      totalCatch: t.totalCatch,
+      femaleCatch: t.femaleCatch,
+      daysSincePrev: t.daysSincePrev,
+    }))
+  )
+
+  // Alert on the more severe of weather risk and measured trap pressure.
+  const level = maxLevel(risk.dakos.level, trapPressure.level)
 
   if (level !== 'HIGH' && level !== 'EXTREME') {
     return { farmId: farm.id, level, alerted: false, pushed: 0 }
@@ -64,10 +77,16 @@ export async function maybeSendDakosAlert(farm: {
   }
 
   const title = `${LEVEL_LABELS[level]} κίνδυνος δάκου — ${farm.name}`
-  const message =
-    `Οι καιρικές συνθήκες των τελευταίων ${ALERT_WINDOW_DAYS} ημερών ευνοούν τον δάκο ` +
-    `(σκορ ${risk.dakos.score}/100). Ελέγξτε τις παγίδες και συμβουλευτείτε τον γεωπόνο σας ` +
-    `για το χρονικό παράθυρο ψεκασμού.`
+  const message = trapPressure.thresholdExceeded
+    ? `Οι παγίδες ξεπέρασαν το όριο επέμβασης (${trapPressure.fliesPerTrapPerDay} συλλήψεις/παγίδα/ημέρα). ` +
+      `Προγραμματίστε δολωματικό ψεκασμό και συμβουλευτείτε τον γεωπόνο σας για το χρονικό παράθυρο.`
+    : `Οι καιρικές συνθήκες των τελευταίων ${ALERT_WINDOW_DAYS} ημερών ευνοούν τον δάκο ` +
+      `(σκορ ${risk.dakos.score}/100). Ελέγξτε τις παγίδες και συμβουλευτείτε τον γεωπόνο σας ` +
+      `για το χρονικό παράθυρο ψεκασμού.`
+
+  const reasoning = trapPressure.fliesPerTrapPerDay != null
+    ? `${risk.dakos.rationale} ${trapPressure.rationale}`
+    : risk.dakos.rationale
 
   // In-app recommendation (shows up in the farm's AI Γεωπόνος tab).
   await prisma.smartRecommendation.create({
@@ -75,7 +94,7 @@ export async function maybeSendDakosAlert(farm: {
       type: 'RISK_WARNING',
       title,
       message,
-      reasoning: risk.dakos.rationale,
+      reasoning,
       urgency: level === 'EXTREME' ? 'CRITICAL' : 'HIGH',
       actionRequired: true,
       source: 'WEATHER_ALERT',

@@ -67,6 +67,9 @@ model Farm {
   // Weather history
   weatherRecords WeatherRecord[]
 
+  // Olive fruit fly trap monitoring
+  trapReadings TrapReading[]
+
   @@index([userId])
   @@map("farms")
 }
@@ -301,6 +304,48 @@ enum WeatherDataSource {
   API_FORECAST  // From forecast API
   CRON_DAILY    // From daily cron job
   MANUAL        // Manually entered
+}
+
+// ===== OLIVE FRUIT FLY (ΔΑΚΟΣ) TRAP MONITORING =====
+
+enum TrapType {
+  MCPHAIL       // Παγίδα McPhail
+  YELLOW_STICKY // Κίτρινη κολλητική παγίδα
+  DACUS_TRAP    // Παγίδα τύπου Dacus / φερομονική
+  OTHER         // Άλλο
+}
+
+// A single trap inspection: how many olive fruit flies were caught since the
+// last check. Combined with weather to produce a real (evidence-based) δάκος
+// risk instead of a weather-only proxy. The economic-threshold decision for
+// spraying is driven primarily by these catch counts.
+model TrapReading {
+  id          String   @id @default(cuid())
+
+  // Parent farm
+  farmId      String
+  farm        Farm     @relation(fields: [farmId], references: [id], onDelete: Cascade)
+
+  // When the trap was inspected
+  date        DateTime
+
+  trapType    TrapType @default(MCPHAIL)
+  trapCount   Int      @default(1)   // How many traps this reading aggregates
+  totalCatch  Int                    // Total flies caught across those traps
+  femaleCatch Int?                   // Females only (drives oviposition pressure)
+
+  // Days since the previous inspection, used to derive flies/trap/day.
+  // Optional: when absent we infer it from the previous reading's date.
+  daysSincePrev Int?
+
+  notes       String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([farmId])
+  @@index([farmId, date])
+  @@map("trap_readings")
 }
 
 // ===== WEB PUSH NOTIFICATIONS =====

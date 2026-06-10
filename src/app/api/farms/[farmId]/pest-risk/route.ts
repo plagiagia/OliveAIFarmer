@@ -1,5 +1,9 @@
-import { getWeatherHistory, prisma } from '@/lib/db'
+import { getTrapReadings, getWeatherHistory, prisma } from '@/lib/db'
 import { computePestRisk, type DailyWeather } from '@/lib/agronomy/pest-risk'
+import { computeTrapPressure, maxLevel } from '@/lib/agronomy/trap-pressure'
+import { computeSprayWindow, type SprayWindowPlan } from '@/lib/agronomy/spray-window'
+import { fetchWeatherData } from '@/lib/weather'
+import { parseCoordinates } from '@/lib/mapbox-utils'
 import { hasFeature, requiresPlanMessage } from '@/lib/plans'
 import { getUserPlanByClerkId } from '@/lib/subscription'
 import { auth } from '@clerk/nextjs/server'
@@ -10,9 +14,13 @@ export const dynamic = 'force-dynamic'
 /**
  * GET /api/farms/[farmId]/pest-risk
  *
- * Returns δάκος + κυκλοκόνιο risk scores derived from the farm's
- * stored weather history (last 30 days). Pure derived data — no
- * OpenAI call, safe to fetch frequently.
+ * Returns a blended δάκος decision report from three inputs:
+ *   - weather history (last 30 days) — the prior,
+ *   - trap readings (last 30 days) — field evidence (flies/trap/day),
+ *   - the 5-day forecast — to recommend a spray window.
+ *
+ * No AI call, so it stays cheap. The forecast fetch is best-effort: if it
+ * fails the rest of the report is still returned.
  */
 export async function GET(
   _request: NextRequest,
@@ -36,16 +44,18 @@ export async function GET(
 
     const farm = await prisma.farm.findFirst({
       where: { id: farmId, user: { clerkId: userId } },
-      select: { id: true, name: true },
+      select: { id: true, name: true, latitude: true, longitude: true, coordinates: true },
     })
     if (!farm) {
       return NextResponse.json({ error: 'Farm not found' }, { status: 404 })
     }
 
-    const records = await getWeatherHistory(farmId, {
-      startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-      limit: 30,
-    })
+    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+
+    const [records, trapReadings] = await Promise.all([
+      getWeatherHistory(farmId, { startDate: since, limit: 30 }),
+      getTrapReadings(farmId, { startDate: since, limit: 30 }),
+    ])
 
     const daily: DailyWeather[] = (records as DailyWeather[]).map((r) => ({
       date: r.date,
@@ -57,12 +67,52 @@ export async function GET(
     }))
 
     const report = computePestRisk(daily)
+    const trapPressure = computeTrapPressure(
+      trapReadings.map((t) => ({
+        date: t.date,
+        trapCount: t.trapCount,
+        totalCatch: t.totalCatch,
+        femaleCatch: t.femaleCatch,
+        daysSincePrev: t.daysSincePrev,
+      }))
+    )
+
+    // Blend: the action level is the more severe of weather and trap evidence.
+    const combinedLevel = maxLevel(report.dakos.level, trapPressure.level)
+
+    // Best-effort forecast-driven spray window.
+    let sprayWindow: SprayWindowPlan | null = null
+    const coords =
+      farm.latitude != null && farm.longitude != null
+        ? { lat: farm.latitude, lng: farm.longitude }
+        : farm.coordinates
+          ? parseCoordinates(farm.coordinates)
+          : null
+    if (coords) {
+      try {
+        const weather = await fetchWeatherData(coords.lat, coords.lng)
+        sprayWindow = computeSprayWindow(
+          weather.forecast.map((d) => ({
+            date: d.date,
+            tempMax: d.tempMax,
+            precipitation: d.precipitation,
+            precipitationProbability: d.precipitationProbability,
+            windSpeed: d.windSpeed,
+          }))
+        )
+      } catch (fcErr) {
+        console.error('[pest-risk] forecast fetch failed', fcErr)
+      }
+    }
 
     return NextResponse.json({
       success: true,
       farmId: farm.id,
       farmName: farm.name,
       report,
+      trapPressure,
+      combinedLevel,
+      sprayWindow,
     })
   } catch (err) {
     console.error('[pest-risk] error', err)
