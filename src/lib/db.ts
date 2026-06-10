@@ -1,4 +1,4 @@
-import { PrismaClient, WeatherDataSource, SatelliteSource, StressLevel } from '@prisma/client'
+import { PrismaClient, WeatherDataSource } from '@prisma/client'
 
 // Prevent multiple instances of Prisma Client in development
 const globalForPrisma = globalThis as unknown as {
@@ -271,7 +271,13 @@ export async function getAllFarmsWithCoordinates() {
         name: true,
         coordinates: true,
         latitude: true,
-        longitude: true
+        longitude: true,
+        userId: true,
+        user: {
+          select: {
+            subscription: { select: { plan: true } }
+          }
+        }
       }
     })
 
@@ -319,99 +325,6 @@ export async function getWeatherStats(farmId: string, days: number = 30) {
     }
   } catch (error) {
     console.error('Error getting weather stats:', error)
-    throw error
-  }
-}
-
-// ===== SATELLITE DATA FUNCTIONS =====
-
-export interface SatelliteRecordInput {
-  farmId: string
-  date: Date
-  ndvi: number | null
-  ndmi: number | null
-  evi: number | null
-  soilMoisture: number | null
-  cloudCoverage: number
-  healthScore: number
-  stressLevel: StressLevel
-  source?: SatelliteSource
-  resolution?: number
-}
-
-// Save or update a satellite record (upsert)
-export async function saveSatelliteRecord(data: SatelliteRecordInput) {
-  try {
-    const record = await prisma.satelliteData.upsert({
-      where: {
-        farmId_date_source: {
-          farmId: data.farmId,
-          date: data.date,
-          source: data.source || SatelliteSource.SENTINEL_2
-        }
-      },
-      update: {
-        ndvi: data.ndvi,
-        ndmi: data.ndmi,
-        evi: data.evi,
-        soilMoisture: data.soilMoisture,
-        cloudCoverage: data.cloudCoverage,
-        healthScore: data.healthScore,
-        stressLevel: data.stressLevel,
-        resolution: data.resolution,
-        recordedAt: new Date()
-      },
-      create: {
-        farmId: data.farmId,
-        date: data.date,
-        ndvi: data.ndvi,
-        ndmi: data.ndmi,
-        evi: data.evi,
-        soilMoisture: data.soilMoisture,
-        cloudCoverage: data.cloudCoverage,
-        healthScore: data.healthScore,
-        stressLevel: data.stressLevel,
-        source: data.source || SatelliteSource.SENTINEL_2,
-        resolution: data.resolution
-      }
-    })
-
-    return record
-  } catch (error) {
-    console.error('Error saving satellite record:', error)
-    throw error
-  }
-}
-
-// Get all farms with coordinates and area for satellite data cron job
-export async function getAllFarmsForSatellite() {
-  try {
-    const farms = await prisma.farm.findMany({
-      where: {
-        isActive: true,
-        OR: [
-          {
-            latitude: { not: null },
-            longitude: { not: null }
-          },
-          {
-            coordinates: { not: null }
-          }
-        ]
-      },
-      select: {
-        id: true,
-        name: true,
-        coordinates: true,
-        latitude: true,
-        longitude: true,
-        totalArea: true
-      }
-    })
-
-    return farms
-  } catch (error) {
-    console.error('Error getting farms for satellite:', error)
     throw error
   }
 }

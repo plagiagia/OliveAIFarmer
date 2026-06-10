@@ -68,31 +68,12 @@ describe('farm-activation', () => {
       ] as never)
       vi.mocked(prisma.farm.updateMany).mockResolvedValue({ count: 2 })
 
-      const result = await reconcileFarmActivationForUser('user-1', 'PRODUCER')
+      const result = await reconcileFarmActivationForUser('user-1', 'GROWER')
 
       expect(result).toEqual({ activated: 2, deactivated: 0 })
       expect(prisma.farm.updateMany).toHaveBeenCalledWith({
         where: { userId: 'user-1', isActive: false },
         data: { isActive: true },
-      })
-    })
-
-    it('keeps up to three newest farms active on GROWER plan', async () => {
-      vi.mocked(prisma.farm.findMany).mockResolvedValue([
-        { id: 'f1' },
-        { id: 'f2' },
-        { id: 'f3' },
-        { id: 'f4' },
-      ] as never)
-      vi.mocked(prisma.farm.updateMany)
-        .mockResolvedValueOnce({ count: 0 })
-        .mockResolvedValueOnce({ count: 1 })
-
-      await reconcileFarmActivationForUser('user-1', 'GROWER')
-
-      expect(prisma.farm.updateMany).toHaveBeenNthCalledWith(2, {
-        where: { userId: 'user-1', id: { in: ['f4'] }, isActive: true },
-        data: { isActive: false },
       })
     })
   })

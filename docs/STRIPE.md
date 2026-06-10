@@ -73,10 +73,8 @@ The webhook route is **not** protected by Clerk. Security is Stripe signature ve
 |----------|----------------|-------------------|
 | `STRIPE_SECRET_KEY` | `sk_test_...` | `sk_live_...` |
 | `STRIPE_WEBHOOK_SECRET` | Per endpoint / CLI session | Per live webhook endpoint |
-| `STRIPE_PRICE_GROWER` | Test price ID | Live price ID |
-| `STRIPE_PRICE_PRODUCER` | Test price ID | Live price ID |
-| `STRIPE_PRICE_VIEWER_SEAT` | Test price ID | Live price ID |
-| `STRIPE_PRICE_MILL` | Optional (enterprise, no self-serve checkout) | — |
+| `STRIPE_PRICE_GROWER` | Test price ID (Pro monthly, €6/mo) | Live price ID |
+| `STRIPE_PRICE_GROWER_ANNUAL` | Test price ID (Pro annual, €49/yr — promoted default) | Live price ID |
 
 Copy from `.env.example`. **Do not use placeholder values** like `sk_test_...` or `whsec_...` — `isStripeSecretKeyConfigured()` rejects keys containing `...`.
 
@@ -141,7 +139,7 @@ Also set a real `STRIPE_SECRET_KEY=sk_test_...` from [Stripe Dashboard → API k
 - Expiry: any future date
 - CVC: any 3 digits
 
-After redirect, plan should show GROWER or PRODUCER. Check Terminal 2 for webhook delivery (`200` = success).
+After redirect, plan should show GROWER (Pro). Check Terminal 2 for webhook delivery (`200` = success).
 
 ### Enable Customer Portal (Dashboard)
 
@@ -186,6 +184,6 @@ Check Vercel function logs for `[stripe/checkout]` or webhook handler errors.
 
 ## Plans reference
 
-Defined in `src/lib/plans.ts`. Self-serve checkout: **GROWER**, **PRODUCER** only. **MILL** is enterprise (no online checkout).
+Defined in `src/lib/plans.ts`. Two tiers: **FREE** and **GROWER** (Pro). Checkout accepts `{ plan: 'GROWER', interval: 'year' | 'month' }`; annual is the promoted default. Legacy PRODUCER/MILL subscription metadata normalizes to GROWER via `normalizePlan()`.
 
 Stripe price IDs map via `STRIPE_PRICE_IDS` in `src/lib/stripe.ts`.

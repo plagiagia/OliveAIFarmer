@@ -6,7 +6,6 @@ import {
   Activity,
   BarChart3,
   Lock,
-  Satellite,
   Sparkles,
   Wheat
 } from 'lucide-react'
@@ -19,23 +18,18 @@ import FarmEditModal from './FarmEditModal'
 import FarmHarvests from './FarmHarvests'
 import FarmHeader from './FarmHeader'
 import FarmStats from './FarmStats'
-import GroveHealthTab from './GroveHealthTab'
 
 interface FarmDetailContentProps {
   farm: any // We'll type this properly later
   user: any
 }
 
-type FarmTabId = 'overview' | 'activities' | 'harvests' | 'grove-health' | 'ai-geoponos'
+type FarmTabId = 'overview' | 'activities' | 'harvests' | 'ai-geoponos'
 
 const LOCKED_TAB_HINTS: Partial<Record<FarmTabId, { title: string; tooltip: string }>> = {
-  'grove-health': {
-    title: 'Ξεκλειδώστε την Υγεία Ελαιώνα',
-    tooltip: 'Απαιτείται πλάνο Παραγωγός — αναβαθμίστε για δορυφορικό NDVI',
-  },
   'ai-geoponos': {
     title: 'Ξεκλειδώστε τον AI Γεωπόνο',
-    tooltip: 'Απαιτείται πλάνο Αγρότης — αναβαθμίστε για πρόσβαση',
+    tooltip: 'Απαιτείται πλάνο Pro — αναβαθμίστε για πρόσβαση',
   },
 }
 
@@ -49,10 +43,8 @@ export default function FarmDetailContent({ farm, user }: FarmDetailContentProps
   const [unreadInsightsCount, setUnreadInsightsCount] = useState(0)
 
   const canUseAiGeoponos = !isPlanLoading && can('aiGeoponos')
-  const canUseGroveHealth = !isPlanLoading && can('satellite')
 
   const isTabLocked = (tabId: FarmTabId) => {
-    if (tabId === 'grove-health') return !canUseGroveHealth
     if (tabId === 'ai-geoponos') return !canUseAiGeoponos
     return false
   }
@@ -76,13 +68,10 @@ export default function FarmDetailContent({ farm, user }: FarmDetailContentProps
   }, [fetchUnreadCount, canUseAiGeoponos])
 
   useEffect(() => {
-    if (
-      (activeTab === 'ai-geoponos' && !canUseAiGeoponos) ||
-      (activeTab === 'grove-health' && !canUseGroveHealth)
-    ) {
+    if (activeTab === 'ai-geoponos' && !canUseAiGeoponos) {
       setActiveTab('overview')
     }
-  }, [canUseAiGeoponos, canUseGroveHealth, activeTab])
+  }, [canUseAiGeoponos, activeTab])
 
   // Reset unread count when viewing AI tab
   useEffect(() => {
@@ -97,7 +86,6 @@ export default function FarmDetailContent({ farm, user }: FarmDetailContentProps
     { id: 'overview', label: 'Επισκόπηση', icon: BarChart3 },
     { id: 'activities', label: 'Δραστηριότητες', icon: Activity },
     { id: 'harvests', label: 'Συγκομιδές', icon: Wheat },
-    { id: 'grove-health', label: 'Υγεία Ελαιώνα', icon: Satellite },
     { id: 'ai-geoponos', label: 'AI Γεωπόνος', icon: Sparkles, badge: unreadInsightsCount },
   ]
 
@@ -189,9 +177,6 @@ export default function FarmDetailContent({ farm, user }: FarmDetailContentProps
           {activeTab === 'overview' && <FarmStats farm={farm} />}
           {activeTab === 'activities' && <FarmActivities farm={farm} readOnly={isReadOnly} />}
           {activeTab === 'harvests' && <FarmHarvests farm={farm} readOnly={isReadOnly} />}
-          {canUseGroveHealth && activeTab === 'grove-health' && (
-            <GroveHealthTab farmId={farm.id} readOnly={isReadOnly} />
-          )}
           {canUseAiGeoponos && activeTab === 'ai-geoponos' && (
             <AIGeoponosTab farmId={farm.id} readOnly={isReadOnly} />
           )}

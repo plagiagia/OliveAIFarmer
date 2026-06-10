@@ -1,13 +1,12 @@
 'use client'
 
-import { BarChart3, Home, Settings, Sparkles } from 'lucide-react'
+import { BarChart3, Home, Settings } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Αρχική', icon: Home },
   { href: '/dashboard/analytics', label: 'Αναλύσεις', icon: BarChart3 },
-  { href: '/dashboard/ai-geoponos', label: 'AI Γεωπόνος', icon: Sparkles },
   { href: '/dashboard/settings', label: 'Ρυθμίσεις', icon: Settings },
 ]
 
@@ -32,7 +31,7 @@ export default function BottomNav() {
         aria-label="Κύρια πλοήγηση"
         className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white/95 backdrop-blur pb-safe md:hidden"
       >
-        <div className="grid grid-cols-4">
+        <div className="grid grid-cols-3">
           {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
             const isActive = isItemActive(href, pathname)
             return (

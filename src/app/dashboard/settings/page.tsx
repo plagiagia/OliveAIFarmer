@@ -1,4 +1,5 @@
 import DeleteAccountSection from '@/components/settings/DeleteAccountSection'
+import PushNotificationSection from '@/components/settings/PushNotificationSection'
 import SubscriptionSection from '@/components/settings/SubscriptionSection'
 import { UserProfile } from '@clerk/nextjs'
 import { ArrowLeft } from 'lucide-react'
@@ -27,6 +28,8 @@ export default function SettingsPage() {
       </header>
 
       <SubscriptionSection />
+
+      <PushNotificationSection />
 
       <UserProfile
         routing="hash"

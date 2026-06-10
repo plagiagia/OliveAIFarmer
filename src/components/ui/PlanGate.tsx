@@ -2,7 +2,7 @@
 
 import { usePlan } from '@/hooks/usePlan'
 import type { Plan, PlanConfig } from '@/lib/plans'
-import { formatMonthlyPrice, getPlanConfig } from '@/lib/plans'
+import { formatAnnualPrice, getPlanConfig } from '@/lib/plans'
 import { Lock } from 'lucide-react'
 
 interface PlanGateProps {
@@ -21,8 +21,8 @@ interface PlanGateProps {
  * the requested feature. Otherwise shows a lock/upgrade prompt.
  *
  * Usage:
- *   <PlanGate feature="satellite" requiredPlan="PRODUCER">
- *     <SatelliteView />
+ *   <PlanGate feature="aiGeoponos">
+ *     <AIGeoponosTab />
  *   </PlanGate>
  */
 export default function PlanGate({ feature, requiredPlan = 'GROWER', children, fallback }: PlanGateProps) {
@@ -35,9 +35,9 @@ export default function PlanGate({ feature, requiredPlan = 'GROWER', children, f
   if (fallback) return <>{fallback}</>
 
   const cfg = getPlanConfig(requiredPlan)
-  const planLabel = cfg.priceMonthly === 0
+  const planLabel = cfg.priceAnnual === 0
     ? cfg.nameEl
-    : `${cfg.nameEl} (${formatMonthlyPrice(cfg.priceMonthly)})`
+    : `${cfg.nameEl} (${formatAnnualPrice(cfg.priceAnnual)})`
 
   return (
     <div className="relative rounded-2xl border-2 border-dashed border-olive-200 bg-olive-50/50 p-6 flex flex-col items-center justify-center gap-3 text-center min-h-[120px]">

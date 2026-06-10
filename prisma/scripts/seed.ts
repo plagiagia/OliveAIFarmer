@@ -18,8 +18,6 @@ import {
   ActivityType,
   PriceUnit,
   WeatherDataSource,
-  SatelliteSource,
-  StressLevel,
   RecommendationType,
   Priority,
   InsightSource,
@@ -126,7 +124,7 @@ async function findTargetUser() {
 }
 
 async function wipeSeedData() {
-  // Cascades to activities, harvests, weather, satellite, recommendations via schema relations.
+  // Cascades to activities, harvests, weather, recommendations via schema relations.
   const deleted = await prisma.farm.deleteMany({
     where: { id: { startsWith: SEED_PREFIX } },
   })
@@ -252,39 +250,6 @@ async function seedWeather() {
   console.log(`☀️  Created ${total} weather records.`)
 }
 
-async function seedSatellite() {
-  let total = 0
-  for (const farm of FARMS) {
-    for (const [offset, ndvi] of [[5, 0.62], [35, 0.55]] as Array<[number, number]>) {
-      const d = new Date()
-      d.setUTCDate(d.getUTCDate() - offset)
-      d.setUTCHours(11, 0, 0, 0)
-      const healthScore = Math.round(ndvi * 100 + randomBetween(-5, 5))
-      const stress: StressLevel =
-        ndvi > 0.6 ? StressLevel.HEALTHY :
-        ndvi > 0.4 ? StressLevel.MILD_STRESS :
-        ndvi > 0.3 ? StressLevel.MODERATE_STRESS : StressLevel.SEVERE_STRESS
-      await prisma.satelliteData.create({
-        data: {
-          farmId: farm.id,
-          date: d,
-          ndvi,
-          ndmi: +(ndvi * 0.7 + randomBetween(-0.05, 0.05)).toFixed(3),
-          evi: +(ndvi * 0.9 + randomBetween(-0.05, 0.05)).toFixed(3),
-          soilMoisture: +randomBetween(25, 55).toFixed(1),
-          cloudCoverage: +randomBetween(0, 25).toFixed(1),
-          healthScore,
-          stressLevel: stress,
-          source: SatelliteSource.SENTINEL_2,
-          resolution: 10,
-        },
-      })
-      total++
-    }
-  }
-  console.log(`🛰️  Created ${total} satellite snapshots.`)
-}
-
 async function seedRecommendations() {
   const items: Array<{
     type: RecommendationType
@@ -361,7 +326,6 @@ async function main() {
   await seedActivities()
   await seedHarvests()
   await seedWeather()
-  await seedSatellite()
   await seedRecommendations()
 
   console.log('\n🎉 Seed complete. Refresh your dashboard.')

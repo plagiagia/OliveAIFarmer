@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAuthorizedCronRequest } from '@/lib/cron-auth'
+import { maybeSendDakosAlert } from '@/lib/agronomy/dakos-alerts'
 import { getAllFarmsWithCoordinates, saveWeatherRecord } from '@/lib/db'
 import { parseCoordinates } from '@/lib/mapbox-utils'
+import { hasFeature, normalizePlan } from '@/lib/plans'
 
 export const dynamic = 'force-dynamic'
 
@@ -51,6 +53,7 @@ export async function GET(request: NextRequest) {
     const results = {
       successCount: 0,
       failedCount: 0,
+      dakosAlerts: 0,
       errors: [] as string[]
     }
 
@@ -127,6 +130,17 @@ export async function GET(request: NextRequest) {
         })
 
         results.successCount++
+
+        // Δάκος risk alert (paid plans only) based on the stored history.
+        const plan = normalizePlan(farm.user?.subscription?.plan)
+        if (hasFeature(plan, 'oliveFlyAlerts')) {
+          try {
+            const alert = await maybeSendDakosAlert(farm)
+            if (alert.alerted) results.dakosAlerts++
+          } catch (alertErr) {
+            console.error(`[cron/weather] dakos alert failed for ${farm.name}:`, alertErr)
+          }
+        }
 
         // Small delay to avoid rate limiting (OpenWeatherMap free tier: 60 calls/min)
         await new Promise(resolve => setTimeout(resolve, 100))

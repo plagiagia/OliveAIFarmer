@@ -1,7 +1,7 @@
 {
   "name": "OliveIQ — Ο ελαιώνας σας, πάντα υπό έλεγχο",
   "short_name": "OliveIQ",
-  "description": "Έξυπνη διαχείριση ελαιώνα. AI γεωπόνος, δορυφόρος, ειδοποιήσεις δάκου.",
+  "description": "Έξυπνη διαχείριση ελαιώνα. Ειδοποιήσεις δάκου, ημερολόγιο αγρού, AI γεωπόνος.",
   "start_url": "/dashboard",
   "display": "standalone",
   "background_color": "#f8fafc",
@@ -10,7 +10,12 @@
   "lang": "el",
   "scope": "/",
   "id": "/",
-  "categories": ["agriculture", "business", "productivity", "utilities"],
+  "categories": [
+    "agriculture",
+    "business",
+    "productivity",
+    "utilities"
+  ],
   "prefer_related_applications": false,
   "icons": [
     {

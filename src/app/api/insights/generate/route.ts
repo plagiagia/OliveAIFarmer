@@ -114,18 +114,6 @@ export async function POST(request: NextRequest) {
             yieldPerTree: true,
             pricePerKg: true
           }
-        },
-        satelliteData: {
-          orderBy: { date: 'desc' },
-          take: 2, // Latest and previous for trend
-          select: {
-            ndvi: true,
-            ndmi: true,
-            healthScore: true,
-            stressLevel: true,
-            date: true,
-            recordedAt: true
-          }
         }
       }
     })
@@ -201,31 +189,7 @@ export async function POST(request: NextRequest) {
       })),
       weatherSummary,
       currentMonth: new Date().getMonth() + 1,
-      currentSeason: getCurrentSeason(),
-
-      // Include satellite data if available
-      satelliteData: farm.satelliteData.length > 0 ? (() => {
-        const latest = farm.satelliteData[0]
-        const previous = farm.satelliteData[1]
-
-        // Calculate trend
-        let ndviTrend: 'improving' | 'stable' | 'declining' | null = null
-        if (latest.ndvi != null && previous?.ndvi != null) {
-          const change = ((latest.ndvi - previous.ndvi) / Math.abs(previous.ndvi || 0.5)) * 100
-          if (change > 5) ndviTrend = 'improving'
-          else if (change < -5) ndviTrend = 'declining'
-          else ndviTrend = 'stable'
-        }
-
-        return {
-          ndvi: latest.ndvi,
-          ndmi: latest.ndmi,
-          healthScore: latest.healthScore,
-          stressLevel: latest.stressLevel,
-          ndviTrend,
-          lastUpdated: latest.recordedAt?.toISOString() || null
-        }
-      })() : undefined
+      currentSeason: getCurrentSeason()
     }
 
     // 24h context-hash cache: if the same farm context produced an

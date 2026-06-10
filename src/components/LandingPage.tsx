@@ -3,7 +3,7 @@
 import PricingComparison from '@/components/pricing/PricingComparison'
 import BrandLogo from '@/components/ui/BrandLogo'
 import OliveIcon from '@/components/ui/OliveIcon'
-import { Check, ChevronRight, Globe, Leaf, Satellite, Zap } from 'lucide-react'
+import { Check, ChevronRight, FileText, Leaf, Wheat, Zap } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, type MouseEvent } from 'react'
@@ -81,7 +81,7 @@ export default function LandingPage() {
         <div className="relative z-10 mx-auto max-w-6xl px-4 pb-16 pt-16 text-center sm:pb-24 sm:pt-20">
           <div className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full border border-olive-200 bg-white/90 px-4 py-1.5 text-sm text-olive-700 shadow-sm backdrop-blur-sm">
             <OliveIcon size="sm" className="shrink-0 text-olive-700" aria-hidden />
-            <span>Για Έλληνες ελαιοπαραγωγούς & απόδημους ιδιοκτήτες</span>
+            <span>Για Έλληνες ελαιοπαραγωγούς</span>
           </div>
           <h1 className="mb-6 text-5xl font-extrabold tracking-tight text-gray-900 sm:text-6xl">
             Ο ελαιώνας σας,{' '}
@@ -89,7 +89,7 @@ export default function LandingPage() {
           </h1>
           <p className="mx-auto mb-10 max-w-2xl text-xl text-gray-600">
             Παρακολουθήστε λιπάνσεις, ψεκασμούς, συγκομιδή και κόστος ελαιολάδου σε ένα
-            μέρος. AI γεωπόνος, δορυφορικός χάρτης NDVI, ειδοποιήσεις δάκου — από οπουδήποτε.
+            μέρος. Ειδοποιήσεις δάκου, ψηφιακό ημερολόγιο αγρού, AI γεωπόνος — από οπουδήποτε.
           </p>
           <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <Link
@@ -127,19 +127,19 @@ export default function LandingPage() {
                 desc: 'Καιρικά δεδομένα + ιστορικό μολύνσεων → ειδοποίηση πριν ο δάκος καταστρέψει την παραγωγή σας.',
               },
               {
-                icon: <Satellite className="h-7 w-7 text-blue-600" />,
-                title: 'Δορυφορικός χάρτης NDVI',
-                desc: 'Sentinel-2 κάθε 5 ημέρες. Δείτε ποια τμήματα του ελαιώνα "πονούν" χωρίς να πάτε επί τόπου.',
+                icon: <Wheat className="h-7 w-7 text-amber-700" />,
+                title: 'Συγκομιδές & έσοδα με μια ματιά',
+                desc: 'Κάθε παράδοση στο ελαιοτριβείο καταγεγραμμένη: κιλά, τιμή, αξία. Σύγκριση με πέρσι, χωρίς τετράδια.',
               },
               {
-                icon: <Globe className="h-7 w-7 text-olive-700" />,
-                title: 'Πρόσβαση απόδημων ιδιοκτητών',
-                desc: 'Προσκαλέστε τον γεωπόνο ή τον αδερφό σας στο εξωτερικό. Πλήρης ορατότητα, χωρίς τηλεφωνήματα.',
+                icon: <FileText className="h-7 w-7 text-blue-600" />,
+                title: 'PDF ημερολόγιο για ΟΣΔΕ & λογιστή',
+                desc: 'Εξαγωγή του ημερολογίου αγρού έτοιμη για επιδοτήσεις, ελέγχους και φορολογικά — με ένα κλικ.',
               },
               {
                 icon: <Leaf className="h-7 w-7 text-green-700" />,
-                title: 'AI Γεωπόνος 24/7',
-                desc: 'Βασισμένος στις οδηγίες του ΥΠΑΑΤ και στη βιβλιογραφία Olea europaea. Ρωτήστε οτιδήποτε.',
+                title: 'AI Γεωπόνος',
+                desc: 'Προτάσεις για τον δικό σας ελαιώνα από τα δικά σας δεδομένα: καιρός, εργασίες, συγκομιδές.',
               },
               {
                 icon: <Check className="h-7 w-7 text-olive-700" />,

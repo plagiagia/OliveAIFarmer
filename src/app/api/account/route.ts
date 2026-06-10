@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic'
  *   1. Cancels Stripe subscription if any (best-effort, non-blocking)
  *   2. Deletes orphan AIUsage rows (no FK relation on schema)
  *   3. Deletes Prisma User row (cascades to farms, activities, harvests,
- *      subscription, weather/satellite records via schema relations)
+ *      subscription, weather records via schema relations)
  *   4. Deletes the Clerk user (invalidates the session)
  *
  * Fulfils the GDPR Article 17 promise made in /legal/privacy.

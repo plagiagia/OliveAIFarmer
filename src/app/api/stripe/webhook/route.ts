@@ -1,7 +1,7 @@
 import { env } from '@/env'
 import { reconcileFarmActivationForUser } from '@/lib/farm-activation'
 import { prisma } from '@/lib/db'
-import type { Plan } from '@/lib/plans'
+import { normalizePlan } from '@/lib/plans'
 import { stripe } from '@/lib/stripe'
 import { headers } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
@@ -87,7 +87,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
   const stripeSubscriptionId = session.subscription as string
   const stripeCustomerId = session.customer as string
-  const plan = (session.metadata?.plan ?? 'FREE') as Plan
+  const plan = normalizePlan(session.metadata?.plan)
 
   const stripeSubscription = await stripe.subscriptions.retrieve(stripeSubscriptionId)
   const priceId = stripeSubscription.items.data[0]?.price.id ?? null
@@ -128,8 +128,10 @@ async function handleSubscriptionUpdated(stripeSubscription: Stripe.Subscription
   })
   if (!subscription) return
 
-  // Derive plan from metadata or price ID
-  const plan = (stripeSubscription.metadata?.plan as Plan | undefined) ?? subscription.plan
+  // Derive plan from metadata (normalized for legacy tiers) or keep current
+  const plan = stripeSubscription.metadata?.plan
+    ? normalizePlan(stripeSubscription.metadata.plan)
+    : subscription.plan
 
   const statusMap: Record<string, 'ACTIVE' | 'TRIALING' | 'PAST_DUE' | 'CANCELED' | 'INCOMPLETE'> = {
     active: 'ACTIVE',

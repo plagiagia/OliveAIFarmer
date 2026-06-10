@@ -2,14 +2,13 @@
 
 import { usePlan } from '@/hooks/usePlan'
 import type { Plan } from '@/lib/plans'
-import { formatMonthlyPrice, PLANS } from '@/lib/plans'
+import { formatAnnualPrice, PLANS } from '@/lib/plans'
 import { CreditCard, ExternalLink, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
 
 const UPGRADE_TARGETS: Partial<Record<Plan, Plan[]>> = {
-  FREE: ['GROWER', 'PRODUCER'],
-  GROWER: ['PRODUCER'],
+  FREE: ['GROWER'],
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -84,7 +83,7 @@ export default function SubscriptionSection() {
                 <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                   <span className="text-base font-semibold text-olive-900">{config.nameEl}</span>
                   <span className="text-sm text-olive-700">
-                    {config.priceMonthly === 0 ? 'Δωρεάν' : formatMonthlyPrice(config.priceMonthly)}
+                    {config.priceAnnual === 0 ? 'Δωρεάν' : formatAnnualPrice(config.priceAnnual)}
                   </span>
                 </div>
                 <p className="mt-1 text-sm text-gray-600">{formatGroveLimit(config.maxFarms)}</p>
@@ -132,7 +131,7 @@ export default function SubscriptionSection() {
                       className="inline-flex items-center gap-2 rounded-xl border border-olive-300 bg-white px-4 py-2 text-sm font-semibold text-olive-800 hover:bg-olive-50 disabled:cursor-not-allowed disabled:opacity-60 transition-colors"
                     >
                       {busy === target && <Loader2 className="h-4 w-4 animate-spin" />}
-                      Αναβάθμιση σε {targetCfg.nameEl} ({formatMonthlyPrice(targetCfg.priceMonthly)})
+                      Αναβάθμιση σε {targetCfg.nameEl} ({formatAnnualPrice(targetCfg.priceAnnual)})
                     </button>
                   )
                 })}

@@ -119,46 +119,6 @@ export async function GET() {
       }))
       .sort((a, b) => b.count - a.count)
 
-    // Calculate monthly activity data for current year
-    const currentYear = new Date().getFullYear()
-    const monthlyData: Record<number, { activities: number; costs: number }> = {}
-
-    farms.forEach(farm => {
-      farm.activities.forEach((activity: ActivityData) => {
-        const activityDate = new Date(activity.date)
-        if (activityDate.getFullYear() === currentYear) {
-          const month = activityDate.getMonth() + 1
-          if (!monthlyData[month]) {
-            monthlyData[month] = { activities: 0, costs: 0 }
-          }
-          monthlyData[month].activities += 1
-          monthlyData[month].costs += activity.cost || 0
-        }
-      })
-    })
-
-    const monthlyActivityData = Object.entries(monthlyData)
-      .map(([month, data]) => ({
-        monthNumber: parseInt(month),
-        month: getGreekMonthName(parseInt(month)),
-        activities: data.activities,
-        costs: data.costs
-      }))
-
-    // Farm comparison data
-    const farmComparisonData = farms.map(farm => {
-      const farmTotalYield = farm.harvests.reduce((sum: number, h: HarvestData) => sum + (h.totalYield || 0), 0)
-      return {
-        farmName: farm.name,
-        totalArea: farm.totalArea || 0,
-        treeCount: farm.treeCount || 0,
-        totalYield: farmTotalYield,
-        yieldPerStremma: farm.totalArea && farm.totalArea > 0
-          ? farmTotalYield / farm.totalArea
-          : 0
-      }
-    })
-
     // Calculate total costs
     const totalCosts = farms.reduce((sum: number, farm: FarmWithRelations) =>
       sum + farm.activities.reduce((aSum: number, a: ActivityData) => aSum + (a.cost || 0), 0), 0
@@ -265,141 +225,6 @@ export async function GET() {
       }
     }
 
-    // Farm Performance Rankings
-    const farmPerformance = farms.map(farm => {
-      const farmYield = farm.harvests.reduce((sum: number, h: HarvestData) => sum + (h.totalYield || 0), 0)
-      const farmRevenue = farm.harvests.reduce((sum: number, h: HarvestData) => sum + (h.totalValue || 0), 0)
-      const farmCosts = farm.activities.reduce((sum: number, a: ActivityData) => sum + (a.cost || 0), 0)
-      const farmProfit = farmRevenue - farmCosts
-      const farmROI = farmCosts > 0 ? (farmProfit / farmCosts) * 100 : 0
-      const farmYieldPerStremma = farm.totalArea && farm.totalArea > 0 ? farmYield / farm.totalArea : 0
-      const farmYieldPerTree = farm.treeCount && farm.treeCount > 0 ? farmYield / farm.treeCount : 0
-
-      return {
-        farmId: farm.id,
-        farmName: farm.name,
-        totalYield: farmYield,
-        revenue: farmRevenue,
-        costs: farmCosts,
-        profit: farmProfit,
-        roi: farmROI,
-        yieldPerStremma: farmYieldPerStremma,
-        yieldPerTree: farmYieldPerTree,
-        efficiency: farmCosts > 0 ? farmYield / farmCosts : 0
-      }
-    })
-
-    const bestPerformingFarm = farmPerformance.length > 0
-      ? farmPerformance.reduce((best, farm) => farm.roi > best.roi ? farm : best)
-      : null
-
-    const worstPerformingFarm = farmPerformance.length > 0
-      ? farmPerformance.reduce((worst, farm) => farm.roi < worst.roi ? farm : worst)
-      : null
-
-    const mostEfficientFarm = farmPerformance.length > 0
-      ? farmPerformance.reduce((best, farm) => farm.efficiency > best.efficiency ? farm : best)
-      : null
-
-    // Activity Intensity Heatmap Data (for calendar view)
-    const activityIntensity: Record<string, number> = {}
-    farms.forEach(farm => {
-      farm.activities.forEach((activity: ActivityData) => {
-        const dateKey = new Date(activity.date).toISOString().split('T')[0]
-        activityIntensity[dateKey] = (activityIntensity[dateKey] || 0) + 1
-      })
-    })
-
-    const activityHeatmapData = Object.entries(activityIntensity).map(([date, count]) => ({
-      date,
-      count
-    }))
-
-    // Actionable Recommendations
-    const recommendations = []
-
-    if (roi < 20) {
-      recommendations.push({
-        type: 'warning',
-        category: 'Κερδοφορία',
-        message: 'Η απόδοση επένδυσης (ROI) είναι χαμηλή. Εξετάστε τρόπους μείωσης κόστους ή βελτίωσης παραγωγής.',
-        priority: 'high'
-      })
-    }
-
-    if (costPerKg > 2) {
-      recommendations.push({
-        type: 'warning',
-        category: 'Κόστος',
-        message: `Το κόστος παραγωγής (€${costPerKg.toFixed(2)}/kg) είναι υψηλό. Αναζητήστε ευκαιρίες βελτιστοποίησης.`,
-        priority: 'medium'
-      })
-    }
-
-    const highCostActivities = activityData.filter(a => a.totalCost > totalCosts * 0.2)
-    if (highCostActivities.length > 0) {
-      recommendations.push({
-        type: 'info',
-        category: 'Δραστηριότητες',
-        message: `Οι δραστηριότητες ${highCostActivities.map(a => a.typeLabel).join(', ')} αποτελούν μεγάλο μέρος του κόστους. Εξετάστε εναλλακτικές μεθόδους.`,
-        priority: 'medium'
-      })
-    }
-
-    if (yieldPerTree < 10) {
-      recommendations.push({
-        type: 'warning',
-        category: 'Παραγωγικότητα',
-        message: `Η απόδοση ανά δέντρο (${yieldPerTree.toFixed(1)} kg) είναι χαμηλή. Εξετάστε βελτίωση φροντίδας δέντρων.`,
-        priority: 'high'
-      })
-    }
-
-    if (profitMargin > 50) {
-      recommendations.push({
-        type: 'success',
-        category: 'Επιτυχία',
-        message: `Εξαιρετικό περιθώριο κέρδους ${profitMargin.toFixed(1)}%! Συνεχίστε τις τρέχουσες πρακτικές.`,
-        priority: 'low'
-      })
-    }
-
-    if (totalActivities === 0) {
-      recommendations.push({
-        type: 'info',
-        category: 'Δραστηριότητες',
-        message: 'Δεν έχετε καταγράψει δραστηριότητες. Ξεκινήστε να καταγράφετε για καλύτερη ανάλυση.',
-        priority: 'high'
-      })
-    }
-
-    // Seasonal Pattern Analysis
-    const seasonalData = {
-      winter: { activities: 0, costs: 0 }, // Δεκ, Ιαν, Φεβ
-      spring: { activities: 0, costs: 0 }, // Μαρ, Απρ, Μαι
-      summer: { activities: 0, costs: 0 }, // Ιουν, Ιουλ, Αυγ
-      autumn: { activities: 0, costs: 0 }  // Σεπ, Οκτ, Νοε
-    }
-
-    farms.forEach(farm => {
-      farm.activities.forEach((activity: ActivityData) => {
-        const month = new Date(activity.date).getMonth() + 1
-        if ([12, 1, 2].includes(month)) {
-          seasonalData.winter.activities += 1
-          seasonalData.winter.costs += activity.cost || 0
-        } else if ([3, 4, 5].includes(month)) {
-          seasonalData.spring.activities += 1
-          seasonalData.spring.costs += activity.cost || 0
-        } else if ([6, 7, 8].includes(month)) {
-          seasonalData.summer.activities += 1
-          seasonalData.summer.costs += activity.cost || 0
-        } else if ([9, 10, 11].includes(month)) {
-          seasonalData.autumn.activities += 1
-          seasonalData.autumn.costs += activity.cost || 0
-        }
-      })
-    })
-
     return NextResponse.json({
       summary: {
         totalFarms,
@@ -420,33 +245,12 @@ export async function GET() {
         profitMargin
       },
       harvestData,
-      activityData,
-      monthlyActivityData,
-      farmComparisonData,
       costBreakdown,
       profitabilityTimeline,
-      yearOverYearComparison,
-      farmPerformance: {
-        all: farmPerformance,
-        best: bestPerformingFarm,
-        worst: worstPerformingFarm,
-        mostEfficient: mostEfficientFarm
-      },
-      activityHeatmapData,
-      recommendations,
-      seasonalData
+      yearOverYearComparison
     })
   } catch (error) {
     console.error('Analytics error:', error)
     return NextResponse.json({ error: 'Failed to fetch analytics' }, { status: 500 })
   }
-}
-
-function getGreekMonthName(month: number): string {
-  const months = [
-    'Ιανουάριος', 'Φεβρουάριος', 'Μάρτιος', 'Απρίλιος',
-    'Μάιος', 'Ιούνιος', 'Ιούλιος', 'Αύγουστος',
-    'Σεπτέμβριος', 'Οκτώβριος', 'Νοέμβριος', 'Δεκέμβριος'
-  ]
-  return months[month - 1] || ''
 }

@@ -15,12 +15,13 @@ export const stripe = new Stripe(env.STRIPE_SECRET_KEY ?? '', {
   typescript: true,
 })
 
-/** Map our Plan enum to Stripe Price IDs from env. */
+/** Stripe Price IDs for the paid (GROWER/Pro) tier, per billing interval. */
 export const STRIPE_PRICE_IDS = {
-  GROWER: env.STRIPE_PRICE_GROWER ?? '',
-  PRODUCER: env.STRIPE_PRICE_PRODUCER ?? '',
-  MILL: env.STRIPE_PRICE_MILL ?? '',
-  VIEWER_SEAT: env.STRIPE_PRICE_VIEWER_SEAT ?? '',
+  GROWER_MONTHLY: env.STRIPE_PRICE_GROWER ?? '',
+  GROWER_ANNUAL: env.STRIPE_PRICE_GROWER_ANNUAL ?? '',
 } as const
 
-export type StripePlan = keyof typeof STRIPE_PRICE_IDS
+/** Resolve the price ID for a billing interval (annual is the default). */
+export function getGrowerPriceId(interval: 'year' | 'month'): string {
+  return interval === 'month' ? STRIPE_PRICE_IDS.GROWER_MONTHLY : STRIPE_PRICE_IDS.GROWER_ANNUAL
+}

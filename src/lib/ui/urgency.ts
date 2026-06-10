@@ -1,6 +1,6 @@
 /**
  * Centralized urgency styling for AI / smart recommendations.
- * Imported by AIGeoponosTab, DashboardAIGeoponos, and any future
+ * Imported by AIGeoponosTab and any future
  * insight / chat surface so colors stay consistent.
  */
 import { AlertTriangle, Clock, Lightbulb, type LucideIcon } from 'lucide-react'
