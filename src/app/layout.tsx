@@ -1,4 +1,5 @@
 import { ClerkProvider, SignedIn, SignedOut } from '@clerk/nextjs'
+import { Analytics } from '@vercel/analytics/next'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
@@ -100,6 +101,7 @@ export default function RootLayout({
             <BottomNav />
             <OfflineIndicator />
           </SignedIn>
+          <Analytics />
         </body>
       </html>
     </ClerkProvider>
