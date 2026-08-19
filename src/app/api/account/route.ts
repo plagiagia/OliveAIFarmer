@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic'
  * DELETE /api/account
  *
  * Hard-deletes the authenticated user's account:
- *   1. Cancels Stripe subscription if any (best-effort, non-blocking)
+ *   1. Cancels Stripe subscription if any (required before data deletion)
  *   2. Deletes orphan AIUsage rows (no FK relation on schema)
  *   3. Deletes Prisma User row (cascades to farms, activities, harvests,
  *      subscription, weather records via schema relations)
@@ -32,7 +32,14 @@ export async function DELETE() {
     try {
       await stripe.subscriptions.cancel(user.subscription.stripeSubscriptionId)
     } catch (err) {
-      console.error('[account-delete] stripe cancel failed (continuing):', err)
+      console.error('[account-delete] stripe cancel failed; aborting account deletion:', err)
+      return NextResponse.json(
+        {
+          error:
+            'Δεν ήταν δυνατή η ακύρωση της συνδρομής σας. Δεν διαγράφηκαν δεδομένα ή ο λογαριασμός σας. Δοκιμάστε ξανά ή επικοινωνήστε μαζί μας.',
+        },
+        { status: 502 }
+      )
     }
   }
 
