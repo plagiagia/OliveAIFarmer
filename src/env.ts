@@ -54,7 +54,8 @@ const serverSchema = z.object({
   VAPID_PRIVATE_KEY: z.string().optional(),
   VAPID_SUBJECT: z.string().optional(),
 
-  // Upstash REST (optional distributed rate limiter; falls back to in-memory).
+  // Upstash REST (optional for local development; protected production routes
+  // fail closed when the distributed limiter is not configured or unavailable).
   UPSTASH_REDIS_REST_URL: z.string().url().optional(),
   UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
 

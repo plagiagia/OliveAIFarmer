@@ -76,7 +76,7 @@
     "vitest": "^4.0.16"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": "22.x"
   },
   "overrides": {
     "serialize-javascript": "7.0.5",

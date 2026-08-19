@@ -46,6 +46,15 @@ export async function POST(request: NextRequest) {
     }
 
     const rateLimit = await checkRateLimitAsync(`ai:generate:${userId}`, 10, 60 * 60 * 1000)
+    if (rateLimit.backend === 'unavailable') {
+      return NextResponse.json(
+        { error: 'Η υπηρεσία περιορισμού αιτημάτων δεν είναι προσωρινά διαθέσιμη.' },
+        {
+          status: 503,
+          headers: { 'Retry-After': String(rateLimit.retryAfterSeconds) }
+        }
+      )
+    }
     if (!rateLimit.allowed) {
       return NextResponse.json(
         {
