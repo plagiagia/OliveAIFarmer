@@ -9,9 +9,9 @@ import { z } from 'zod'
 
 const isProd = process.env.NODE_ENV === 'production'
 
-// In production every secret must be present. In dev/test we allow them to be
-// optional so contributors can run partial slices of the app without all
-// third-party keys configured.
+// Core production secrets must be present. Optional integrations are modeled
+// separately so an unavailable AI or weather provider cannot prevent unrelated
+// routes (for example Stripe billing) from starting.
 const requiredInProd = (schema: z.ZodString) =>
   isProd ? schema : schema.optional()
 
@@ -34,13 +34,13 @@ const serverSchema = z.object({
   CLERK_SECRET_KEY: requiredInProd(z.string().min(1)),
 
   // OpenWeatherMap
-  OPENWEATHER_API_KEY: requiredInProd(z.string().min(1)),
+  OPENWEATHER_API_KEY: z.string().min(1).optional(),
 
   // Vercel Cron auth
   CRON_SECRET: requiredInProd(z.string().min(16)),
 
   // OpenAI (AI Geoponos)
-  OPENAI_API_KEY: requiredInProd(z.string().min(1)),
+  OPENAI_API_KEY: z.string().min(1).optional(),
   OPENAI_MODEL: z.string().optional(),
   OPENAI_MONTHLY_TOKEN_BUDGET: z.coerce.number().int().positive().optional(),
 

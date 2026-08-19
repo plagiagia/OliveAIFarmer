@@ -3,7 +3,7 @@ import { isAuthorizedCronRequest } from '@/lib/cron-auth'
 import { maybeSendDakosAlert } from '@/lib/agronomy/dakos-alerts'
 import { getAllFarmsWithCoordinates, saveWeatherRecord } from '@/lib/db'
 import { parseCoordinates } from '@/lib/mapbox-utils'
-import { hasFeature, normalizePlan } from '@/lib/plans'
+import { getEntitledPlan, hasFeature } from '@/lib/plans'
 
 export const dynamic = 'force-dynamic'
 
@@ -132,7 +132,10 @@ export async function GET(request: NextRequest) {
         results.successCount++
 
         // Δάκος risk alert (paid plans only) based on the stored history.
-        const plan = normalizePlan(farm.user?.subscription?.plan)
+        const plan = getEntitledPlan(
+          farm.user?.subscription?.plan,
+          farm.user?.subscription?.status
+        )
         if (hasFeature(plan, 'oliveFlyAlerts')) {
           try {
             const alert = await maybeSendDakosAlert(farm)

@@ -275,7 +275,7 @@ export async function getAllFarmsWithCoordinates() {
         userId: true,
         user: {
           select: {
-            subscription: { select: { plan: true } }
+            subscription: { select: { plan: true, status: true } }
           }
         }
       }

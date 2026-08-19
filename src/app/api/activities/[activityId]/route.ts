@@ -6,13 +6,14 @@ import { NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     activityId: string
-  }
+  }>
 }
 
 // GET /api/activities/[activityId]
-export async function GET(request: Request, { params }: RouteParams) {
+export async function GET(request: Request, props: RouteParams) {
+  const params = await props.params
   try {
     const { userId } = await auth()
     if (!userId) {
@@ -40,7 +41,8 @@ export async function GET(request: Request, { params }: RouteParams) {
 }
 
 // PUT /api/activities/[activityId]
-export async function PUT(request: Request, { params }: RouteParams) {
+export async function PUT(request: Request, props: RouteParams) {
+  const params = await props.params
   try {
     const { userId } = await auth()
     if (!userId) {
@@ -110,7 +112,8 @@ export async function PUT(request: Request, { params }: RouteParams) {
 }
 
 // DELETE /api/activities/[activityId]
-export async function DELETE(request: Request, { params }: RouteParams) {
+export async function DELETE(request: Request, props: RouteParams) {
+  const params = await props.params
   try {
     const { userId } = await auth()
     if (!userId) {
@@ -146,4 +149,4 @@ export async function DELETE(request: Request, { params }: RouteParams) {
     console.error('Error deleting activity:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-} 
+}

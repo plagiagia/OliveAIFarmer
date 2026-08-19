@@ -5,7 +5,7 @@
  */
 import { prisma } from '@/lib/db'
 import type { Plan, PlanConfig } from '@/lib/plans'
-import { getPlanConfig, normalizePlan } from '@/lib/plans'
+import { getEntitledPlan, getPlanConfig } from '@/lib/plans'
 import { auth } from '@clerk/nextjs/server'
 
 export interface UserPlan {
@@ -53,7 +53,7 @@ export async function getUserPlanByClerkId(clerkId: string): Promise<UserPlan> {
   }
 
   const sub = user.subscription
-  const plan = normalizePlan(sub.plan)
+  const plan = getEntitledPlan(sub.plan, sub.status)
 
   return {
     plan,

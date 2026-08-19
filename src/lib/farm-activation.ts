@@ -5,7 +5,7 @@
 import { prisma } from '@/lib/db'
 import { ForbiddenError, NotFoundError } from '@/lib/errors'
 import type { Plan } from '@/lib/plans'
-import { getPlanConfig, normalizePlan } from '@/lib/plans'
+import { getEntitledPlan, getPlanConfig } from '@/lib/plans'
 
 export const INACTIVE_FARM_MESSAGE =
   'Αυτός ο ελαιώνας είναι ανενεργός λόγω ορίων προγράμματος. Αναβαθμίστε για να τον ενεργοποιήσετε ξανά.'
@@ -78,13 +78,16 @@ export async function reconcileFarmActivationByClerkId(clerkId: string): Promise
       where: { clerkId },
       select: {
         id: true,
-        subscription: { select: { plan: true } },
+        subscription: { select: { plan: true, status: true } },
       },
     })
 
     if (!user) return
 
-    const plan = normalizePlan(user.subscription?.plan)
+    const plan = getEntitledPlan(
+      user.subscription?.plan,
+      user.subscription?.status
+    )
     await reconcileFarmActivationForUser(user.id, plan)
   } catch (err) {
     console.error('[farm-activation] reconcile skipped due to error:', err)

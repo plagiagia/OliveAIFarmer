@@ -1,7 +1,7 @@
 import { env } from '@/env'
 import { reconcileFarmActivationForUser } from '@/lib/farm-activation'
 import { prisma } from '@/lib/db'
-import { normalizePlan } from '@/lib/plans'
+import { getEntitledPlan, normalizePlan } from '@/lib/plans'
 import { stripe } from '@/lib/stripe'
 import { headers } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
@@ -143,13 +143,15 @@ async function handleSubscriptionUpdated(stripeSubscription: Stripe.Subscription
     unpaid: 'PAST_DUE',
     paused: 'PAST_DUE',
   }
+  // Fail closed if Stripe introduces a status we do not recognize.
+  const status = statusMap[stripeSubscription.status] ?? 'INCOMPLETE'
 
   const { periodStart, periodEnd } = getBillingPeriod(stripeSubscription)
   await prisma.subscription.update({
     where: { stripeSubscriptionId: stripeSubId },
     data: {
       plan,
-      status: statusMap[stripeSubscription.status] ?? 'ACTIVE',
+      status,
       currentPeriodStart: periodStart ?? undefined,
       currentPeriodEnd: periodEnd ?? undefined,
       cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end,
@@ -157,7 +159,10 @@ async function handleSubscriptionUpdated(stripeSubscription: Stripe.Subscription
     },
   })
 
-  await reconcileFarmActivationForUser(subscription.userId, plan)
+  await reconcileFarmActivationForUser(
+    subscription.userId,
+    getEntitledPlan(plan, status)
+  )
 }
 
 async function handleSubscriptionDeleted(stripeSubscription: Stripe.Subscription) {
@@ -193,8 +198,17 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
   const stripeSubId = typeof subRef === 'string' ? subRef : subRef?.id ?? null
   if (!stripeSubId) return
 
+  const subscription = await prisma.subscription.findUnique({
+    where: { stripeSubscriptionId: stripeSubId },
+    select: { userId: true },
+  })
+
   await prisma.subscription.updateMany({
     where: { stripeSubscriptionId: stripeSubId },
     data: { status: 'PAST_DUE' },
   })
+
+  if (subscription) {
+    await reconcileFarmActivationForUser(subscription.userId, 'FREE')
+  }
 }

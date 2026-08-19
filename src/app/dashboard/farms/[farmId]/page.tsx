@@ -5,12 +5,13 @@ import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 
 interface FarmDetailPageProps {
-  params: {
+  params: Promise<{
     farmId: string
-  }
+  }>
 }
 
-export default async function FarmDetailPage({ params }: FarmDetailPageProps) {
+export default async function FarmDetailPage(props: FarmDetailPageProps) {
+  const params = await props.params
   const { userId } = await auth()
 
   if (!userId) {
