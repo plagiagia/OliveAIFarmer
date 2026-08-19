@@ -13,6 +13,8 @@
 
 export type Plan = 'FREE' | 'GROWER'
 
+const ENTITLED_SUBSCRIPTION_STATUSES = new Set(['ACTIVE', 'TRIALING'])
+
 export interface PlanConfig {
   name: string
   nameEl: string // Greek name
@@ -73,6 +75,20 @@ export type BillingInterval = 'year' | 'month'
 export function normalizePlan(value: string | null | undefined): Plan {
   if (value === 'GROWER' || value === 'PRODUCER' || value === 'MILL') return 'GROWER'
   return 'FREE'
+}
+
+/** Paid access is granted only while Stripe considers the subscription usable. */
+export function hasPaidEntitlements(status: string | null | undefined): boolean {
+  return status != null && ENTITLED_SUBSCRIPTION_STATUSES.has(status)
+}
+
+/** Convert a stored billing plan into the plan that may actually be used. */
+export function getEntitledPlan(
+  value: string | null | undefined,
+  status: string | null | undefined
+): Plan {
+  const plan = normalizePlan(value)
+  return plan === 'GROWER' && !hasPaidEntitlements(status) ? 'FREE' : plan
 }
 
 /** Returns the config for a given plan (defaults to FREE). */

@@ -19,6 +19,15 @@ export async function GET(request: NextRequest) {
 
     // 60 requests per minute per user.
     const rateLimit = await checkRateLimitAsync(`weather:${userId}`, 60, 60_000)
+    if (rateLimit.backend === 'unavailable') {
+      return NextResponse.json(
+        { error: 'Η υπηρεσία περιορισμού αιτημάτων δεν είναι προσωρινά διαθέσιμη.' },
+        {
+          status: 503,
+          headers: { 'Retry-After': String(rateLimit.retryAfterSeconds) }
+        }
+      )
+    }
     if (!rateLimit.allowed) {
       return NextResponse.json(
         {

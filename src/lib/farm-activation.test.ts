@@ -15,6 +15,7 @@ vi.mock('@/lib/db', () => ({
 import { prisma } from '@/lib/db'
 import {
   assertFarmIsActive,
+  reconcileFarmActivationByClerkId,
   reconcileFarmActivationForUser,
 } from '@/lib/farm-activation'
 
@@ -74,6 +75,29 @@ describe('farm-activation', () => {
       expect(prisma.farm.updateMany).toHaveBeenCalledWith({
         where: { userId: 'user-1', isActive: false },
         data: { isActive: true },
+      })
+    })
+  })
+
+  describe('reconcileFarmActivationByClerkId', () => {
+    it('applies FREE limits to a past-due paid subscription', async () => {
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({
+        id: 'user-1',
+        subscription: { plan: 'GROWER', status: 'PAST_DUE' },
+      } as never)
+      vi.mocked(prisma.farm.findMany).mockResolvedValue([
+        { id: 'newest' },
+        { id: 'older' },
+      ] as never)
+      vi.mocked(prisma.farm.updateMany)
+        .mockResolvedValueOnce({ count: 1 })
+        .mockResolvedValueOnce({ count: 1 })
+
+      await reconcileFarmActivationByClerkId('clerk-user-1')
+
+      expect(prisma.farm.updateMany).toHaveBeenNthCalledWith(2, {
+        where: { userId: 'user-1', id: { in: ['older'] }, isActive: true },
+        data: { isActive: false },
       })
     })
   })
