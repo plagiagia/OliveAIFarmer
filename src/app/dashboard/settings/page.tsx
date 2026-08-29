@@ -1,6 +1,7 @@
 import DeleteAccountSection from '@/components/settings/DeleteAccountSection'
 import PushNotificationSection from '@/components/settings/PushNotificationSection'
 import SubscriptionSection from '@/components/settings/SubscriptionSection'
+import SupportSection from '@/components/settings/SupportSection'
 import { UserProfile } from '@clerk/nextjs'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
@@ -26,6 +27,8 @@ export default function SettingsPage() {
           Διαχειριστείτε τη συνδρομή σας, τα στοιχεία σύνδεσης, την ασφάλεια και τον λογαριασμό σας.
         </p>
       </header>
+
+      <SupportSection />
 
       <SubscriptionSection />
 
