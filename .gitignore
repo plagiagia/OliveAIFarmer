@@ -111,3 +111,5 @@ temp/
 # Local development
 .local 
 .cursor
+.claude/settings.json
+public/worker-fed74f01070eed3f.js
