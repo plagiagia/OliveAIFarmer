@@ -1,5 +1,6 @@
 import { ClerkProvider, SignedIn, SignedOut } from '@clerk/nextjs'
 import { Analytics } from '@vercel/analytics/next'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
@@ -102,6 +103,7 @@ export default function RootLayout({
             <OfflineIndicator />
           </SignedIn>
           <Analytics />
+          <SpeedInsights />
         </body>
       </html>
     </ClerkProvider>
