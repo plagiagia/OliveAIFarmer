@@ -35,7 +35,7 @@ export default function PrivacyPage() {
           <li><strong>Καταγραφές δραστηριοτήτων & συγκομιδής:</strong> ημερομηνίες, τύπος εργασίας, κόστος, σημειώσεις.</li>
           <li><strong>Πληρωμές:</strong> τα στοιχεία της κάρτας σας δεν αποθηκεύονται από εμάς. Διαχειρίζονται αποκλειστικά από την υπηρεσία Stripe.</li>
           <li><strong>Δεδομένα AI Γεωπόνου:</strong> το σχετικό περιεχόμενο του ελαιώνα σας (εργασίες, συγκομιδές, καιρός) αποστέλλεται στην OpenAI για τη δημιουργία προτάσεων. Καταγράφουμε τη συνολική χρήση tokens για έλεγχο κόστους.</li>
-          <li><strong>Τεχνικά cookies και δεδομένα χρήσης:</strong> απαραίτητα cookies σύνδεσης από το Clerk. Χρησιμοποιούμε το Vercel Web Analytics και το Vercel Speed Insights για στατιστικά επισκεψιμότητας και μέτρηση απόδοσης.</li>
+          <li><strong>Τεχνικά cookies και δεδομένα χρήσης:</strong> απαραίτητα cookies σύνδεσης από το Clerk. Χρησιμοποιούμε το Vercel Web Analytics και το Vercel Speed Insights για στατιστικά επισκεψιμότητας και μέτρηση απόδοσης. Το Meta Pixel για μέτρηση διαφημίσεων ενεργοποιείται μόνο μετά από συγκατάθεση.</li>
         </ul>
       </section>
 
@@ -70,6 +70,7 @@ export default function PrivacyPage() {
           <li><strong>OpenWeatherMap</strong> — δέχεται μόνο γεωγραφικές συντεταγμένες, χωρίς προσωπικά δεδομένα.</li>
           <li><strong>Mapbox</strong> (ΗΠΑ) — εμφάνιση χαρτών.</li>
           <li><strong>Vercel Inc.</strong> (ΗΠΑ, φιλοξενία EU region) — φιλοξενία εφαρμογής, Web Analytics και Speed Insights.</li>
+          <li><strong>Meta Platforms Ireland Limited</strong> — μέτρηση απόδοσης διαφημίσεων, μόνο όταν έχει δοθεί συγκατάθεση.</li>
         </ul>
       </section>
 
