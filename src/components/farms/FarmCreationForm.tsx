@@ -79,7 +79,7 @@ export default function FarmCreationForm({ userId: _userId }: FarmCreationFormPr
 
       if (data.success) {
         if (data.isFirstFarm) {
-          trackWhopEvent('first_grove_created')
+          trackWhopEvent('complete_registration')
         }
 
         // Redirect to dashboard with success message

@@ -1,7 +1,6 @@
 'use client'
 
 import { useSignIn, useSignUp } from '@clerk/nextjs'
-import { clearWhopRegistrationPending, markWhopRegistrationPending } from '@/lib/whop'
 import { Loader2 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -26,10 +25,6 @@ export default function GoogleSignInButton({ onNotification, mode }: GoogleSignI
         throw new Error('Authentication method not available')
       }
 
-      if (mode === 'register') {
-        markWhopRegistrationPending()
-      }
-
       await authMethod.authenticateWithRedirect({
         strategy: 'oauth_google',
         redirectUrl: '/',
@@ -37,7 +32,6 @@ export default function GoogleSignInButton({ onNotification, mode }: GoogleSignI
       })
 
     } catch (error: any) {
-      clearWhopRegistrationPending()
       console.error('Google auth error:', error)
       onNotification(
         error?.errors?.[0]?.message || 'Σφάλμα κατά τη σύνδεση με Google. Παρακαλώ δοκιμάστε ξανά.',

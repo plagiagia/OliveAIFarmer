@@ -5,7 +5,6 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { OfflineIndicator } from '@/components/ui/OfflineIndicator'
-import WhopRegistrationTracker from '@/components/analytics/WhopRegistrationTracker'
 import BrandLogo from '@/components/ui/BrandLogo'
 import BottomNav from '@/components/navigation/BottomNav'
 import UserMenuButton from '@/components/auth/UserMenuButton'
@@ -112,7 +111,6 @@ export default function RootLayout({
           </SignedIn>
           <Analytics />
           <SpeedInsights />
-          <WhopRegistrationTracker />
         </body>
       </html>
     </ClerkProvider>

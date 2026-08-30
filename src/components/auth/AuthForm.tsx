@@ -1,7 +1,6 @@
 'use client'
 
 import { useSignIn, useSignUp } from '@clerk/nextjs'
-import { trackWhopEvent } from '@/lib/whop'
 import { Building2, Eye, EyeOff, Loader2, Lock, Mail, MapPin, User } from 'lucide-react'
 import { useState } from 'react'
 
@@ -59,7 +58,6 @@ export default function AuthForm({ mode, onNotification }: AuthFormProps) {
         })
 
         if (result.status === 'complete') {
-          trackWhopEvent('complete_registration')
           onNotification('Επιτυχής εγγραφή! Καλώς ήρθατε στο OliveIQ.', 'success')
         } else {
           // If email verification is required
