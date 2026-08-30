@@ -22,7 +22,9 @@ export async function POST() {
     // Check if user already exists in our database (basic check)
     let basicUser = await getUserByClerkIdBasic(userId)
     
-    if (!basicUser) {
+    const isNewUser = !basicUser
+
+    if (isNewUser) {
       // Create new user in our database
       basicUser = await createUser({
         id: clerkUser.id,
@@ -33,7 +35,7 @@ export async function POST() {
       
       console.log('✅ New user created in database:', basicUser?.email)
     } else {
-      console.log('✅ Existing user found:', basicUser.email)
+      console.log('✅ Existing user found:', basicUser?.email)
     }
 
     // Now get the full user data with farms
@@ -52,7 +54,8 @@ export async function POST() {
         lastName: user.lastName,
         farmsCount: user.farms?.length || 0,
         hasCompletedOnboarding: (user.farms?.length || 0) > 0
-      }
+      },
+      isNewUser,
     })
   } catch (error) {
     console.error('❌ User sync error:', error)
@@ -61,4 +64,4 @@ export async function POST() {
       error: 'User sync failed'
     }, { status: 500 })
   }
-} 
+}

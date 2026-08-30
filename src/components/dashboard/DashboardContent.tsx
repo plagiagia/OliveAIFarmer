@@ -10,6 +10,7 @@ import OliveIcon from '@/components/ui/OliveIcon'
 import { usePlan } from '@/hooks/usePlan'
 import { canAddFarm } from '@/lib/plans'
 import { parseCoordinates } from '@/lib/mapbox-utils'
+import { trackCompleteRegistration } from '@/lib/meta-pixel'
 import { ACTIVITY_TYPE_COLORS, ACTIVITY_TYPE_ICONS, ActivityType } from '@/types/activity'
 import { format } from 'date-fns'
 import { el } from 'date-fns/locale'
@@ -85,6 +86,9 @@ export default function DashboardContent({ user, clerkUserId: _clerkUserId }: Da
       if (response.ok) {
         const data = await response.json()
         if (data.success) {
+          if (data.isNewUser) {
+            trackCompleteRegistration()
+          }
           // Refresh the page to get updated user data
           window.location.reload()
         }
@@ -626,4 +630,4 @@ function FarmCard({ farm, onEdit: _onEdit }: { farm: Farm; onEdit: (farm: Farm |
       </div>
     </div>
   )
-} 
+}

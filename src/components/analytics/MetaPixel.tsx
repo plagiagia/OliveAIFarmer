@@ -1,6 +1,7 @@
 'use client'
 
 import Script from 'next/script'
+import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import {
   getMarketingConsent,
@@ -12,7 +13,9 @@ interface MetaPixelProps {
 }
 
 export default function MetaPixel({ pixelId }: MetaPixelProps) {
+  const pathname = usePathname()
   const [hasConsent, setHasConsent] = useState(false)
+  const [isPixelReady, setIsPixelReady] = useState(false)
 
   useEffect(() => {
     const updateConsent = () => {
@@ -26,6 +29,12 @@ export default function MetaPixel({ pixelId }: MetaPixelProps) {
       window.removeEventListener(MARKETING_CONSENT_CHANGED_EVENT, updateConsent)
     }
   }, [])
+
+  useEffect(() => {
+    if (!pixelId || !hasConsent || !isPixelReady || typeof window.fbq !== 'function') return
+
+    window.fbq('track', 'PageView')
+  }, [hasConsent, isPixelReady, pathname, pixelId])
 
   if (!pixelId || !hasConsent) return null
 
@@ -44,8 +53,11 @@ export default function MetaPixel({ pixelId }: MetaPixelProps) {
           s.parentNode.insertBefore(t,s)}(window, document,'script',
           'https://connect.facebook.net/en_US/fbevents.js');
           fbq('init', '${pixelId}');
-          fbq('track', 'PageView');
         `,
+      }}
+      onReady={() => {
+        setIsPixelReady(true)
+        window.dispatchEvent(new Event('oliveiq:meta-pixel-ready'))
       }}
     />
   )

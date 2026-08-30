@@ -4,7 +4,7 @@ import LocationAutocomplete from '@/components/map/LocationAutocomplete'
 import MapboxMap from '@/components/map/MapboxMap'
 import { convertToStremmata, type AreaUnit } from '@/lib/area-conversions'
 import { formatCoordinates } from '@/lib/mapbox-utils'
-import { trackCompleteRegistration } from '@/lib/meta-pixel'
+import { trackFirstGroveCreated } from '@/lib/meta-pixel'
 import { ArrowLeft, Loader2, MapPin, Save } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
@@ -79,7 +79,7 @@ export default function FarmCreationForm({ userId: _userId }: FarmCreationFormPr
 
       if (data.success) {
         if (data.isFirstFarm) {
-          trackCompleteRegistration()
+          trackFirstGroveCreated()
         }
 
         // Redirect to dashboard with success message
