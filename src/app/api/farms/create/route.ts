@@ -126,6 +126,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      isFirstFarm: existingFarmCount === 0,
       farm: {
         id: farm.id,
         name: farm.name,

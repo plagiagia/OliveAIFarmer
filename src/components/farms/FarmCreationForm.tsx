@@ -4,6 +4,7 @@ import LocationAutocomplete from '@/components/map/LocationAutocomplete'
 import MapboxMap from '@/components/map/MapboxMap'
 import { convertToStremmata, type AreaUnit } from '@/lib/area-conversions'
 import { formatCoordinates } from '@/lib/mapbox-utils'
+import { trackWhopEvent } from '@/lib/whop'
 import { ArrowLeft, Loader2, MapPin, Save } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
@@ -77,6 +78,10 @@ export default function FarmCreationForm({ userId: _userId }: FarmCreationFormPr
       const data = await response.json()
 
       if (data.success) {
+        if (data.isFirstFarm) {
+          trackWhopEvent('first_grove_created')
+        }
+
         // Redirect to dashboard with success message
         router.push('/dashboard?created=true')
       } else {
@@ -413,4 +418,4 @@ export default function FarmCreationForm({ userId: _userId }: FarmCreationFormPr
       </div>
     </div>
   )
-} 
+}
