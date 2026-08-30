@@ -78,6 +78,13 @@ export default function RootLayout({
           <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes, viewport-fit=cover" />
           <link rel="icon" href="/images/logo-monogram.png" type="image/png" />
           <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+          {process.env.VERCEL_ENV === 'production' && (
+            <script
+              dangerouslySetInnerHTML={{
+                __html: `!function(w,d,s,u,n,a,b){if(w[n])return;a=w[n]={q:[],t:+new Date,s:[],o:u,track:function(){a.q.push([+new Date].concat([].slice.call(arguments)))},setScope:function(){a.s=[].slice.call(arguments).filter(function(x){return typeof x==="string"});a.q.push([+new Date,"setScope"].concat(a.s))},scope:function(){var c=[].slice.call(arguments);return{track:function(){a.q.push([+new Date].concat([].slice.call(arguments)).concat([{__scope:c}]))}}}};b=d.createElement(s);b.async=1;b.src=u+"/s.js";d.getElementsByTagName(s)[0].parentNode.insertBefore(b,d.getElementsByTagName(s)[0])}(window,document,"script","https://t.whop.tw","whop");whop.setScope("biz_6TQBSky8Xw7c3c");whop.track("page");`,
+              }}
+            />
+          )}
         </head>
         <body className={`${inter.className} greek-font antialiased`}>
           {/* Show auth page only when signed out */}

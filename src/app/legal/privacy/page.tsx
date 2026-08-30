@@ -8,7 +8,7 @@ export default function PrivacyPage() {
     <>
       <header className="border-b border-gray-100 pb-6">
         <h1 className="text-3xl font-bold text-gray-900">Πολιτική Απορρήτου</h1>
-        <p className="mt-2 text-sm text-gray-500">Τελευταία ενημέρωση: 17 Μαΐου 2026</p>
+        <p className="mt-2 text-sm text-gray-500">Τελευταία ενημέρωση: 30 Αυγούστου 2026</p>
       </header>
 
       <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
@@ -35,7 +35,7 @@ export default function PrivacyPage() {
           <li><strong>Καταγραφές δραστηριοτήτων & συγκομιδής:</strong> ημερομηνίες, τύπος εργασίας, κόστος, σημειώσεις.</li>
           <li><strong>Πληρωμές:</strong> τα στοιχεία της κάρτας σας δεν αποθηκεύονται από εμάς. Διαχειρίζονται αποκλειστικά από την υπηρεσία Stripe.</li>
           <li><strong>Δεδομένα AI Γεωπόνου:</strong> το σχετικό περιεχόμενο του ελαιώνα σας (εργασίες, συγκομιδές, καιρός) αποστέλλεται στην OpenAI για τη δημιουργία προτάσεων. Καταγράφουμε τη συνολική χρήση tokens για έλεγχο κόστους.</li>
-          <li><strong>Τεχνικά cookies:</strong> απαραίτητα cookies σύνδεσης (από Clerk). Δεν χρησιμοποιούμε εργαλεία αναλυτικών στοιχείων ή tracking τρίτων.</li>
+          <li><strong>Τεχνικά cookies και δεδομένα χρήσης:</strong> απαραίτητα cookies σύνδεσης από το Clerk. Χρησιμοποιούμε το Vercel Web Analytics και το Vercel Speed Insights για στατιστικά επισκεψιμότητας και μέτρηση απόδοσης, καθώς και το Whop Pixel για τη μέτρηση επισκέψεων και την απόδοση διαφημιστικών και affiliate campaigns.</li>
         </ul>
       </section>
 
@@ -69,7 +69,8 @@ export default function PrivacyPage() {
           <li><strong>OpenAI L.L.C.</strong> (ΗΠΑ) — επεξεργασία AI Γεωπόνου. Δεν χρησιμοποιούνται τα δεδομένα σας για εκπαίδευση μοντέλων.</li>
           <li><strong>OpenWeatherMap</strong> — δέχεται μόνο γεωγραφικές συντεταγμένες, χωρίς προσωπικά δεδομένα.</li>
           <li><strong>Mapbox</strong> (ΗΠΑ) — εμφάνιση χαρτών.</li>
-          <li><strong>Vercel Inc.</strong> (ΗΠΑ, φιλοξενία EU region) — φιλοξενία εφαρμογής.</li>
+          <li><strong>Vercel Inc.</strong> (ΗΠΑ, φιλοξενία EU region) — φιλοξενία εφαρμογής, Web Analytics και Speed Insights.</li>
+          <li><strong>Whop</strong> — μέτρηση επισκέψεων και απόδοση διαφημιστικών και affiliate campaigns μέσω του Whop Pixel.</li>
         </ul>
       </section>
 
