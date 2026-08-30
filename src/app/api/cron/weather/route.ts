@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAuthorizedCronRequest } from '@/lib/cron-auth'
 import { maybeSendDakosAlert } from '@/lib/agronomy/dakos-alerts'
-import { getAllFarmsWithCoordinates, saveWeatherRecord } from '@/lib/db'
+import {
+  getAllFarmsWithCoordinates,
+  refreshDailyWeatherRecord,
+  saveWeatherObservation
+} from '@/lib/db'
 import { parseCoordinates } from '@/lib/mapbox-utils'
 import { getEntitledPlan, hasFeature } from '@/lib/plans'
 
@@ -56,6 +60,9 @@ export async function GET(request: NextRequest) {
       dakosAlerts: 0,
       errors: [] as string[]
     }
+    const invocationTime = new Date()
+    const sampleSlot = new Date(invocationTime)
+    sampleSlot.setUTCMinutes(0, 0, 0)
 
     // Process each farm (with rate limiting consideration)
     for (const farm of farms) {
@@ -69,7 +76,7 @@ export async function GET(request: NextRequest) {
           continue
         }
 
-        // Fetch current weather
+        // Fetch the measured current weather for this scheduled sample.
         const weatherRes = await fetch(
           `${OPENWEATHER_BASE_URL}/weather?lat=${coords.lat}&lon=${coords.lng}&units=metric&lang=el&appid=${OPENWEATHER_API_KEY}`
         )
@@ -81,53 +88,29 @@ export async function GET(request: NextRequest) {
         }
 
         const weatherData = await weatherRes.json()
+        const observedAt = weatherData.dt
+          ? new Date(weatherData.dt * 1000)
+          : invocationTime
 
-        // Also fetch forecast to get daily min/max
-        const forecastRes = await fetch(
-          `${OPENWEATHER_BASE_URL}/forecast?lat=${coords.lat}&lon=${coords.lng}&units=metric&lang=el&appid=${OPENWEATHER_API_KEY}`
-        )
-
-        let tempHigh = weatherData.main.temp
-        let tempLow = weatherData.main.temp
-        let totalRain = 0
-
-        if (forecastRes.ok) {
-          const forecastData = await forecastRes.json()
-          // Get today's forecast entries to calculate min/max
-          const today = new Date().toISOString().split('T')[0]
-          const todayEntries = forecastData.list.filter((entry: any) =>
-            entry.dt_txt.startsWith(today)
-          )
-
-          if (todayEntries.length > 0) {
-            const temps = todayEntries.map((e: any) => e.main.temp)
-            tempHigh = Math.max(...temps)
-            tempLow = Math.min(...temps)
-            totalRain = todayEntries.reduce((sum: number, e: any) =>
-              sum + (e.rain?.['3h'] || 0), 0)
-          }
-        }
-
-        // Save weather record
-        await saveWeatherRecord({
+        // The current endpoint reports precipitation for a recent period.
+        // It is stored per sample and summed only in the daily aggregate.
+        await saveWeatherObservation({
           farmId: farm.id,
-          date: new Date(),
-          tempHigh,
-          tempLow,
-          tempAvg: weatherData.main.temp,
+          observedAt,
+          sampleSlot: sampleSlot.toISOString(),
+          temperature: weatherData.main.temp,
           humidity: weatherData.main.humidity,
-          rainfall: totalRain,
+          rainfall: weatherData.rain?.['3h'] ?? weatherData.rain?.['1h'] ?? 0,
           windSpeed: weatherData.wind?.speed || 0,
           windGust: weatherData.wind?.gust,
           windDirection: weatherData.wind?.deg,
           pressure: weatherData.main?.pressure,
           clouds: weatherData.clouds?.all,
-          // UV index requires One Call API (paid) - will be null from free API
-          uvIndex: undefined,
           condition: weatherData.weather?.[0]?.description || 'Unknown',
           icon: weatherData.weather?.[0]?.icon,
-          source: 'CRON_DAILY'
+          source: 'CRON_INTRADAY'
         })
+        await refreshDailyWeatherRecord(farm.id, observedAt)
 
         results.successCount++
 

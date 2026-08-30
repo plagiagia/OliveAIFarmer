@@ -1,4 +1,5 @@
 import { PrismaClient, WeatherDataSource } from '@prisma/client'
+import { aggregateWeatherObservations } from './weather-aggregation'
 
 // Prevent multiple instances of Prisma Client in development
 const globalForPrisma = globalThis as unknown as {
@@ -134,6 +135,140 @@ export interface WeatherRecordInput {
   condition: string
   icon?: string
   source?: WeatherDataSource
+}
+
+export interface WeatherObservationInput {
+  farmId: string
+  observedAt: Date
+  temperature: number
+  humidity: number
+  rainfall?: number
+  windSpeed: number
+  windGust?: number
+  windDirection?: number
+  pressure?: number
+  clouds?: number
+  condition: string
+  icon?: string
+  source?: WeatherDataSource
+  /** Stable UTC hour bucket used to make scheduled retries idempotent. */
+  sampleSlot?: string
+}
+
+function normalizeWeatherDate(date: Date) {
+  const normalized = new Date(date)
+  normalized.setUTCHours(0, 0, 0, 0)
+  return normalized
+}
+
+function getWeatherSampleSlot(date: Date) {
+  const slot = new Date(date)
+  slot.setUTCMinutes(0, 0, 0)
+  return slot.toISOString()
+}
+
+/** Save one intraday observation, updating the same farm/day/hour on retries. */
+export async function saveWeatherObservation(data: WeatherObservationInput) {
+  const observedAt = new Date(data.observedAt)
+  const date = normalizeWeatherDate(observedAt)
+  const sampleSlot = data.sampleSlot || getWeatherSampleSlot(observedAt)
+
+  return prisma.weatherObservation.upsert({
+    where: {
+      farmId_date_sampleSlot: {
+        farmId: data.farmId,
+        date,
+        sampleSlot
+      }
+    },
+    update: {
+      observedAt,
+      temperature: data.temperature,
+      humidity: data.humidity,
+      ...(data.rainfall !== undefined ? { rainfall: data.rainfall } : {}),
+      windSpeed: data.windSpeed,
+      windGust: data.windGust,
+      windDirection: data.windDirection,
+      pressure: data.pressure,
+      clouds: data.clouds,
+      condition: data.condition,
+      icon: data.icon,
+      source: data.source || 'API_CURRENT'
+    },
+    create: {
+      farmId: data.farmId,
+      date,
+      sampleSlot,
+      observedAt,
+      temperature: data.temperature,
+      humidity: data.humidity,
+      rainfall: data.rainfall ?? 0,
+      windSpeed: data.windSpeed,
+      windGust: data.windGust,
+      windDirection: data.windDirection,
+      pressure: data.pressure,
+      clouds: data.clouds,
+      condition: data.condition,
+      icon: data.icon,
+      source: data.source || 'API_CURRENT'
+    }
+  })
+}
+
+/** Rebuild the daily row from all observations collected for that UTC day. */
+export async function refreshDailyWeatherRecord(farmId: string, date: Date) {
+  const normalizedDate = normalizeWeatherDate(date)
+  const observations = await prisma.weatherObservation.findMany({
+    where: { farmId, date: normalizedDate },
+    orderBy: { observedAt: 'asc' }
+  })
+
+  if (observations.length === 0) return null
+
+  const aggregate = aggregateWeatherObservations(observations)
+
+  return prisma.weatherRecord.upsert({
+    where: {
+      farmId_date: {
+        farmId,
+        date: normalizedDate
+      }
+    },
+    update: {
+      tempHigh: aggregate.tempHigh,
+      tempLow: aggregate.tempLow,
+      tempAvg: aggregate.tempAvg,
+      humidity: aggregate.humidity,
+      rainfall: aggregate.rainfall,
+      windSpeed: aggregate.windSpeed,
+      windGust: aggregate.windGust,
+      windDirection: aggregate.windDirection,
+      pressure: aggregate.pressure,
+      clouds: aggregate.clouds,
+      uvIndex: undefined,
+      condition: aggregate.condition,
+      icon: aggregate.icon,
+      source: aggregate.source,
+      recordedAt: new Date()
+    },
+    create: {
+      farmId,
+      date: normalizedDate,
+      tempHigh: aggregate.tempHigh,
+      tempLow: aggregate.tempLow,
+      tempAvg: aggregate.tempAvg,
+      humidity: aggregate.humidity,
+      rainfall: aggregate.rainfall,
+      windSpeed: aggregate.windSpeed,
+      windGust: aggregate.windGust,
+      windDirection: aggregate.windDirection,
+      pressure: aggregate.pressure,
+      clouds: aggregate.clouds,
+      condition: aggregate.condition,
+      icon: aggregate.icon,
+      source: aggregate.source
+    }
+  })
 }
 
 // Save or update a weather record (upsert)

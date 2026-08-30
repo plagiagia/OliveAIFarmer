@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getWeatherIntelligence } from '@/lib/weather'
-import { prisma, saveWeatherRecord } from '@/lib/db'
+import { prisma, refreshDailyWeatherRecord, saveWeatherObservation } from '@/lib/db'
 import { hasFeature } from '@/lib/plans'
 import { checkRateLimitAsync } from '@/lib/rate-limit'
 import { getUserPlanByClerkId } from '@/lib/subscription'
@@ -103,24 +103,20 @@ export async function GET(request: NextRequest) {
         }
 
         const current = weatherIntelligence.weather.current
-        await saveWeatherRecord({
+        await saveWeatherObservation({
           farmId: farm.id,
-          date: new Date(),
-          tempHigh: current.temperature, // Current temp as high for now
-          tempLow: current.temperature,  // Will be updated by cron with proper min/max
-          tempAvg: current.temperature,
+          observedAt: current.updatedAt,
+          temperature: current.temperature,
           humidity: current.humidity,
-          rainfall: 0, // Current API doesn't give rainfall, cron will update
           windSpeed: current.windSpeed,
           windDirection: current.windDirection,
           pressure: current.pressure,
           clouds: current.clouds,
-          // UV index requires One Call API (paid) - not available in free tier
-          uvIndex: undefined,
           condition: current.description,
           icon: current.icon,
           source: 'API_CURRENT'
         })
+        await refreshDailyWeatherRecord(farm.id, current.updatedAt)
       } catch (saveError) {
         // Don't fail the request if saving fails, just log it
         console.error('Failed to save weather record:', saveError)

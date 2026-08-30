@@ -66,6 +66,7 @@ model Farm {
 
   // Weather history
   weatherRecords WeatherRecord[]
+  weatherObservations WeatherObservation[]
 
   @@index([userId])
   @@map("farms")
@@ -245,7 +246,53 @@ enum InsightSource {
 
 // ===== WEATHER HISTORY STORAGE =====
 
-// Daily weather records for each farm
+// Intraday weather observations collected from the current-weather API
+model WeatherObservation {
+  id          String   @id @default(cuid())
+
+  // Parent farm
+  farmId      String
+  farm        Farm     @relation(fields: [farmId], references: [id], onDelete: Cascade)
+
+  // Observation timing. date is normalized to midnight UTC and sampleSlot
+  // makes scheduled retries idempotent for a given farm/day/hour.
+  date        DateTime
+  sampleSlot  String
+  observedAt  DateTime
+
+  // Temperature (Celsius)
+  temperature Float
+
+  // Humidity (percentage)
+  humidity    Int
+
+  // Precipitation during the provider's reported period (mm)
+  rainfall    Float    @default(0)
+
+  // Wind (m/s)
+  windSpeed   Float
+  windGust    Float?
+  windDirection Int?
+
+  // Atmospheric conditions
+  pressure    Int?
+  clouds      Int?
+
+  // Weather condition
+  condition   String
+  icon        String?
+
+  source      WeatherDataSource @default(API_CURRENT)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([farmId, date, sampleSlot])
+  @@index([farmId, date])
+  @@index([observedAt])
+  @@map("weather_observations")
+}
+
+// Daily aggregate derived from weather observations for each farm
 model WeatherRecord {
   id          String   @id @default(cuid())
 
@@ -300,6 +347,7 @@ enum WeatherDataSource {
   API_CURRENT   // From current weather API call
   API_FORECAST  // From forecast API
   CRON_DAILY    // From daily cron job
+  CRON_INTRADAY // From scheduled intraday current-weather collection
   MANUAL        // Manually entered
 }
 
