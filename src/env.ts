@@ -69,6 +69,10 @@ const clientSchema = z.object({
   NEXT_PUBLIC_CLERK_SIGN_UP_URL: z.string().default('/sign-up'),
   NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN: requiredInProd(z.string().min(1)),
   NEXT_PUBLIC_VAPID_PUBLIC_KEY: z.string().optional(),
+  NEXT_PUBLIC_META_PIXEL_ID: z
+    .string()
+    .regex(/^\d+$/, 'Meta Pixel ID must contain only digits')
+    .optional(),
 })
 
 const merged = serverSchema.merge(clientSchema)
@@ -96,6 +100,7 @@ const parsed = merged.safeParse({
   NEXT_PUBLIC_CLERK_SIGN_UP_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_UP_URL,
   NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN: process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN,
   NEXT_PUBLIC_VAPID_PUBLIC_KEY: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+  NEXT_PUBLIC_META_PIXEL_ID: process.env.NEXT_PUBLIC_META_PIXEL_ID,
 })
 
 if (!parsed.success) {
