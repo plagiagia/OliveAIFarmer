@@ -1,3 +1,5 @@
+import { z } from 'zod'
+import { INACTIVE_FARM_MESSAGE } from '@/lib/farm-activation'
 import { prisma } from '@/lib/db'
 import { auth } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
@@ -16,12 +18,13 @@ export async function PATCH(
     }
 
     const { insightId } = await params
-    const body = await request.json()
-    const { isRead, isActioned } = body
+    const parsed = z.object({ isRead: z.boolean().optional(), isActioned: z.boolean().optional() }).strict().refine(value => value.isRead !== undefined || value.isActioned !== undefined).safeParse(await request.json().catch(() => null))
+    if (!parsed.success) return NextResponse.json({ error: 'Μη έγκυρη ενημέρωση πρότασης' }, { status: 400 })
+    const { isRead, isActioned } = parsed.data
 
     // Get the insight and verify ownership through farm
     const insight = await prisma.smartRecommendation.findFirst({
-      where: { id: insightId },
+      where: { id: insightId, farm: { user: { clerkId: userId } } },
       include: {
         farm: {
           include: {
@@ -45,6 +48,8 @@ export async function PATCH(
         { status: 403 }
       )
     }
+
+    if (!insight.farm?.isActive) return NextResponse.json({ error: INACTIVE_FARM_MESSAGE }, { status: 403 })
 
     // Build update data
     const updateData: {
@@ -71,7 +76,7 @@ export async function PATCH(
 
     // Update the insight
     const updatedInsight = await prisma.smartRecommendation.update({
-      where: { id: insightId },
+      where: { id: insightId, farm: { user: { clerkId: userId } } },
       data: updateData
     })
 
@@ -103,7 +108,7 @@ export async function DELETE(
 
     // Get the insight and verify ownership through farm
     const insight = await prisma.smartRecommendation.findFirst({
-      where: { id: insightId },
+      where: { id: insightId, farm: { user: { clerkId: userId } } },
       include: {
         farm: {
           include: {
@@ -127,6 +132,8 @@ export async function DELETE(
         { status: 403 }
       )
     }
+
+    if (!insight.farm?.isActive) return NextResponse.json({ error: INACTIVE_FARM_MESSAGE }, { status: 403 })
 
     // Delete the insight
     await prisma.smartRecommendation.delete({

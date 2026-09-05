@@ -113,3 +113,10 @@ temp/
 .cursor
 .claude/settings.json
 public/worker-fed74f01070eed3f.js
+ds-bundle
+.ds-sync
+.design-sync
+.claude
+.agents
+skills-lock.json
+docs

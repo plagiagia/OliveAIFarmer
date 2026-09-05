@@ -42,7 +42,7 @@ const serverSchema = z.object({
 
   // OpenAI (AI Geoponos)
   OPENAI_API_KEY: z.string().min(1).optional(),
-  OPENAI_MODEL: z.string().optional(),
+  OPENAI_MODEL: z.enum(['gpt-5.6-luna', 'gpt-4o-mini', 'gpt-5-mini']).default('gpt-5.6-luna'),
   OPENAI_MONTHLY_TOKEN_BUDGET: z.coerce.number().int().positive().optional(),
 
   // Stripe billing

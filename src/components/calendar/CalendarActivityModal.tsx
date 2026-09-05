@@ -66,6 +66,7 @@ export default function CalendarActivityModal({
   const [selectedFarms, setSelectedFarms] = useState<string[]>([])
   const [aiSuggestions, setAiSuggestions] = useState<AISuggestion[]>([])
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false)
+  const [suggestionError, setSuggestionError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const soleFarmId = farms.length === 1 ? farms[0].id : null
@@ -89,7 +90,7 @@ export default function CalendarActivityModal({
   }, [isOpen, initialDate, soleFarmId])
 
   // Fetch AI suggestions when activity type or farms change
-  const fetchAISuggestions = useCallback(async () => {
+  const fetchAISuggestions = useCallback(async (signal: AbortSignal) => {
     if (selectedFarms.length === 0 || !scheduledDate) {
       setAiSuggestions([])
       return
@@ -99,31 +100,36 @@ export default function CalendarActivityModal({
     try {
       const response = await fetch('/api/activities/suggestions', {
         method: 'POST',
+        signal,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           farmIds: selectedFarms,
           activityType,
-          date: new Date(`${scheduledDate}T12:00:00`).toISOString()
+          date: scheduledDate
         })
       })
 
-      if (response.ok) {
-        const data = await response.json()
-        setAiSuggestions(data.suggestions || [])
-      }
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || 'Δεν ήταν δυνατή η φόρτωση των υποδείξεων.')
+      if (!signal.aborted) setAiSuggestions(data.suggestions || [])
     } catch (error) {
-      console.error('Failed to fetch AI suggestions:', error)
+      if (!signal.aborted) setSuggestionError(error instanceof Error ? error.message : 'Δεν ήταν δυνατή η φόρτωση των υποδείξεων.')
     } finally {
-      setIsLoadingSuggestions(false)
+      if (!signal.aborted) setIsLoadingSuggestions(false)
     }
   }, [selectedFarms, activityType, scheduledDate])
 
   useEffect(() => {
+    setAiSuggestions([])
+    setSuggestionError(null)
+    setIsLoadingSuggestions(false)
+    if (!isOpen) return
+    const controller = new AbortController()
     const debounce = setTimeout(() => {
-      fetchAISuggestions()
+      fetchAISuggestions(controller.signal)
     }, 300)
-    return () => clearTimeout(debounce)
-  }, [fetchAISuggestions])
+    return () => { clearTimeout(debounce); controller.abort() }
+  }, [fetchAISuggestions, isOpen])
 
   // Auto-generate title based on activity type
   useEffect(() => {

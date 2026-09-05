@@ -1,3 +1,4 @@
+import { INACTIVE_FARM_MESSAGE } from '@/lib/farm-activation'
 import { prisma } from '@/lib/db'
 import { auth } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
@@ -103,11 +104,13 @@ export async function DELETE(
       )
     }
 
+    if (!farm.isActive) return NextResponse.json({ error: INACTIVE_FARM_MESSAGE }, { status: 403 })
+
     // Delete all AI-generated insights for this farm
     const result = await prisma.smartRecommendation.deleteMany({
       where: {
         farmId,
-        source: 'AI_GENERATED'
+        OR: [{ source: 'AI_GENERATED' }, { source: 'RULE_BASED', contextHash: { startsWith: 'farm:' } }]
       }
     })
 

@@ -203,7 +203,7 @@ export default function WeatherWidget({ latitude, longitude, farmId }: WeatherWi
         >
           <div className="flex items-center gap-2">
             <Droplet className={`w-5 h-5 ${irrigation.shouldIrrigate ? 'text-blue-500' : 'text-gray-400'}`} />
-            <span className="font-medium text-gray-800">Σύσταση Ποτίσματος</span>
+            <span className="font-medium text-gray-800">Έλεγχος Άρδευσης</span>
             {irrigation.shouldIrrigate && (
               <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full">
                 Συνιστάται
@@ -356,7 +356,7 @@ function DiseaseRiskCard({ risk }: { risk: DiseaseRisk }) {
       <div className="flex items-center justify-between mb-2">
         <h4 className="font-semibold text-gray-800">{risk.greekName}</h4>
         <span className={`text-xs px-2 py-1 rounded-full ${riskColors[risk.riskLevel]}`}>
-          {riskLabels[risk.riskLevel]} ({risk.riskPercentage}%)
+          {riskLabels[risk.riskLevel]} · δείκτης {risk.riskScore}/100
         </span>
       </div>
       <p className="text-sm text-gray-600 mb-2">

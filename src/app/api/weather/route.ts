@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getWeatherIntelligence } from '@/lib/weather'
-import { prisma, refreshDailyWeatherRecord, saveWeatherObservation } from '@/lib/db'
+import { prisma, getWeatherHistory, refreshDailyWeatherRecord, saveWeatherObservation } from '@/lib/db'
 import { hasFeature } from '@/lib/plans'
 import { checkRateLimitAsync } from '@/lib/rate-limit'
 import { getUserPlanByClerkId } from '@/lib/subscription'
@@ -45,8 +45,8 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const latitude = parseFloat(lat)
-    const longitude = parseFloat(lon)
+    let latitude = Number(lat)
+    let longitude = Number(lon)
 
     if (isNaN(latitude) || isNaN(longitude)) {
       return NextResponse.json(
@@ -63,10 +63,23 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Farm weather must use the stored location; query coordinates must not poison its history.
+    const farm = farmId ? await prisma.farm.findFirst({ where: { id: farmId, user: { clerkId: userId } }, select: { id: true, isActive: true, coordinates: true } }) : null
+    if (farmId) {
+      if (!farm) return NextResponse.json({ error: 'Ο ελαιώνας δεν βρέθηκε' }, { status: 404 })
+      if (!farm.isActive) return NextResponse.json({ error: 'Ο ελαιώνας είναι ανενεργός' }, { status: 403 })
+      const parts = farm.coordinates?.split(',')
+      const coords = parts?.map(p => Number(p.trim()))
+      if (!coords || coords.length !== 2 || parts?.some(p => !p.trim()) || !coords.every(Number.isFinite) || Math.abs(coords[0]) > 90 || Math.abs(coords[1]) > 180) return NextResponse.json({ error: 'Συμπληρώστε τη θέση του ελαιώνα' }, { status: 400 })
+      ;[latitude, longitude] = coords
+    }
+    const history = farm ? await getWeatherHistory(farm.id, { startDate: new Date(Date.now() - 30 * 86400_000), limit: 30 }) : []
     // Get weather intelligence
     const weatherIntelligence = await getWeatherIntelligence(
       latitude,
-      longitude
+      longitude,
+      undefined,
+      history
     )
 
     const userPlan = await getUserPlanByClerkId(userId)

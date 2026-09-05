@@ -14,6 +14,7 @@ const ALERT_COOLDOWN_DAYS = 3
 const ALERT_WINDOW_DAYS = 30
 
 const LEVEL_LABELS: Record<RiskLevel, string> = {
+  UNKNOWN: 'Άγνωστος',
   LOW: 'Χαμηλός',
   MODERATE: 'Μέτριος',
   HIGH: 'Υψηλός',
@@ -44,7 +45,7 @@ export async function maybeSendDakosAlert(farm: {
   const risk = computePestRisk(records)
   const level = risk.dakos.level
 
-  if (level !== 'HIGH' && level !== 'EXTREME') {
+  if (!risk.sufficient || (level !== 'HIGH' && level !== 'EXTREME')) {
     return { farmId: farm.id, level, alerted: false, pushed: 0 }
   }
 
@@ -65,9 +66,9 @@ export async function maybeSendDakosAlert(farm: {
 
   const title = `${LEVEL_LABELS[level]} κίνδυνος δάκου — ${farm.name}`
   const message =
-    `Οι καιρικές συνθήκες των τελευταίων ${ALERT_WINDOW_DAYS} ημερών ευνοούν τον δάκο ` +
-    `(σκορ ${risk.dakos.score}/100). Ελέγξτε τις παγίδες και συμβουλευτείτε τον γεωπόνο σας ` +
-    `για το χρονικό παράθυρο ψεκασμού.`
+    `Ο ενδεικτικός καιρικός δείκτης από ${risk.windowDays} διαθέσιμες ημέρες ιστορικού είναι αυξημένος ` +
+    `(${risk.dakos.score}/100), χωρίς να επιβεβαιώνει προσβολή. Ελέγξτε τις παγίδες και συμβουλευτείτε τον γεωπόνο σας ` +
+    `με τα ευρήματα πριν από επέμβαση.`
 
   // In-app recommendation (shows up in the farm's AI Γεωπόνος tab).
   await prisma.smartRecommendation.create({
@@ -76,7 +77,7 @@ export async function maybeSendDakosAlert(farm: {
       title,
       message,
       reasoning: risk.dakos.rationale,
-      urgency: level === 'EXTREME' ? 'CRITICAL' : 'HIGH',
+      urgency: 'MEDIUM',
       actionRequired: true,
       source: 'WEATHER_ALERT',
       farmId: farm.id,

@@ -15,7 +15,9 @@
  * Output is plain numbers + a categorical level so the UI and AI
  * can both consume it without re-implementing the logic.
  */
-export type RiskLevel = 'LOW' | 'MODERATE' | 'HIGH' | 'EXTREME'
+import { summarizeWeather, validWeatherDays } from '@/lib/ai/context'
+
+export type RiskLevel = 'LOW' | 'MODERATE' | 'HIGH' | 'EXTREME' | 'UNKNOWN'
 
 export interface DailyWeather {
   date: Date | string
@@ -47,6 +49,7 @@ export interface PeacockSpotRisk {
 export interface PestRiskReport {
   generatedAt: string
   windowDays: number
+  sufficient: boolean
   dakos: DakosRisk
   peacockSpot: PeacockSpotRisk
 }
@@ -120,11 +123,18 @@ function peacockSpotFromWeather(records: DailyWeather[]): PeacockSpotRisk {
   }
 }
 
-export function computePestRisk(records: DailyWeather[]): PestRiskReport {
+export function computePestRisk(records: DailyWeather[], now = new Date()): PestRiskReport {
+  const valid = validWeatherDays(records, now)
+  const { sufficient } = summarizeWeather(valid, now)
+  const dakos = dakosFromWeather(sufficient ? valid : [])
+  const peacockSpot = peacockSpotFromWeather(sufficient ? valid : [])
+  if (!sufficient) {
+    dakos.level = peacockSpot.level = 'UNKNOWN'
+    dakos.rationale = peacockSpot.rationale = 'Ανεπαρκές ή παλιό καιρικό ιστορικό. Δεν μπορεί να εκτιμηθεί ο δείκτης.'
+  }
   return {
-    generatedAt: new Date().toISOString(),
-    windowDays: records.length,
-    dakos: dakosFromWeather(records),
-    peacockSpot: peacockSpotFromWeather(records),
+    generatedAt: now.toISOString(),
+    windowDays: valid.length,
+    sufficient, dakos, peacockSpot,
   }
 }
