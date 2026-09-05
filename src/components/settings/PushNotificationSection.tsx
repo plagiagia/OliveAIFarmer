@@ -111,7 +111,7 @@ export default function PushNotificationSection() {
   }
 
   return (
-    <section className="mb-10 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+    <section id="notifications" className="mb-10 scroll-mt-24 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
       <div className="flex items-start gap-3">
         <BellRing className="mt-0.5 h-6 w-6 shrink-0 text-olive-700" />
         <div className="flex-1 min-w-0">

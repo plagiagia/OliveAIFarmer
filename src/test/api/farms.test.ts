@@ -200,4 +200,24 @@ describe('POST /api/farms/create', () => {
     expect(data.error).toContain('όριο ελαιώνων')
     expect(prisma.farm.create).not.toHaveBeenCalled()
   })
+
+  it('allows first setup without tree counts and stores unknown counts as null', async () => {
+    vi.mocked(auth).mockResolvedValue({ userId: 'owner' } as never)
+    vi.mocked(prisma.user.findUnique).mockResolvedValue({ id: 'owner-db' } as never)
+    vi.mocked(getUserPlanByClerkId).mockResolvedValue({ plan: 'FREE' } as never)
+    vi.mocked(prisma.farm.count).mockResolvedValue(0)
+    vi.mocked(prisma.farm.findMany).mockResolvedValue([{ id: 'new-grove' }] as never)
+    vi.mocked(prisma.farm.updateMany).mockResolvedValue({ count: 0 })
+    vi.mocked(prisma.farm.create).mockResolvedValue({ id: 'new-grove', treeCount: null } as never)
+    const response = await POST(new NextRequest('http://localhost/api/farms/create', { method: 'POST', body: JSON.stringify({ name: 'Νότιος', location: 'Καλαμάτα' }) }))
+    expect(response.status).toBe(200)
+    expect(prisma.farm.create).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ treeCount: null, userId: 'owner-db' }) }))
+  })
+
+  it.each([0, -1, 1.5, 'invalid', true, [1]])('rejects an invalid supplied tree count: %s', async treeCount => {
+    vi.mocked(auth).mockResolvedValue({ userId: 'owner' } as never)
+    const response = await POST(new NextRequest('http://localhost/api/farms/create', { method: 'POST', body: JSON.stringify({ name: 'Νότιος', location: 'Καλαμάτα', treeCount }) }))
+    expect(response.status).toBe(400)
+    expect(prisma.farm.create).not.toHaveBeenCalled()
+  })
 })

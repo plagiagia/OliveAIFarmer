@@ -18,6 +18,7 @@ import FarmEditModal from './FarmEditModal'
 import FarmHarvests from './FarmHarvests'
 import FarmHeader from './FarmHeader'
 import FarmStats from './FarmStats'
+import GroveWelcome from './GroveWelcome'
 
 interface FarmDetailContentProps {
   farm: any // We'll type this properly later
@@ -41,6 +42,19 @@ export default function FarmDetailContent({ farm, user }: FarmDetailContentProps
   const [showPricingModal, setShowPricingModal] = useState(false)
   const [pricingModalTitle, setPricingModalTitle] = useState('Αναβαθμίστε το πλάνο σας')
   const [unreadInsightsCount, setUnreadInsightsCount] = useState(0)
+  const [showWelcome, setShowWelcome] = useState(false)
+
+  useEffect(() => {
+    const readLocation = () => {
+      const params = new URLSearchParams(window.location.search)
+      const tab = params.get('tab')
+      if (tab === 'overview' || tab === 'activities' || tab === 'harvests' || tab === 'ai-geoponos') setActiveTab(tab)
+      setShowWelcome(params.get('welcome') === 'true')
+    }
+    readLocation()
+    window.addEventListener('popstate', readLocation)
+    return () => window.removeEventListener('popstate', readLocation)
+  }, [])
 
   const canUseAiGeoponos = !isPlanLoading && can('aiGeoponos')
 
@@ -68,10 +82,10 @@ export default function FarmDetailContent({ farm, user }: FarmDetailContentProps
   }, [fetchUnreadCount, canUseAiGeoponos])
 
   useEffect(() => {
-    if (activeTab === 'ai-geoponos' && !canUseAiGeoponos) {
+    if (!isPlanLoading && activeTab === 'ai-geoponos' && !canUseAiGeoponos) {
       setActiveTab('overview')
     }
-  }, [canUseAiGeoponos, activeTab])
+  }, [canUseAiGeoponos, activeTab, isPlanLoading])
 
   // Reset unread count when viewing AI tab
   useEffect(() => {
@@ -80,7 +94,7 @@ export default function FarmDetailContent({ farm, user }: FarmDetailContentProps
       const timer = setTimeout(fetchUnreadCount, 2000)
       return () => clearTimeout(timer)
     }
-  }, [activeTab, fetchUnreadCount])
+  }, [activeTab, fetchUnreadCount, canUseAiGeoponos])
 
   const tabs = [
     { id: 'overview', label: 'Επισκόπηση', icon: BarChart3 },
@@ -149,6 +163,11 @@ export default function FarmDetailContent({ farm, user }: FarmDetailContentProps
                         return
                       }
                       setActiveTab(tabId)
+                      const url = new URL(window.location.href)
+                      url.searchParams.set('tab', tabId)
+                      url.searchParams.delete('welcome')
+                      window.history.replaceState({}, '', url)
+                      setShowWelcome(false)
                     }}
                     className={`flex min-h-[48px] items-center space-x-2 py-3 sm:py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap transition-colors active:scale-[0.98] ${
                       isLocked
@@ -174,7 +193,8 @@ export default function FarmDetailContent({ farm, user }: FarmDetailContentProps
 
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {activeTab === 'overview' && <FarmStats farm={farm} />}
+          {showWelcome && !isReadOnly && activeTab === 'overview' && <GroveWelcome farm={farm} />}
+          {activeTab === 'overview' && (!showWelcome || isReadOnly) && <FarmStats farm={farm} />}
           {activeTab === 'activities' && <FarmActivities farm={farm} readOnly={isReadOnly} />}
           {activeTab === 'harvests' && <FarmHarvests farm={farm} readOnly={isReadOnly} />}
           {canUseAiGeoponos && activeTab === 'ai-geoponos' && (
@@ -202,4 +222,4 @@ export default function FarmDetailContent({ farm, user }: FarmDetailContentProps
       )}
     </>
   )
-} 
+}

@@ -4,6 +4,9 @@ import CalendarActivityModal from '@/components/calendar/CalendarActivityModal'
 import FarmCalendar from '@/components/calendar/FarmCalendar'
 import FarmEditModal from '@/components/farms/FarmEditModal'
 import UpgradeBanner from '@/components/dashboard/UpgradeBanner'
+import WeeklyWork from '@/components/dashboard/WeeklyWork'
+import GroveWeatherBrief from '@/components/dashboard/GroveWeatherBrief'
+import { trackProductEvent } from '@/lib/product-events'
 import PricingModal from '@/components/pricing/PricingModal'
 import MapPreview from '@/components/map/MapPreview'
 import OliveIcon from '@/components/ui/OliveIcon'
@@ -46,7 +49,8 @@ interface DashboardContentProps {
 
 export default function DashboardContent({ user, clerkUserId: _clerkUserId }: DashboardContentProps) {
   const [isLoading, setIsLoading] = useState(!user)
-  const [userData, _setUserData] = useState(user)
+  const userData = user
+  const [syncError, setSyncError] = useState(false)
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
   const [showDeleteMessage, setShowDeleteMessage] = useState(false)
 
@@ -78,6 +82,8 @@ export default function DashboardContent({ user, clerkUserId: _clerkUserId }: Da
   }, [user])
 
   const syncUserWithDatabase = async () => {
+    setIsLoading(true)
+    setSyncError(false)
     try {
       const response = await fetch('/api/sync-user', {
         method: 'POST',
@@ -91,9 +97,10 @@ export default function DashboardContent({ user, clerkUserId: _clerkUserId }: Da
           }
           // Refresh the page to get updated user data
           window.location.reload()
-        }
-      }
+        } else { setSyncError(true) }
+      } else { setSyncError(true) }
     } catch (error) {
+      setSyncError(true)
       console.error('Failed to sync user:', error)
     } finally {
       setIsLoading(false)
@@ -112,6 +119,8 @@ export default function DashboardContent({ user, clerkUserId: _clerkUserId }: Da
       </div>
     )
   }
+
+  if (syncError) return <div role="alert" className="mx-auto max-w-2xl p-8"><h1 className="text-xl font-semibold text-gray-900">Δεν ολοκληρώθηκε η φόρτωση του λογαριασμού σας.</h1><p className="mt-3 text-gray-600">Δοκιμάστε ξανά για να συνεχίσετε με τον ελαιώνα σας.</p><button onClick={syncUserWithDatabase} className="mt-4 rounded-xl bg-olive-700 px-5 py-3 font-semibold text-white">Δοκιμάστε ξανά</button></div>
 
   // If user has no farms, show onboarding
   if (!userData?.farms || userData.farms.length === 0) {
@@ -133,12 +142,12 @@ function OnboardingView({ user }: { user: User | null }) {
           Καλώς ήρθατε{user?.firstName ? ` ${user.firstName}` : ''} στο OliveIQ!
         </h1>
         <p className="text-xl text-gray-600 mb-8">
-          Ας δημιουργήσουμε τον πρώτο σας ελαιώνα
+          Δείτε τον καιρό στον ελαιώνα σας και οργανώστε την επόμενη επίσκεψη.
         </p>
 
         <div className="bg-white rounded-3xl shadow-lg p-8 max-w-2xl mx-auto">
           <h2 className="text-2xl font-semibold text-olive-700 mb-6">
-            Ξεκινήστε τη διαχείριση του ελαιώνα σας
+            Ξεκινήστε με όνομα και τοποθεσία
           </h2>
 
           <div className="space-y-4 text-left mb-8">
@@ -146,26 +155,27 @@ function OnboardingView({ user }: { user: User | null }) {
               <div className="w-8 h-8 bg-olive-100 rounded-full flex items-center justify-center">
                 <span className="text-olive-700 font-semibold">1</span>
               </div>
-              <span className="text-gray-700">Προσθήκη βασικών πληροφοριών ελαιώνα</span>
+              <span className="text-gray-700">Επιλέξτε την περιοχή του ελαιώνα σας</span>
             </div>
 
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-olive-100 rounded-full flex items-center justify-center">
                 <span className="text-olive-700 font-semibold">2</span>
               </div>
-              <span className="text-gray-700">Προσθήκη δέντρων στον ελαιώνα</span>
+              <span className="text-gray-700">Δείτε τον τοπικό καιρό πριν την επίσκεψη</span>
             </div>
 
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-olive-100 rounded-full flex items-center justify-center">
                 <span className="text-olive-700 font-semibold">3</span>
               </div>
-              <span className="text-gray-700">Ξεκίνημα καταγραφής δραστηριοτήτων</span>
+              <span className="text-gray-700">Προγραμματίστε την πρώτη εργασία σας</span>
             </div>
           </div>
 
           <button
             onClick={() => {
+              trackProductEvent('GroveSetupStarted')
               window.location.href = '/dashboard/farms/new'
             }}
             className="bg-gradient-to-r from-olive-700 to-olive-600 hover:from-olive-800 hover:to-olive-700 text-white py-3 px-8 rounded-2xl font-semibold transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] flex items-center gap-2 mx-auto"
@@ -173,6 +183,8 @@ function OnboardingView({ user }: { user: User | null }) {
             <Plus className="w-5 h-5" />
             Δημιουργήστε τον πρώτο σας ελαιώνα
           </button>
+          <Link href="/demo" className="mt-4 inline-block min-h-[44px] py-3 text-sm font-semibold text-olive-700 underline">Δείτε πρώτα ένα παράδειγμα</Link>
+          <p className="mt-2 text-sm text-gray-500">Χωρίς κάρτα. Συμπληρώστε δέντρα και έκταση όποτε είστε έτοιμοι.</p>
         </div>
       </div>
     </div>
@@ -203,6 +215,8 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
   // Calendar state
   const [calendarActivities, setCalendarActivities] = useState<CalendarActivity[]>([])
   const [isLoadingActivities, setIsLoadingActivities] = useState(true)
+  const [activitiesError, setActivitiesError] = useState<string | null>(null)
+  const [weatherFarmId, setWeatherFarmId] = useState('')
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [showActivityModal, setShowActivityModal] = useState(false)
   const [activityTypeFilter, setActivityTypeFilter] = useState<ActivityType | 'ALL'>('ALL')
@@ -211,25 +225,17 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
   // Fetch all activities from all farms
   const fetchAllActivities = useCallback(async () => {
     setIsLoadingActivities(true)
+    setActivitiesError(null)
     try {
-      const allActivities: CalendarActivity[] = []
-
-      for (const farm of user.farms) {
+      const results = await Promise.all(user.farms.filter(farm => farm.isActive).map(async farm => {
         const response = await fetch(`/api/activities?farmId=${farm.id}`)
-        if (response.ok) {
-          const activities = await response.json()
-          activities.forEach((activity: { id: string; type: ActivityType; title: string; date: string; completed: boolean }) => {
-            allActivities.push({
-              ...activity,
-              farmId: farm.id,
-              farmName: farm.name
-            })
-          })
-        }
-      }
-
-      setCalendarActivities(allActivities)
+        if (!response.ok) throw new Error('Activities unavailable')
+        const activities: CalendarActivity[] = await response.json()
+        return activities.map(activity => ({ ...activity, farmId: farm.id, farmName: farm.name }))
+      }))
+      setCalendarActivities(results.flat())
     } catch (error) {
+      setActivitiesError('Δεν ήταν δυνατή η φόρτωση όλων των εργασιών σας. Η εικόνα του προγράμματος δεν είναι διαθέσιμη.')
       console.error('Failed to fetch activities:', error)
     } finally {
       setIsLoadingActivities(false)
@@ -251,9 +257,10 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
   }
 
   const handleActivityCreated = () => {
+    setShowActivityModal(false)
+    setSelectedDate(null)
+    trackProductEvent('TaskSaved', { surface: 'dashboard' })
     fetchAllActivities()
-    // Refresh page to update counts
-    setTimeout(() => window.location.reload(), 500)
   }
 
   const handleEditSuccess = () => {
@@ -298,8 +305,6 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
           </div>
         )}
 
-        <UpgradeBanner />
-
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
@@ -334,6 +339,14 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
             )}
           </div>
         </div>
+
+        {activeFarms.length > 0 && <>
+          <WeeklyWork activities={calendarActivities} loading={isLoadingActivities} error={activitiesError} onRetry={fetchAllActivities} onAdd={() => { setSelectedDate(new Date()); setShowActivityModal(true) }} />
+          {activeFarms.length > 1 && <div className="mb-3"><label htmlFor="weather-grove" className="mr-3 text-sm font-semibold text-gray-700">Καιρός για τον ελαιώνα</label><select id="weather-grove" value={weatherFarmId || activeFarms[0].id} onChange={event => setWeatherFarmId(event.target.value)} className="min-h-[44px] max-w-full rounded-xl border border-gray-200 bg-white px-3 py-2">{activeFarms.map(farm => <option key={farm.id} value={farm.id}>{farm.name}</option>)}</select></div>}
+          <GroveWeatherBrief farm={activeFarms.find(farm => farm.id === weatherFarmId) ?? activeFarms[0]} />
+          {!isPlanLoading && plan === 'GROWER' && <Link href="/dashboard/settings#notifications" className="mb-8 block rounded-xl border border-olive-200 bg-olive-50 p-5 text-sm text-olive-900"><strong>Ειδοποιήσεις δάκου στη συσκευή σας.</strong> Ελέγξτε αν είναι ενεργές στις ρυθμίσεις ειδοποιήσεων →</Link>}
+          {calendarActivities.length > 0 && !activitiesError && <UpgradeBanner />}
+        </>}
 
         {/* Stats Overview - Horizontal Row */}
         <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-8">
@@ -372,7 +385,7 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
               </div>
               <div className="min-w-0">
                 <div className="text-xl sm:text-2xl font-bold text-gray-800 truncate">
-                  {user.farms.reduce((sum, farm) => sum + farm.activitiesCount, 0)}
+                  {activitiesError ? '—' : calendarActivities.length}
                 </div>
                 <div className="text-xs sm:text-sm text-gray-500 truncate">Δραστηριότητες</div>
               </div>
@@ -401,7 +414,7 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
               <div className="animate-spin w-8 h-8 border-4 border-olive-200 border-t-olive-600 rounded-full mx-auto mb-4"></div>
               <p className="text-gray-600">Φόρτωση ημερολογίου...</p>
             </div>
-          ) : (
+          ) : activitiesError ? null : (
             <FarmCalendar
               activities={filteredActivities}
               onDateSelect={handleDateSelect}
@@ -455,19 +468,6 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
             />
           )}
 
-          {/* Last activity info */}
-          {calendarActivities.length > 0 && (
-            <div className="mt-4 text-sm text-gray-500 flex items-center gap-2">
-              <Activity className="w-4 h-4" />
-              <span>
-                Τελευταία δραστηριότητα: {format(
-                  new Date(Math.max(...calendarActivities.map(a => new Date(a.date).getTime()))),
-                  'dd/MM/yyyy',
-                  { locale: el }
-                )} (πριν {Math.floor((Date.now() - Math.max(...calendarActivities.map(a => new Date(a.date).getTime()))) / (1000 * 60 * 60 * 24))} μέρες)
-              </span>
-            </div>
-          )}
         </div>
 
         {/* Farms Grid */}
@@ -475,7 +475,7 @@ function FarmsView({ user, showSuccessMessage, showDeleteMessage }: {
           <h2 className="text-xl font-bold text-gray-900 mb-4">Οι Ελαιώνες σας</h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {sortedFarms.map((farm) => (
-              <FarmCard key={farm.id} farm={farm} onEdit={setEditingFarm} />
+              <FarmCard key={farm.id} farm={{ ...farm, activitiesCount: farm.isActive && !isLoadingActivities && !activitiesError ? calendarActivities.filter(activity => activity.farmId === farm.id).length : farm.activitiesCount }} onEdit={setEditingFarm} />
             ))}
           </div>
         </div>
