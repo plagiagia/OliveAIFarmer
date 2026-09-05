@@ -6,6 +6,7 @@
  * rather than producing confusing runtime errors deep in API routes.
  */
 import { z } from 'zod'
+import { validateClerkConfig } from '@/lib/clerk-config'
 
 const isProd = process.env.NODE_ENV === 'production'
 
@@ -67,6 +68,10 @@ const clientSchema = z.object({
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: requiredInProd(z.string().min(1)),
   NEXT_PUBLIC_CLERK_SIGN_IN_URL: z.string().default('/sign-in'),
   NEXT_PUBLIC_CLERK_SIGN_UP_URL: z.string().default('/sign-up'),
+  // Satellite mode is off for oliveiq.gr — the apex already 308s to www, so
+  // there is no second domain that needs its own Clerk instance. Declared here
+  // so that setting it is validated instead of silently breaking middleware.
+  NEXT_PUBLIC_CLERK_IS_SATELLITE: z.string().optional(),
   NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN: requiredInProd(z.string().min(1)),
   NEXT_PUBLIC_VAPID_PUBLIC_KEY: z.string().optional(),
   NEXT_PUBLIC_META_PIXEL_ID: z
@@ -98,6 +103,7 @@ const parsed = merged.safeParse({
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
   NEXT_PUBLIC_CLERK_SIGN_IN_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL,
   NEXT_PUBLIC_CLERK_SIGN_UP_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_UP_URL,
+  NEXT_PUBLIC_CLERK_IS_SATELLITE: process.env.NEXT_PUBLIC_CLERK_IS_SATELLITE,
   NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN: process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN,
   NEXT_PUBLIC_VAPID_PUBLIC_KEY: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
   NEXT_PUBLIC_META_PIXEL_ID: process.env.NEXT_PUBLIC_META_PIXEL_ID,
@@ -111,6 +117,25 @@ if (!parsed.success) {
   // when configuration is wrong, surfacing the misconfiguration in Vercel logs
   // instead of producing 500s for end users.
   throw new Error(`Invalid environment configuration:\n${issues}`)
+}
+
+const clerkConfig = validateClerkConfig({
+  publishableKey: parsed.data.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+  isSatellite: parsed.data.NEXT_PUBLIC_CLERK_IS_SATELLITE,
+  signInUrl: parsed.data.NEXT_PUBLIC_CLERK_SIGN_IN_URL,
+  isProduction: isProd,
+})
+
+if (clerkConfig.errors.length > 0) {
+  // Same reasoning as above: crash on cold start with a readable message
+  // rather than letting Clerk throw from inside the middleware.
+  throw new Error(
+    `Invalid Clerk configuration:\n${clerkConfig.errors.map((e) => `  - ${e}`).join('\n')}`
+  )
+}
+
+for (const warning of clerkConfig.warnings) {
+  console.error(`[env] ${warning}`)
 }
 
 export const env = parsed.data
