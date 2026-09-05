@@ -7,6 +7,8 @@ import { useAuth } from '@clerk/nextjs'
 import { Check, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
+import ProPreview from './ProPreview'
+import { trackProductEvent } from '@/lib/product-events'
 
 const FREE_HIGHLIGHTS = [
   '1 ελαιώνας',
@@ -16,10 +18,10 @@ const FREE_HIGHLIGHTS = [
 ]
 
 const PRO_HIGHLIGHTS = [
-  'Ειδοποιήσεις Δάκου & κυκλοκονίου',
+  'Ειδοποιήσεις όταν ο καιρός ευνοεί τον δάκο',
   'Απεριόριστοι ελαιώνες',
   'AI Γεωπόνος — προτάσεις για τον ελαιώνα σας',
-  'Εξαγωγή PDF ημερολογίου (έτοιμο για ΟΣΔΕ/λογιστή)',
+  'PDF ημερολογίου για τον γεωπόνο ή τον λογιστή σας',
   'Κόστος ανά κιλό & ανά λίτρο',
 ]
 
@@ -42,6 +44,7 @@ export default function PricingComparison({ showHeader = true, className = '' }:
   const handleUpgrade = async () => {
     setUpgradeError(null)
     setBusy(true)
+    trackProductEvent('UpgradeStarted', { interval, surface: 'pricing' })
     try {
       const result = await upgrade('GROWER', interval)
       if (!result.ok) setUpgradeError(result.error)
@@ -55,9 +58,9 @@ export default function PricingComparison({ showHeader = true, className = '' }:
       <div className="mx-auto max-w-3xl px-4">
         {showHeader && (
           <div className="mb-10 text-center">
-            <h2 className="mb-4 text-3xl font-bold text-gray-900">Τιμολόγηση</h2>
+            <h2 className="mb-4 text-3xl font-bold text-gray-900">Οργανώστε τη φροντίδα και το κόστος των ελαιώνων σας</h2>
             <p className="text-gray-600">
-              Ξεκινήστε δωρεάν · Ένα απλό πλάνο Pro για όλη τη σεζόν
+              Ξεκινήστε με το δωρεάν ημερολόγιο. Προσθέστε παρακολούθηση και εξατομικευμένες προτάσεις με το Pro.
             </p>
           </div>
         )}
@@ -81,7 +84,7 @@ export default function PricingComparison({ showHeader = true, className = '' }:
                 interval === 'year' ? 'bg-white text-olive-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              Ετήσια <span className="ml-1 text-xs font-bold text-olive-700">-32%</span>
+              Ετήσια <span className="ml-1 text-xs font-bold text-olive-700">-{Math.round((1 - pro.priceAnnual / (pro.priceMonthly * 12)) * 100)}%</span>
             </button>
             <button
               type="button"
@@ -155,7 +158,7 @@ export default function PricingComparison({ showHeader = true, className = '' }:
               </div>
               <p className="mt-1 text-sm text-gray-500">
                 {interval === 'year'
-                  ? 'Μία πληρωμή για όλη τη σεζόν — λιγότερο από μια λίπανση.'
+                  ? `Περίπου ${(pro.priceAnnual / 12).toLocaleString('el-GR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€/μήνα, με ετήσια χρέωση ${pro.priceAnnual}€.`
                   : `Ή €${pro.priceAnnual}/έτος με την ετήσια χρέωση.`}
               </p>
             </div>
@@ -189,6 +192,11 @@ export default function PricingComparison({ showHeader = true, className = '' }:
               </Link>
             )}
           </div>
+        </div>
+        <ProPreview />
+        <div className="mt-6 space-y-3 text-sm text-gray-600">
+          <details className="rounded-xl border border-gray-200 p-4"><summary className="cursor-pointer font-semibold text-gray-900">Τι χρειάζομαι για να αξιοποιήσω το Pro;</summary><p className="mt-3 leading-relaxed">Ορίστε τη θέση του ελαιώνα για τον καιρό και τις εκτιμήσεις κινδύνου. Ενεργοποιήστε τις ειδοποιήσεις στις ρυθμίσεις της συσκευής σας. Για το κόστος παραγωγής, καταγράψτε έξοδα και συγκομιδές.</p></details>
+          <details className="rounded-xl border border-gray-200 p-4"><summary className="cursor-pointer font-semibold text-gray-900">Μπορώ να ξεκινήσω δωρεάν;</summary><p className="mt-3 leading-relaxed">Ναι. Ένας ελαιώνας, καιρός, δραστηριότητες και συγκομιδές παραμένουν διαθέσιμα στο δωρεάν πλάνο, χωρίς κάρτα.</p></details>
         </div>
       </div>
     </section>

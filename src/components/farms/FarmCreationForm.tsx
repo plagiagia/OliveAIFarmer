@@ -5,6 +5,7 @@ import MapboxMap from '@/components/map/MapboxMap'
 import { convertToStremmata, type AreaUnit } from '@/lib/area-conversions'
 import { formatCoordinates } from '@/lib/mapbox-utils'
 import { trackFirstGroveCreated } from '@/lib/meta-pixel'
+import { trackProductEvent } from '@/lib/product-events'
 import { ArrowLeft, Loader2, MapPin, Save } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
@@ -38,7 +39,7 @@ export default function FarmCreationForm({ userId: _userId }: FarmCreationFormPr
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
-  const [_showMap, _setShowMap] = useState(false)
+  const [showMap, setShowMap] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -52,7 +53,7 @@ export default function FarmCreationForm({ userId: _userId }: FarmCreationFormPr
         : null
 
       // Format coordinates for storage
-      const coordinates = formData.longitude && formData.latitude
+      const coordinates = formData.longitude != null && formData.latitude != null
         ? formatCoordinates(formData.longitude, formData.latitude)
         : null
 
@@ -82,8 +83,8 @@ export default function FarmCreationForm({ userId: _userId }: FarmCreationFormPr
           trackFirstGroveCreated()
         }
 
-        // Redirect to dashboard with success message
-        router.push('/dashboard?created=true')
+        trackProductEvent('GroveCreated', { first: Boolean(data.isFirstFarm) })
+        router.push(`/dashboard/farms/${data.farm.id}?welcome=true`)
       } else {
         setError(data.error || 'Αποτυχία δημιουργίας ελαιώνα')
       }
@@ -96,7 +97,7 @@ export default function FarmCreationForm({ userId: _userId }: FarmCreationFormPr
   }
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
+    setFormData(prev => ({ ...prev, [field]: value, ...(field === 'location' ? { latitude: null, longitude: null } : {}) }))
     if (error) setError('') // Clear error when user types
   }
 
@@ -109,7 +110,6 @@ export default function FarmCreationForm({ userId: _userId }: FarmCreationFormPr
       longitude: lng,
       latitude: lat,
     }))
-    _setShowMap(true) // Show map when location is selected
   }
 
   // Handle location selection from map
@@ -122,12 +122,12 @@ export default function FarmCreationForm({ userId: _userId }: FarmCreationFormPr
   }
 
   // Check if form is valid
-  const isFormValid = formData.name.trim() && formData.location.trim() && formData.treeCount.trim() && parseInt(formData.treeCount) > 0
+  const isFormValid = formData.name.trim() && formData.location.trim() && (!formData.treeCount || (Number.isInteger(Number(formData.treeCount)) && Number(formData.treeCount) > 0))
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 p-4">
       <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-8">
           {/* Header */}
           <div className="flex items-center mb-8">
             <button
@@ -139,8 +139,8 @@ export default function FarmCreationForm({ userId: _userId }: FarmCreationFormPr
             </button>
             <OliveIcon size="lg" className="text-olive-600" />
             <div className="ml-3">
-              <h1 className="text-2xl font-bold text-gray-800">Νέος Ελαιώνας</h1>
-              <p className="text-gray-600 text-sm">Προσθέστε τον ελαιώνα σας στον χάρτη</p>
+              <h2 className="text-xl font-bold text-gray-800">Πού βρίσκεται ο ελαιώνας σας;</h2>
+              <p className="text-gray-600 text-sm">Ξεκινήστε με δύο στοιχεία. Τα υπόλοιπα συμπληρώνονται αργότερα.</p>
             </div>
           </div>
 
@@ -148,7 +148,6 @@ export default function FarmCreationForm({ userId: _userId }: FarmCreationFormPr
           {error && (
             <div className="bg-red-50 border-l-4 border-red-400 text-red-700 p-4 rounded-lg mb-6">
               <div className="flex">
-                <div className="text-lg mr-2">⚠️</div>
                 <div>
                   <strong>Σφάλμα:</strong>
                   <p className="mt-1">{error}</p>
@@ -163,10 +162,11 @@ export default function FarmCreationForm({ userId: _userId }: FarmCreationFormPr
               <div className="space-y-6">
                 {/* Farm Name */}
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-3">
+                  <label htmlFor="grove-name" className="block text-sm font-bold text-gray-700 mb-3">
                     Όνομα Ελαιώνα *
                   </label>
                   <input
+                    id="grove-name"
                     type="text"
                     required
                     value={formData.name}
@@ -178,10 +178,11 @@ export default function FarmCreationForm({ userId: _userId }: FarmCreationFormPr
 
                 {/* Location with Autocomplete */}
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-3">
+                  <label htmlFor="grove-location" className="block text-sm font-bold text-gray-700 mb-3">
                     Τοποθεσία *
                   </label>
                   <LocationAutocomplete
+                    id="grove-location"
                     value={formData.location}
                     onChange={(value) => handleInputChange('location', value)}
                     onLocationSelect={handleLocationSelect}
@@ -189,18 +190,19 @@ export default function FarmCreationForm({ userId: _userId }: FarmCreationFormPr
                     required
                   />
                   <p className="text-sm text-gray-500 mt-2">
-                    💡 Ξεκινήστε να πληκτρολογείτε για αυτόματη συμπλήρωση
+                    Επιλέξτε ένα αποτέλεσμα αναζήτησης για να εμφανιστεί ο τοπικός καιρός.
                   </p>
                 </div>
 
                 {/* Coordinates Display & Map Inline */}
                 {(formData.location) && (
-                  <div className="space-y-4">
+                  <details className="space-y-4" onToggle={event => setShowMap(event.currentTarget.open)}>
+                    <summary className="min-h-[44px] cursor-pointer py-3 text-sm font-semibold text-olive-700">Επιβεβαίωση θέσης στον χάρτη (προαιρετικό)</summary>
                     <label className="block text-sm font-bold text-gray-700">
                       Χάρτης & Συντεταγμένες
                     </label>
                     <div className="border-2 border-gray-200 rounded-2xl overflow-hidden shadow-inner">
-                      <MapboxMap
+                      {showMap && <MapboxMap
                         longitude={formData.longitude || undefined}
                         latitude={formData.latitude || undefined}
                         markerLongitude={formData.longitude || undefined}
@@ -211,7 +213,7 @@ export default function FarmCreationForm({ userId: _userId }: FarmCreationFormPr
                         showMarker={!!(formData.longitude && formData.latitude)}
                         onLocationSelect={handleMapLocationSelect}
                         className="w-full"
-                      />
+                      />}
                     </div>
 
                     {formData.longitude && formData.latitude ? (
@@ -232,9 +234,12 @@ export default function FarmCreationForm({ userId: _userId }: FarmCreationFormPr
                         </p>
                       </div>
                     )}
-                  </div>
+                  </details>
                 )}
 
+                <details className="rounded-xl border border-gray-200 p-4">
+                  <summary className="min-h-[44px] cursor-pointer py-3 font-semibold text-olive-800">Δέντρα, έκταση και ποικιλία (προαιρετικά)</summary>
+                  <div className="mt-4 space-y-6">
                 {/* Total Area with Unit Selection */}
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-3">
@@ -283,12 +288,11 @@ export default function FarmCreationForm({ userId: _userId }: FarmCreationFormPr
                 {/* Tree Count */}
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-3">
-                    Αριθμός Δέντρων *
+                    Αριθμός Δέντρων
                   </label>
                   <input
                     type="number"
                     inputMode="numeric"
-                    required
                     min="1"
                     value={formData.treeCount}
                     onChange={(e) => handleInputChange('treeCount', e.target.value)}
@@ -296,7 +300,7 @@ export default function FarmCreationForm({ userId: _userId }: FarmCreationFormPr
                     className="w-full px-4 py-4 text-lg border-2 border-gray-300 rounded-xl focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all duration-200 placeholder-gray-400"
                   />
                   <p className="text-sm text-gray-500 mt-2">
-                    Απαραίτητο για τον υπολογισμό κατανομής κόστους
+                    Συμπληρώστε το αργότερα για κατανομή κόστους ανά δέντρο.
                   </p>
                 </div>
 
@@ -360,6 +364,8 @@ export default function FarmCreationForm({ userId: _userId }: FarmCreationFormPr
                     className="w-full px-4 py-4 text-lg border-2 border-gray-300 rounded-xl focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all duration-200 placeholder-gray-400 resize-none"
                   />
                 </div>
+                  </div>
+                </details>
               </div>
             </div>
 
@@ -378,7 +384,7 @@ export default function FarmCreationForm({ userId: _userId }: FarmCreationFormPr
                 ) : (
                   <>
                     <Save className="w-6 h-6" />
-                    Δημιουργία Ελαιώνα
+                    Δείτε τον ελαιώνα σας
                   </>
                 )}
               </button>
@@ -388,7 +394,6 @@ export default function FarmCreationForm({ userId: _userId }: FarmCreationFormPr
           {/* Help Section */}
           <div className="mt-8 bg-green-50 rounded-2xl p-6 border border-green-200">
             <h3 className="font-bold text-green-800 mb-3 flex items-center">
-              <span className="text-xl mr-2">💡</span>
               Συμβουλές για το OliveIQ
             </h3>
             <ul className="text-sm text-green-700 space-y-2">

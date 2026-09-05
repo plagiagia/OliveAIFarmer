@@ -15,6 +15,7 @@ interface LocationSuggestion {
 }
 
 interface LocationAutocompleteProps {
+  id?: string
   value: string
   onChange: (value: string) => void
   onLocationSelect: (location: LocationSuggestion) => void
@@ -24,6 +25,7 @@ interface LocationAutocompleteProps {
 }
 
 export default function LocationAutocomplete({
+  id,
   value,
   onChange,
   onLocationSelect,
@@ -188,6 +190,7 @@ export default function LocationAutocomplete({
     return (
       <div className="relative">
         <input
+          id={id}
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
@@ -209,6 +212,7 @@ export default function LocationAutocomplete({
     <div className="relative">
       <div className="relative">
         <input
+          id={id}
           ref={inputRef}
           type="text"
           value={value}
@@ -276,4 +280,4 @@ export default function LocationAutocomplete({
       )}
     </div>
   )
-} 
+}

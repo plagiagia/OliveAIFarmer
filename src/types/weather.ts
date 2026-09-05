@@ -54,7 +54,7 @@ export interface WeatherAlert {
 
 // Irrigation recommendation
 export interface IrrigationRecommendation {
-  shouldIrrigate: boolean
+  shouldIrrigate: boolean | null
   reason: string
   nextIrrigationDate?: Date
   waterAmount?: string  // e.g., "15-20 λίτρα/δέντρο"
@@ -65,7 +65,7 @@ export interface DiseaseRisk {
   disease: string
   greekName: string
   riskLevel: 'low' | 'medium' | 'high'
-  riskPercentage: number
+  riskScore: number
   conditions: string
   prevention: string
 }

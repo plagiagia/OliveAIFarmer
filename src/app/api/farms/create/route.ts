@@ -65,16 +65,17 @@ export async function POST(request: NextRequest) {
     )
 
     // Validate required fields
-    if (!name || !location) {
+    if (typeof name !== 'string' || !name.trim() || typeof location !== 'string' || !location.trim()) {
       return NextResponse.json({
         error: 'Το όνομα και η τοποθεσία είναι υποχρεωτικά'
       }, { status: 400 })
     }
 
-    // Validate treeCount is required and positive
-    if (!treeCount || parseInt(treeCount) < 1) {
+    // Unknown tree counts remain null; never invent data during onboarding.
+    const parsedTreeCount = treeCount == null || treeCount === '' ? null : Number(treeCount)
+    if (parsedTreeCount != null && ((typeof treeCount !== 'number' && typeof treeCount !== 'string') || !Number.isSafeInteger(parsedTreeCount) || parsedTreeCount < 1)) {
       return NextResponse.json({
-        error: 'Ο αριθμός δέντρων είναι υποχρεωτικός και πρέπει να είναι τουλάχιστον 1'
+        error: 'Ο αριθμός δέντρων πρέπει να είναι θετικός ακέραιος ή να μείνει κενός.'
       }, { status: 400 })
     }
 
@@ -108,7 +109,7 @@ export async function POST(request: NextRequest) {
         latitude: latitudeValue,
         longitude: longitudeValue,
         totalArea: totalArea ? parseFloat(totalArea) : null,
-        treeCount: treeCount ? parseInt(treeCount) : null,
+        treeCount: parsedTreeCount,
         oliveVariety: oliveVariety?.trim() || null,
         treeAge: treeAge ? parseInt(treeAge) : null,
         description: description?.trim() || null,

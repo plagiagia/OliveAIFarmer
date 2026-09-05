@@ -54,7 +54,8 @@ export default function CalendarActivityModal({
   farms,
   onSuccess
 }: CalendarActivityModalProps) {
-  const [activityType, setActivityType] = useState<ActivityType>('WATERING')
+  const [activityType, setActivityType] = useState<ActivityType>('INSPECTION')
+  const [scheduledDate, setScheduledDate] = useState(() => format(selectedDate, 'yyyy-MM-dd'))
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [duration, setDuration] = useState('')
@@ -65,28 +66,32 @@ export default function CalendarActivityModal({
   const [selectedFarms, setSelectedFarms] = useState<string[]>([])
   const [aiSuggestions, setAiSuggestions] = useState<AISuggestion[]>([])
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false)
+  const [suggestionError, setSuggestionError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const soleFarmId = farms.length === 1 ? farms[0].id : null
+  const initialDate = format(selectedDate, 'yyyy-MM-dd')
 
   // Reset form when modal opens
   useEffect(() => {
     if (isOpen) {
-      setActivityType('WATERING')
+      setActivityType('INSPECTION')
+      setScheduledDate(initialDate)
       setTitle('')
       setDescription('')
       setDuration('')
       setCost('')
       setNotes('')
       setCompleted(false)
-      setSelectedFarms([])
+      setSelectedFarms(soleFarmId ? [soleFarmId] : [])
       setAiSuggestions([])
       setErrors({})
     }
-  }, [isOpen])
+  }, [isOpen, initialDate, soleFarmId])
 
   // Fetch AI suggestions when activity type or farms change
-  const fetchAISuggestions = useCallback(async () => {
-    if (selectedFarms.length === 0) {
+  const fetchAISuggestions = useCallback(async (signal: AbortSignal) => {
+    if (selectedFarms.length === 0 || !scheduledDate) {
       setAiSuggestions([])
       return
     }
@@ -95,31 +100,36 @@ export default function CalendarActivityModal({
     try {
       const response = await fetch('/api/activities/suggestions', {
         method: 'POST',
+        signal,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           farmIds: selectedFarms,
           activityType,
-          date: selectedDate.toISOString()
+          date: scheduledDate
         })
       })
 
-      if (response.ok) {
-        const data = await response.json()
-        setAiSuggestions(data.suggestions || [])
-      }
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || 'Δεν ήταν δυνατή η φόρτωση των υποδείξεων.')
+      if (!signal.aborted) setAiSuggestions(data.suggestions || [])
     } catch (error) {
-      console.error('Failed to fetch AI suggestions:', error)
+      if (!signal.aborted) setSuggestionError(error instanceof Error ? error.message : 'Δεν ήταν δυνατή η φόρτωση των υποδείξεων.')
     } finally {
-      setIsLoadingSuggestions(false)
+      if (!signal.aborted) setIsLoadingSuggestions(false)
     }
-  }, [selectedFarms, activityType, selectedDate])
+  }, [selectedFarms, activityType, scheduledDate])
 
   useEffect(() => {
+    setAiSuggestions([])
+    setSuggestionError(null)
+    setIsLoadingSuggestions(false)
+    if (!isOpen) return
+    const controller = new AbortController()
     const debounce = setTimeout(() => {
-      fetchAISuggestions()
+      fetchAISuggestions(controller.signal)
     }, 300)
-    return () => clearTimeout(debounce)
-  }, [fetchAISuggestions])
+    return () => { clearTimeout(debounce); controller.abort() }
+  }, [fetchAISuggestions, isOpen])
 
   // Auto-generate title based on activity type
   useEffect(() => {
@@ -154,7 +164,7 @@ export default function CalendarActivityModal({
 
     const totalTrees = selectedFarmData.reduce((sum, farm) => sum + (farm.treeCount || 0), 0)
 
-    if (totalTrees > 0) {
+    if (totalTrees > 0 && selectedFarmData.every(farm => (farm.treeCount ?? 0) > 0)) {
       // Distribute by tree count
       return selectedFarmData.map(farm => {
         const farmTrees = farm.treeCount || 0
@@ -183,6 +193,7 @@ export default function CalendarActivityModal({
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {}
+    if (!scheduledDate || !Number.isFinite(new Date(`${scheduledDate}T12:00:00`).getTime())) newErrors.date = 'Επιλέξτε ημερομηνία.'
 
     if (!title.trim()) {
       newErrors.title = 'Ο τίτλος είναι υποχρεωτικός'
@@ -221,7 +232,7 @@ export default function CalendarActivityModal({
           type: activityType,
           title,
           description: description || undefined,
-          date: selectedDate.toISOString(),
+          date: new Date(`${scheduledDate}T12:00:00`).toISOString(),
           duration: duration ? parseInt(duration) : undefined,
           cost: cost ? parseFloat(cost) : undefined,
           notes: notes || undefined,
@@ -285,7 +296,7 @@ export default function CalendarActivityModal({
             </h2>
             <p className="text-gray-500 mt-1 flex items-center gap-2 text-sm sm:text-base">
               <Calendar className="w-4 h-4" />
-              {format(selectedDate, 'EEEE, d MMMM yyyy', { locale: el })}
+              {scheduledDate ? format(new Date(`${scheduledDate}T12:00:00`), 'EEEE, d MMMM yyyy', { locale: el }) : 'Επιλέξτε ημερομηνία εργασίας'}
             </p>
           </div>
           <button
@@ -304,6 +315,7 @@ export default function CalendarActivityModal({
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Left Column - Activity Details */}
               <div className="lg:col-span-2 space-y-6">
+                <div><label htmlFor="scheduled-work-date" className="mb-2 block text-sm font-medium text-gray-700">Ημερομηνία εργασίας *</label><input id="scheduled-work-date" type="date" required value={scheduledDate} onChange={event => setScheduledDate(event.target.value)} className="min-h-[44px] w-full rounded-xl border border-gray-300 px-4 py-2.5" />{errors.date && <p role="alert" className="mt-1 text-sm text-red-600">{errors.date}</p>}</div>
                 {/* Activity Type */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -407,7 +419,7 @@ export default function CalendarActivityModal({
                     {errors.cost && <p className="mt-1 text-sm text-red-600">{errors.cost}</p>}
                     {selectedFarms.length > 1 && (
                       <p className="mt-1 text-xs text-gray-500">
-                        Το κόστος θα κατανεμηθεί ανάλογα με τον αριθμό δέντρων
+                        {farms.filter(farm => selectedFarms.includes(farm.id)).every(farm => (farm.treeCount ?? 0) > 0) ? 'Το κόστος θα κατανεμηθεί ανάλογα με τον αριθμό δέντρων' : 'Λείπει ο αριθμός δέντρων σε επιλεγμένο ελαιώνα. Το κόστος θα κατανεμηθεί ισόποσα.'}
                       </p>
                     )}
                   </div>
@@ -555,7 +567,7 @@ export default function CalendarActivityModal({
                   <div className="flex items-center gap-2 mb-2">
                     <Lightbulb className="w-4 h-4 text-amber-500" />
                     <label className="block text-sm font-medium text-gray-700">
-                      Έξυπνες Προτάσεις
+                      Υποδείξεις καιρού και καταγραφών
                     </label>
                     {isLoadingSuggestions && (
                       <Loader2 className="w-3 h-3 animate-spin text-gray-400" />
@@ -567,10 +579,11 @@ export default function CalendarActivityModal({
                       <div className="text-sm text-gray-500 bg-gray-50 rounded-xl p-4 text-center">
                         Επιλέξτε ελαιώνες για να δείτε προτάσεις
                       </div>
+                    ) : suggestionError ? (
+                      <div role="status" className="text-sm text-amber-900 bg-amber-50 border border-amber-200 rounded-xl p-4">{suggestionError} Η εργασία μπορεί να καταγραφεί, αλλά δεν υπάρχει διαθέσιμη εκτίμηση.</div>
                     ) : aiSuggestions.length === 0 && !isLoadingSuggestions ? (
-                      <div className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4" />
-                        Όλα δείχνουν καλά για αυτή τη δραστηριότητα!
+                      <div className="text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded-xl p-4">
+                        Δεν προέκυψε ειδική υπόδειξη από τα διαθέσιμα στοιχεία. Ελέγξτε τις συνθήκες πριν από την εργασία.
                       </div>
                     ) : (
                       aiSuggestions.map((suggestion, index) => (

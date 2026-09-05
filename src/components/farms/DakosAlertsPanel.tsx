@@ -9,6 +9,7 @@ interface DakosAlertsPanelProps {
 }
 
 const LEVEL_LABELS: Record<RiskLevel, string> = {
+  UNKNOWN: 'Ανεπαρκή δεδομένα',
   LOW: 'Χαμηλός',
   MODERATE: 'Μέτριος',
   HIGH: 'Υψηλός',
@@ -16,6 +17,7 @@ const LEVEL_LABELS: Record<RiskLevel, string> = {
 }
 
 const LEVEL_STYLES: Record<RiskLevel, string> = {
+  UNKNOWN: 'bg-gray-100 text-gray-700 border-gray-200',
   LOW: 'bg-green-100 text-green-800 border-green-200',
   MODERATE: 'bg-amber-100 text-amber-800 border-amber-200',
   HIGH: 'bg-orange-100 text-orange-800 border-orange-200',
@@ -23,6 +25,7 @@ const LEVEL_STYLES: Record<RiskLevel, string> = {
 }
 
 const LEVEL_ALERT_STYLES: Record<RiskLevel, string> = {
+  UNKNOWN: 'bg-gray-50 border-gray-200',
   LOW: 'bg-green-50 border-green-200',
   MODERATE: 'bg-amber-50 border-amber-200',
   HIGH: 'bg-orange-50 border-orange-300',
@@ -30,23 +33,16 @@ const LEVEL_ALERT_STYLES: Record<RiskLevel, string> = {
 }
 
 function preventionAdvice(level: RiskLevel): string {
-  if (level === 'LOW') {
-    return 'Συνεχίστε την εβδομαδιαία παρακολούθηση με παγίδες McPhail. Καταγράψτε ψεκασμούς στο ημερολόγιο.'
-  }
-  if (level === 'MODERATE') {
-    return 'Ελέγξτε τις παγίδες 2–3 φορές την εβδομάδα. Εξετάστε δολωματικό ψεκασμό αν ανιχνευθούν captures.'
-  }
-  if (level === 'HIGH') {
-    return 'Προγραμματίστε δολωματικό ψεκασμό (π.χ. spinosad) εντός 5–7 ημερών. Αυξήστε τη συχνότητα ελέγχου παγίδων.'
-  }
-  return 'Άμεση δράση: δολωματικός ψεκασμός και επανέλεγχος παγίδων σε 3–5 ημέρες. Επικοινωνήστε με γεωπόνο αν η πίεση παραμένει.'
+  return level === 'LOW'
+    ? 'Συνεχίστε την παρακολούθηση και καταγράψτε ευρήματα από παγίδες και καρπούς. Ο χαμηλός καιρικός δείκτης δεν αποκλείει προσβολή.'
+    : 'Ελέγξτε παγίδες και καρπούς και καταγράψτε τα ευρήματα. Συζητήστε τα με τον γεωπόνο πριν από επέμβαση. Ο δείκτης δεν είναι διάγνωση ή οδηγία ψεκασμού.'
 }
 
 function alertTitle(dakos: DakosRisk): string {
-  if (dakos.level === 'EXTREME') return 'Κρίσιμος κίνδυνος δάκου'
-  if (dakos.level === 'HIGH') return 'Αυξημένος κίνδυνος δάκου'
-  if (dakos.level === 'MODERATE') return 'Μέτριος κίνδυνος δάκου'
-  return 'Χαμηλός κίνδυνος δάκου'
+  if (dakos.level === 'EXTREME') return 'Πολύ αυξημένος καιρικός δείκτης δάκου'
+  if (dakos.level === 'HIGH') return 'Αυξημένος καιρικός δείκτης δάκου'
+  if (dakos.level === 'MODERATE') return 'Μέτριος καιρικός δείκτης δάκου'
+  return 'Χαμηλός καιρικός δείκτης δάκου'
 }
 
 export default function DakosAlertsPanel({ farmId }: DakosAlertsPanelProps) {
@@ -105,7 +101,7 @@ export default function DakosAlertsPanel({ farmId }: DakosAlertsPanelProps) {
   if (!report) return null
 
   const { dakos } = report
-  const hasEnoughHistory = report.windowDays >= 7
+  const hasEnoughHistory = report.sufficient
   const showAlert = hasEnoughHistory && dakos.level !== 'LOW'
 
   return (
@@ -117,7 +113,7 @@ export default function DakosAlertsPanel({ farmId }: DakosAlertsPanelProps) {
             Ειδοποιήσεις Δάκου
           </h3>
           <p className="text-xs text-gray-500 mt-0.5">
-            Βασισμένο σε {report.windowDays} ημέρες καιρικού ιστορικού · ενημέρωση κάθε 30 λεπτά
+            Βασισμένο σε {report.windowDays} ημέρες διαθέσιμου καιρικού ιστορικού · επανυπολογισμός κάθε 30 λεπτά · νέα δεδομένα έως 4 φορές την ημέρα
           </p>
         </div>
         <button
@@ -134,7 +130,7 @@ export default function DakosAlertsPanel({ farmId }: DakosAlertsPanelProps) {
         {!hasEnoughHistory ? (
           <div className="rounded-xl bg-blue-50 border border-blue-200 p-4 text-sm text-blue-900">
             Συλλέγουμε καιρικά δεδομένα για τον ελαιώνα σας. Οι ειδοποιήσεις δάκου θα εμφανιστούν
-            μόλις υπάρχουν τουλάχιστον 7 ημέρες ιστορικού (αυτόματα από το σύστημα).
+            μόλις υπάρχουν τουλάχιστον 7 διαφορετικές ημέρες ιστορικού και πρόσφατη ενημέρωση.
           </div>
         ) : (
           <>

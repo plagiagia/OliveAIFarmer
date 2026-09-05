@@ -93,7 +93,7 @@ export async function POST(request: Request) {
       // Calculate total trees across all selected farms
       const totalTrees = farms.reduce((sum, farm) => sum + (farm.treeCount || 0), 0)
 
-      if (totalTrees > 0) {
+      if (totalTrees > 0 && farms.every(farm => (farm.treeCount ?? 0) > 0)) {
         // Distribute cost proportionally by tree count
         for (const farm of farms) {
           const farmTrees = farm.treeCount || 0

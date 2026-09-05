@@ -1,64 +1,17 @@
-/**
- * Rule-based fallback insights.
- *
- * Triggered when OpenAI is unavailable (no key, rate limited upstream,
- * persistent errors after retry). Returns a small, sensible set of
- * insights derived purely from the farm context so the UI is never empty.
- */
-import type { FarmContext, AIInsight } from '@/lib/openai'
+import { missingContext, type FarmContext } from './context'
+import type { AIInsightParsed } from './schemas'
 
-export function ruleBasedInsights(ctx: FarmContext): AIInsight[] {
-  const out: AIInsight[] = []
-  const month = ctx.currentMonth
-
-  // 1. Drought warning from weather
-  if (ctx.weatherSummary.totalRainfall < 10 && ctx.weatherSummary.avgTempHigh > 28) {
-    out.push({
-      type: 'WEATHER_ALERT',
-      title: 'Πιθανή ξηρασία',
-      message: `Τις τελευταίες 30 ημέρες καταγράφηκαν μόνο ${ctx.weatherSummary.totalRainfall.toFixed(1)}mm βροχής με μέση μέγιστη θερμοκρασία ${ctx.weatherSummary.avgTempHigh.toFixed(1)}°C. Εξετάστε ενίσχυση της άρδευσης, ιδιαίτερα σε νέα δέντρα.`,
-      urgency: 'HIGH',
-      actionRequired: true,
-      reasoning: 'Χαμηλή βροχόπτωση + υψηλές θερμοκρασίες = αυξημένο υδατικό στρες.',
-    })
-  }
-
-  // 2. Seasonal tip — flowering / fruit set window (April–June for Greece)
-  if (month >= 4 && month <= 6) {
-    out.push({
-      type: 'SEASONAL_TIP',
-      title: 'Παρακολούθηση άνθησης / καρπόδεσης',
-      message: 'Είναι κρίσιμη περίοδος για άνθηση και καρπόδεση. Αποφύγετε καταπόνηση από έλλειψη νερού και παρακολουθήστε για παράσιτα ανθέων.',
-      urgency: 'MEDIUM',
-      actionRequired: false,
-      reasoning: 'Άνοιξη/αρχές καλοκαιριού: φάση που καθορίζει την παραγωγή της χρονιάς.',
-    })
-  }
-
-  // 3. Pest watch in summer
-  if (month >= 6 && month <= 9) {
-    out.push({
-      type: 'RISK_WARNING',
-      title: 'Παρακολούθηση δάκου',
-      message: 'Οι μήνες Ιούνιος–Σεπτέμβριος είναι περίοδος δραστηριότητας του δάκου της ελιάς (Bactrocera oleae). Τοποθετήστε παγίδες παρακολούθησης και ελέγξτε εβδομαδιαίως.',
-      urgency: 'HIGH',
-      actionRequired: true,
-      reasoning: 'Καλοκαιρινές θερμοκρασίες ευνοούν την αναπαραγωγή του δάκου.',
-    })
-  }
-
-  // 4. Missing recent activity reminder
-  const hasRecentActivity = ctx.recentActivities.length > 0
-  if (!hasRecentActivity) {
-    out.push({
-      type: 'TASK_REMINDER',
-      title: 'Καμία πρόσφατη δραστηριότητα',
-      message: 'Δεν έχουν καταγραφεί δραστηριότητες τις τελευταίες 30 ημέρες. Καταγράψτε ποτίσματα, λιπάνσεις και ψεκασμούς για ακριβέστερες AI συμβουλές.',
-      urgency: 'LOW',
-      actionRequired: false,
-      reasoning: 'Η ποιότητα των AI συστάσεων εξαρτάται από την πληρότητα των δεδομένων.',
-    })
-  }
-
-  return out.slice(0, 5)
+export function ruleBasedInsights(ctx: FarmContext): AIInsightParsed[] {
+  const missing = missingContext(ctx)
+  const out: AIInsightParsed[] = [{
+    type: 'TASK_REMINDER', title: 'Η επόμενη χρήσιμη καταγραφή',
+    message: ctx.recentActivities.some(a => a.completed) ? `Για τον ελαιώνα στην περιοχή ${ctx.location}, καταγράψτε τις παρατηρήσεις της επόμενης επίσκεψης μαζί με την εργασία που έγινε.` : 'Προσθέστε την τελευταία εργασία που πραγματοποιήσατε και τυχόν παρατηρήσεις. Η απουσία καταγραφών δεν σημαίνει ότι δεν έγιναν εργασίες.',
+    urgency: 'LOW', actionRequired: true, reasoning: 'Οι πραγματικές παρατηρήσεις βοηθούν να διακριθούν οι ανάγκες του ελαιώνα από γενικές εποχικές υπενθυμίσεις.',
+    evidenceIds: ['region'], missingData: missing.slice(0, 4), followUpQuestion: ctx.variety === 'Άγνωστη' ? 'Ποια είναι η κύρια ποικιλία ελιάς;' : 'Ποιος είναι ο στόχος σας αυτή την περίοδο: ποιότητα λαδιού, επιτραπέζιος καρπός ή μείωση κόστους;',
+  }]
+  if (!ctx.weatherSummary.sufficient) out.push({
+    type: 'CARE_SUGGESTION', title: 'Περιορισμένα καιρικά στοιχεία', message: `Διαθέσιμες ημέρες ιστορικού: ${ctx.weatherSummary.observedDays}/30. Δεν προκύπτει αξιόπιστη εικόνα κινδύνου από αυτά τα στοιχεία.`,
+    urgency: 'LOW', actionRequired: false, reasoning: 'Ελλιπή ή παλιά δεδομένα δεν ισοδυναμούν με χαμηλό κίνδυνο.', evidenceIds: ['weather'], missingData: ['Πρόσφατο καιρικό ιστορικό'], followUpQuestion: null,
+  })
+  return out
 }
