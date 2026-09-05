@@ -2,10 +2,15 @@
  * Sliding-window rate limiter.
  *
  * Backed by Upstash Redis (REST) when `UPSTASH_REDIS_REST_URL` /
- * `UPSTASH_REDIS_REST_TOKEN` are configured. Local development falls
- * back to an in-process Map. Production fails closed when the distributed
- * backend is missing or unavailable so serverless instances cannot bypass
- * cost-sensitive limits.
+ * `UPSTASH_REDIS_REST_TOKEN` are configured, with an in-process Map as the
+ * fallback everywhere else.
+ *
+ * The fallback degrades rather than rejects: a missing or unreachable limiter
+ * must not take down the feature it is protecting. Per-instance limiting is
+ * weaker than a distributed counter, but it is still a limit, and the
+ * expensive route (`/api/insights/generate`) is independently bounded by the
+ * plan entitlement check and the monthly token budget in `src/lib/ai/usage.ts`.
+ * Losing Upstash is logged loudly so the gap is visible in Vercel logs.
  */
 type RateLimitEntry = {
   timestamps: number[]
@@ -18,7 +23,7 @@ export interface RateLimitResult {
   remaining: number
   retryAfterSeconds: number
   resetAt: number
-  backend: 'memory' | 'upstash' | 'unavailable'
+  backend: 'memory' | 'upstash'
 }
 
 function checkInMemory(
@@ -56,14 +61,19 @@ function checkInMemory(
   }
 }
 
-function unavailableResult(now: number): RateLimitResult {
-  return {
-    allowed: false,
-    remaining: 0,
-    retryAfterSeconds: 60,
-    resetAt: now + 60_000,
-    backend: 'unavailable',
-  }
+// Upstash being unconfigured is a deploy-time mistake, not a per-request
+// event: log it once per instance instead of once per request so it stays
+// visible without drowning the log.
+let warnedUpstashUnconfigured = false
+
+function warnUpstashUnconfiguredOnce() {
+  if (warnedUpstashUnconfigured) return
+  warnedUpstashUnconfigured = true
+  console.warn(
+    '[rate-limit] UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN are not set; ' +
+      'falling back to the per-instance in-memory limiter. Rate limits are no longer ' +
+      'shared across serverless instances until these are configured.'
+  )
 }
 
 /**
@@ -160,29 +170,26 @@ export async function checkRateLimitAsync(
 ): Promise<RateLimitResult> {
   const url = process.env.UPSTASH_REDIS_REST_URL
   const token = process.env.UPSTASH_REDIS_REST_TOKEN
-  const isProduction = process.env.NODE_ENV === 'production'
 
   if (!url || !token) {
-    if (isProduction) {
-      console.error('[rate-limit] Upstash is not configured; rejecting request')
-      return unavailableResult(now)
-    }
+    warnUpstashUnconfiguredOnce()
     return checkInMemory(key, maxRequests, windowMs, now)
   }
 
   try {
     return await checkUpstash(key, maxRequests, windowMs, now, url, token)
   } catch (err) {
-    console.error('[rate-limit] Upstash request failed', err)
-    if (isProduction) {
-      return unavailableResult(now)
-    }
+    console.error(
+      '[rate-limit] Upstash request failed; falling back to the in-process limiter',
+      err
+    )
     return checkInMemory(key, maxRequests, windowMs, now)
   }
 }
 
 export function clearRateLimitStore() {
   memoryStore.clear()
+  warnedUpstashUnconfigured = false
 }
 
 export function isDistributedRateLimitEnabled(): boolean {
