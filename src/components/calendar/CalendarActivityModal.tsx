@@ -567,7 +567,7 @@ export default function CalendarActivityModal({
                   <div className="flex items-center gap-2 mb-2">
                     <Lightbulb className="w-4 h-4 text-amber-500" />
                     <label className="block text-sm font-medium text-gray-700">
-                      Έξυπνες Προτάσεις
+                      Υποδείξεις καιρού και καταγραφών
                     </label>
                     {isLoadingSuggestions && (
                       <Loader2 className="w-3 h-3 animate-spin text-gray-400" />
@@ -579,10 +579,11 @@ export default function CalendarActivityModal({
                       <div className="text-sm text-gray-500 bg-gray-50 rounded-xl p-4 text-center">
                         Επιλέξτε ελαιώνες για να δείτε προτάσεις
                       </div>
+                    ) : suggestionError ? (
+                      <div role="status" className="text-sm text-amber-900 bg-amber-50 border border-amber-200 rounded-xl p-4">{suggestionError} Η εργασία μπορεί να καταγραφεί, αλλά δεν υπάρχει διαθέσιμη εκτίμηση.</div>
                     ) : aiSuggestions.length === 0 && !isLoadingSuggestions ? (
-                      <div className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4" />
-                        Όλα δείχνουν καλά για αυτή τη δραστηριότητα!
+                      <div className="text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded-xl p-4">
+                        Δεν προέκυψε ειδική υπόδειξη από τα διαθέσιμα στοιχεία. Ελέγξτε τις συνθήκες πριν από την εργασία.
                       </div>
                     ) : (
                       aiSuggestions.map((suggestion, index) => (
