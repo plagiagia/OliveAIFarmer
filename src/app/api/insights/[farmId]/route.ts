@@ -50,11 +50,21 @@ export async function GET(
       ]
     })
 
+    // A dakos alert is periodically refreshed, but older active rows may
+    // exist from before alert creation became idempotent. Show only the newest
+    // one while preserving all other insight types.
+    const latestWeatherAlertId = insights
+      .filter((insight) => insight.source === 'WEATHER_ALERT' && insight.contextHash === 'dakos-alert')
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0]?.id
+    const visibleInsights = insights.filter((insight) =>
+      insight.source !== 'WEATHER_ALERT' || insight.contextHash !== 'dakos-alert' || insight.id === latestWeatherAlertId
+    )
+
     // Count unread insights
-    const unreadCount = insights.filter((i: { isRead: boolean }) => !i.isRead).length
+    const unreadCount = visibleInsights.filter((i: { isRead: boolean }) => !i.isRead).length
 
     // Get the most recent generation time
-    const aiInsights = insights.filter((i: { source: string }) => i.source === 'AI_GENERATED')
+    const aiInsights = visibleInsights.filter((i: { source: string }) => i.source === 'AI_GENERATED')
     const lastGeneratedAt = aiInsights.length > 0
       ? aiInsights.sort((a: { createdAt: Date }, b: { createdAt: Date }) =>
           b.createdAt.getTime() - a.createdAt.getTime()
@@ -63,7 +73,7 @@ export async function GET(
 
     return NextResponse.json({
       success: true,
-      insights,
+      insights: visibleInsights,
       unreadCount,
       lastGeneratedAt: lastGeneratedAt || null
     })

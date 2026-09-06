@@ -49,44 +49,68 @@ export async function maybeSendDakosAlert(farm: {
     return { farmId: farm.id, level, alerted: false, pushed: 0 }
   }
 
-  // Cooldown: skip if a δάκος alert for this farm fired recently.
-  const recent = await prisma.smartRecommendation.findFirst({
-    where: {
-      farmId: farm.id,
-      type: 'RISK_WARNING',
-      source: 'WEATHER_ALERT',
-      contextHash: 'dakos-alert',
-      createdAt: { gte: new Date(Date.now() - ALERT_COOLDOWN_DAYS * 24 * 60 * 60 * 1000) },
-    },
-    select: { id: true },
-  })
-  if (recent) {
-    return { farmId: farm.id, level, alerted: false, pushed: 0 }
-  }
-
   const title = `${LEVEL_LABELS[level]} κίνδυνος δάκου — ${farm.name}`
   const message =
     `Ο ενδεικτικός καιρικός δείκτης από ${risk.windowDays} διαθέσιμες ημέρες ιστορικού είναι αυξημένος ` +
     `(${risk.dakos.score}/100), χωρίς να επιβεβαιώνει προσβολή. Ελέγξτε τις παγίδες και συμβουλευτείτε τον γεωπόνο σας ` +
     `με τα ευρήματα πριν από επέμβαση.`
 
-  // In-app recommendation (shows up in the farm's AI Γεωπόνος tab).
-  await prisma.smartRecommendation.create({
-    data: {
-      type: 'RISK_WARNING',
-      title,
-      message,
-      reasoning: risk.dakos.rationale,
-      urgency: 'MEDIUM',
-      actionRequired: true,
-      source: 'WEATHER_ALERT',
-      farmId: farm.id,
-      weatherBased: true,
-      contextHash: 'dakos-alert',
-      validFrom: new Date(),
-      validUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    },
+  const now = new Date()
+  const alert = await prisma.$transaction(async tx => {
+    // Serialize cron retries/invocations for this farm. The previous
+    // check-then-create flow could create identical alerts concurrently.
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`dakos-alert:${farm.id}`}))`
+
+    const recent = await tx.smartRecommendation.findFirst({
+      where: {
+        farmId: farm.id,
+        type: 'RISK_WARNING',
+        source: 'WEATHER_ALERT',
+        contextHash: 'dakos-alert',
+        isArchived: false,
+        createdAt: { gte: new Date(now.getTime() - ALERT_COOLDOWN_DAYS * 24 * 60 * 60 * 1000) },
+      },
+      orderBy: { createdAt: 'desc' },
+      select: { id: true },
+    })
+
+    // Keep only the newest active alert. This also repairs duplicates created
+    // by earlier cron runs without deleting their history.
+    await tx.smartRecommendation.updateMany({
+      where: {
+        farmId: farm.id,
+        type: 'RISK_WARNING',
+        source: 'WEATHER_ALERT',
+        contextHash: 'dakos-alert',
+        isArchived: false,
+        ...(recent ? { id: { not: recent.id } } : {}),
+      },
+      data: { isArchived: true },
+    })
+
+    if (recent) return null
+
+    return tx.smartRecommendation.create({
+      data: {
+        type: 'RISK_WARNING',
+        title,
+        message,
+        reasoning: risk.dakos.rationale,
+        urgency: 'MEDIUM',
+        actionRequired: true,
+        source: 'WEATHER_ALERT',
+        farmId: farm.id,
+        weatherBased: true,
+        contextHash: 'dakos-alert',
+        validFrom: now,
+        validUntil: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
+      },
+    })
   })
+
+  if (!alert) {
+    return { farmId: farm.id, level, alerted: false, pushed: 0 }
+  }
 
   // Push notification to all the owner's devices.
   const pushed = await sendPushToUser(farm.userId, {
