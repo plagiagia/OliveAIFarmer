@@ -3,6 +3,7 @@
 import { ACTIVITY_TYPE_LABELS, ActivityFormData, ActivityWithTrees, ActivityType } from '@/types/activity'
 import { Activity, CheckCircle2, Clock, Filter, Plus, Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import posthog from 'posthog-js'
 import ActivityCard from '../activities/ActivityCard'
 import ActivityFormModal from '../activities/ActivityFormModal'
 import LogbookExportButton from '../export/LogbookExportButton'
@@ -121,6 +122,11 @@ export default function FarmActivities({ farm, readOnly = false }: FarmActivitie
       })
 
       if (response.ok) {
+        posthog.capture('activity_saved', {
+          action: editingActivity ? 'updated' : 'created',
+          activity_type: formData.type,
+          is_completed: Boolean(formData.completed),
+        })
         await loadActivities()
         setShowFormModal(false)
         setEditingActivity(null)
@@ -142,6 +148,7 @@ export default function FarmActivities({ farm, readOnly = false }: FarmActivitie
       })
 
       if (response.ok) {
+        posthog.capture('activity_deleted')
         await loadActivities()
       } else {
         console.error('Failed to delete activity')
@@ -170,6 +177,9 @@ export default function FarmActivities({ farm, readOnly = false }: FarmActivitie
       })
 
       if (response.ok) {
+        posthog.capture('activity_completion_changed', {
+          is_completed: completed,
+        })
         await loadActivities()
       } else {
         console.error('Failed to update activity')

@@ -9,6 +9,7 @@ import { trackProductEvent } from '@/lib/product-events'
 import { ArrowLeft, Loader2, MapPin, Save } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import posthog from 'posthog-js'
 import OliveIcon from '@/components/ui/OliveIcon'
 
 interface FarmCreationFormProps {
@@ -84,6 +85,11 @@ export default function FarmCreationForm({ userId: _userId }: FarmCreationFormPr
         }
 
         trackProductEvent('GroveCreated', { first: Boolean(data.isFirstFarm) })
+        posthog.capture('farm_created', {
+          is_first_farm: Boolean(data.isFirstFarm),
+          has_coordinates: Boolean(coordinates),
+          has_tree_count: Boolean(formData.treeCount),
+        })
         router.push(`/dashboard/farms/${data.farm.id}?welcome=true`)
       } else {
         setError(data.error || 'Αποτυχία δημιουργίας ελαιώνα')

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import posthog from 'posthog-js'
 import { Download, FileSpreadsheet, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -29,6 +30,7 @@ export function ExportButton({
     setIsExporting(true)
     try {
       await onExport()
+      posthog.capture('data_exported')
     } catch (error) {
       console.error('Export failed:', error)
     } finally {
@@ -92,6 +94,7 @@ export function ExportDropdown({
     setIsOpen(false)
     try {
       await exportFn()
+      posthog.capture('data_exported')
     } catch (error) {
       console.error('Export failed:', error)
     } finally {

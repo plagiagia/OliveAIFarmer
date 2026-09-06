@@ -2,6 +2,7 @@ import { env } from '@/env'
 import { reconcileFarmActivationForUser } from '@/lib/farm-activation'
 import { prisma } from '@/lib/db'
 import { getEntitledPlan, normalizePlan } from '@/lib/plans'
+import { captureServerEvent } from '@/lib/posthog-server'
 import { stripe } from '@/lib/stripe'
 import { headers } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
@@ -118,6 +119,13 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   })
 
   await reconcileFarmActivationForUser(userId, plan)
+
+  const clerkId = session.metadata?.clerkId
+  if (clerkId) {
+    await captureServerEvent(clerkId, 'subscription_checkout_completed', {
+      plan,
+    })
+  }
 }
 
 async function handleSubscriptionUpdated(stripeSubscription: Stripe.Subscription) {
