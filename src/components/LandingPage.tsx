@@ -432,6 +432,7 @@ export default function LandingPage() {
           <Link href="/sign-in" className="hover:text-olive-700">Σύνδεση</Link>
           <Link href="/sign-up" className="hover:text-olive-700">Εγγραφή</Link>
           <Link href="/legal/privacy" className="hover:text-olive-700">Πολιτική Απορρήτου</Link>
+          <Link href="/legal/privacy-settings" className="hover:text-olive-700">Ρυθμίσεις απορρήτου</Link>
           <Link href="/legal/terms" className="hover:text-olive-700">Όροι Χρήσης</Link>
           <Link href="/legal/imprint" className="hover:text-olive-700">Επικοινωνία</Link>
         </div>

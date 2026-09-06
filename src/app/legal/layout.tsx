@@ -15,6 +15,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
           </Link>
           <nav className="flex items-center gap-4 text-sm">
             <Link href="/legal/privacy" className="text-gray-600 hover:text-olive-700">Απόρρητο</Link>
+            <Link href="/legal/privacy-settings" className="text-gray-600 hover:text-olive-700">Ρυθμίσεις απορρήτου</Link>
             <Link href="/legal/terms" className="text-gray-600 hover:text-olive-700">Όροι</Link>
             <Link href="/legal/imprint" className="text-gray-600 hover:text-olive-700">Επικοινωνία</Link>
           </nav>

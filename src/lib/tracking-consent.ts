@@ -1,5 +1,7 @@
 export const MARKETING_CONSENT_STORAGE_KEY = 'oliveiq:marketing-consent'
 export const MARKETING_CONSENT_CHANGED_EVENT = 'oliveiq:marketing-consent-changed'
+export const ANALYTICS_CONSENT_STORAGE_KEY = 'oliveiq:analytics-consent'
+export const ANALYTICS_CONSENT_CHANGED_EVENT = 'oliveiq:analytics-consent-changed'
 
 export type MarketingConsent = 'granted' | 'denied'
 
@@ -15,4 +17,18 @@ export function setMarketingConsent(consent: MarketingConsent) {
 
   window.localStorage.setItem(MARKETING_CONSENT_STORAGE_KEY, consent)
   window.dispatchEvent(new Event(MARKETING_CONSENT_CHANGED_EVENT))
+}
+
+export function getAnalyticsConsent(): MarketingConsent | null {
+  if (typeof window === 'undefined') return null
+
+  const value = window.localStorage.getItem(ANALYTICS_CONSENT_STORAGE_KEY)
+  return value === 'granted' || value === 'denied' ? value : null
+}
+
+export function setAnalyticsConsent(consent: MarketingConsent) {
+  if (typeof window === 'undefined') return
+
+  window.localStorage.setItem(ANALYTICS_CONSENT_STORAGE_KEY, consent)
+  window.dispatchEvent(new Event(ANALYTICS_CONSENT_CHANGED_EVENT))
 }

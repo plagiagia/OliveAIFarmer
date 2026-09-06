@@ -3,7 +3,7 @@
 import { ACTIVITY_TYPE_LABELS, ActivityFormData, ActivityWithTrees, ActivityType } from '@/types/activity'
 import { Activity, CheckCircle2, Clock, Filter, Plus, Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import posthog from 'posthog-js'
+import { capturePostHogEvent } from '@/lib/posthog-client'
 import ActivityCard from '../activities/ActivityCard'
 import ActivityFormModal from '../activities/ActivityFormModal'
 import LogbookExportButton from '../export/LogbookExportButton'
@@ -122,7 +122,7 @@ export default function FarmActivities({ farm, readOnly = false }: FarmActivitie
       })
 
       if (response.ok) {
-        posthog.capture('activity_saved', {
+        capturePostHogEvent('activity_saved', {
           action: editingActivity ? 'updated' : 'created',
           activity_type: formData.type,
           is_completed: Boolean(formData.completed),
@@ -148,7 +148,7 @@ export default function FarmActivities({ farm, readOnly = false }: FarmActivitie
       })
 
       if (response.ok) {
-        posthog.capture('activity_deleted')
+        capturePostHogEvent('activity_deleted')
         await loadActivities()
       } else {
         console.error('Failed to delete activity')
@@ -177,7 +177,7 @@ export default function FarmActivities({ farm, readOnly = false }: FarmActivitie
       })
 
       if (response.ok) {
-        posthog.capture('activity_completion_changed', {
+        capturePostHogEvent('activity_completion_changed', {
           is_completed: completed,
         })
         await loadActivities()
@@ -402,4 +402,4 @@ export default function FarmActivities({ farm, readOnly = false }: FarmActivitie
       />
     </div>
   )
-} 
+}

@@ -3,6 +3,8 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import {
+  getAnalyticsConsent,
+  setAnalyticsConsent,
   getMarketingConsent,
   setMarketingConsent,
   type MarketingConsent,
@@ -10,20 +12,59 @@ import {
 
 interface MarketingConsentBannerProps {
   enabled: boolean
+  hasAnalytics: boolean
+  hasMarketing: boolean
 }
 
-export default function MarketingConsentBanner({ enabled }: MarketingConsentBannerProps) {
-  const [consent, setConsent] = useState<MarketingConsent | null>(null)
+export default function MarketingConsentBanner({
+  enabled,
+  hasAnalytics,
+  hasMarketing,
+}: MarketingConsentBannerProps) {
+  const [marketingConsent, setMarketingChoice] = useState<MarketingConsent | null>(null)
+  const [analyticsConsent, setAnalyticsChoice] = useState<MarketingConsent | null>(null)
+  const [analyticsEnabled, setAnalyticsEnabled] = useState(false)
+  const [marketingEnabled, setMarketingEnabled] = useState(false)
 
   useEffect(() => {
-    setConsent(getMarketingConsent())
+    const currentMarketingConsent = getMarketingConsent()
+    const currentAnalyticsConsent = getAnalyticsConsent()
+    setMarketingChoice(currentMarketingConsent)
+    setAnalyticsChoice(currentAnalyticsConsent)
+    setMarketingEnabled(currentMarketingConsent === 'granted')
+    setAnalyticsEnabled(currentAnalyticsConsent === 'granted')
   }, [])
 
-  if (!enabled || consent !== null) return null
+  const hasPendingConsent =
+    (hasMarketing && marketingConsent === null) ||
+    (hasAnalytics && analyticsConsent === null)
 
-  const chooseConsent = (value: MarketingConsent) => {
-    setMarketingConsent(value)
-    setConsent(value)
+  if (!enabled || !hasPendingConsent) return null
+
+  const saveChoices = () => {
+    if (hasMarketing) {
+      const consent = marketingEnabled ? 'granted' : 'denied'
+      setMarketingConsent(consent)
+      setMarketingChoice(consent)
+    }
+    if (hasAnalytics) {
+      const consent = analyticsEnabled ? 'granted' : 'denied'
+      setAnalyticsConsent(consent)
+      setAnalyticsChoice(consent)
+    }
+  }
+
+  const rejectOptional = () => {
+    setAnalyticsEnabled(false)
+    setMarketingEnabled(false)
+    if (hasMarketing) {
+      setMarketingConsent('denied')
+      setMarketingChoice('denied')
+    }
+    if (hasAnalytics) {
+      setAnalyticsConsent('denied')
+      setAnalyticsChoice('denied')
+    }
   }
 
   return (
@@ -32,30 +73,55 @@ export default function MarketingConsentBanner({ enabled }: MarketingConsentBann
       role="dialog"
       aria-label="Ρυθμίσεις cookies"
     >
-      <div className="mx-auto flex max-w-5xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mx-auto flex max-w-5xl flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <p className="max-w-3xl text-sm leading-relaxed text-gray-700">
-          Χρησιμοποιούμε προαιρετικά cookies μέτρησης διαφημίσεων για να κατανοούμε
-          ποιες καμπάνιες οδηγούν σε δημιουργία ελαιώνα. Τα ενεργοποιούμε μόνο με τη
-          συγκατάθεσή σας.{' '}
+          Χρησιμοποιούμε προαιρετικές τεχνολογίες για τη βελτίωση της υπηρεσίας και τη μέτρηση διαφημίσεων. Επιλέξτε
+          ξεχωριστά τι επιτρέπετε.{' '}
           <Link href="/legal/privacy" className="font-medium text-olive-700 underline">
             Πολιτική απορρήτου
           </Link>
         </p>
-        <div className="flex shrink-0 gap-2">
+        <div className="flex shrink-0 flex-col gap-3 sm:min-w-72">
+          <div className="space-y-2 text-sm text-gray-700">
+            {hasAnalytics && (
+              <label className="flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  checked={analyticsEnabled}
+                  onChange={(event) => setAnalyticsEnabled(event.target.checked)}
+                  className="mt-0.5 h-4 w-4 accent-olive-700"
+                />
+                <span>PostHog analytics για βελτίωση της υπηρεσίας</span>
+              </label>
+            )}
+            {hasMarketing && (
+              <label className="flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  checked={marketingEnabled}
+                  onChange={(event) => setMarketingEnabled(event.target.checked)}
+                  className="mt-0.5 h-4 w-4 accent-olive-700"
+                />
+                <span>Meta Pixel για μέτρηση διαφημίσεων</span>
+              </label>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-2">
           <button
             type="button"
-            onClick={() => chooseConsent('denied')}
+            onClick={rejectOptional}
             className="rounded-xl border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:border-olive-600 hover:text-olive-700 active:scale-[0.98]"
           >
             Μόνο απαραίτητα
           </button>
           <button
             type="button"
-            onClick={() => chooseConsent('granted')}
+            onClick={saveChoices}
             className="rounded-xl bg-olive-700 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-olive-800 active:scale-[0.98]"
           >
-            Αποδοχή
+            Αποθήκευση επιλογών
           </button>
+          </div>
         </div>
       </div>
     </aside>

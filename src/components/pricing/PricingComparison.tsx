@@ -7,9 +7,9 @@ import { useAuth } from '@clerk/nextjs'
 import { Check, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
-import posthog from 'posthog-js'
 import ProPreview from './ProPreview'
 import { trackProductEvent } from '@/lib/product-events'
+import { capturePostHogEvent } from '@/lib/posthog-client'
 
 const FREE_HIGHLIGHTS = [
   '1 ελαιώνας',
@@ -46,7 +46,7 @@ export default function PricingComparison({ showHeader = true, className = '' }:
     setUpgradeError(null)
     setBusy(true)
     trackProductEvent('UpgradeStarted', { interval, surface: 'pricing' })
-    posthog.capture('subscription_checkout_started', { billing_interval: interval })
+    capturePostHogEvent('subscription_checkout_started', { billing_interval: interval })
     try {
       const result = await upgrade('GROWER', interval)
       if (!result.ok) setUpgradeError(result.error)

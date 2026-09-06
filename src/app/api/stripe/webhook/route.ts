@@ -121,7 +121,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   await reconcileFarmActivationForUser(userId, plan)
 
   const clerkId = session.metadata?.clerkId
-  if (clerkId) {
+  if (clerkId && session.metadata?.posthogConsent === 'granted') {
     await captureServerEvent(clerkId, 'subscription_checkout_completed', {
       plan,
     })

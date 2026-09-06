@@ -2,6 +2,7 @@
 
 import type { BillingInterval, Plan, PlanConfig } from '@/lib/plans'
 import { getPlanConfig, hasFeature } from '@/lib/plans'
+import { getAnalyticsConsent } from '@/lib/tracking-consent'
 import { useEffect, useState } from 'react'
 
 interface PlanState {
@@ -70,7 +71,11 @@ export function usePlan() {
       const res = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan, interval }),
+        body: JSON.stringify({
+          plan,
+          interval,
+          analyticsConsent: getAnalyticsConsent() === 'granted' ? 'granted' : 'denied',
+        }),
       })
       const data = (await res.json()) as { url?: string; error?: string }
       if (res.ok && data.url) {

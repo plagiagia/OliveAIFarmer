@@ -17,9 +17,9 @@ import {
   X
 } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
-import posthog from 'posthog-js'
 import { URGENCY_CONFIG, type Urgency } from '@/lib/ui/urgency'
 import { greekDate } from '@/lib/ai/activity-weather'
+import { capturePostHogEvent } from '@/lib/posthog-client'
 
 interface Insight {
   id: string
@@ -78,7 +78,7 @@ export default function AIGeoponosTab({ farmId, readOnly = false }: AIGeoponosTa
           notes: `${insight.triggerConditions?.followUpQuestion || ''}\nΠαρατήρηση παραγωγού: ${observation.trim()}` }),
       })
       if (!response.ok) throw new Error('Δεν αποθηκεύτηκε η παρατήρηση. Δοκιμάστε ξανά.')
-      posthog.capture('ai_observation_saved', { insight_type: insight.type })
+      capturePostHogEvent('ai_observation_saved', { insight_type: insight.type })
       setObservation('')
       setNotice('Η παρατήρηση αποθηκεύτηκε στις εργασίες. Πατήστε «Νέες Προτάσεις» για ανάλυση με τα νέα στοιχεία.')
     } catch (err) {
@@ -135,7 +135,7 @@ export default function AIGeoponosTab({ farmId, readOnly = false }: AIGeoponosTa
 
       // Refresh insights list
       await fetchInsights()
-      posthog.capture('ai_insights_generated', {
+      capturePostHogEvent('ai_insights_generated', {
         used_fallback: Boolean(data.usedFallback),
         was_cached: Boolean(data.cached),
       })
@@ -178,7 +178,7 @@ export default function AIGeoponosTab({ farmId, readOnly = false }: AIGeoponosTa
       })
       if (!response.ok) throw new Error('Δεν αποθηκεύτηκε η ολοκλήρωση της πρότασης.')
 
-      posthog.capture('ai_insight_actioned', {
+      capturePostHogEvent('ai_insight_actioned', {
         insight_type: insights.find(insight => insight.id === insightId)?.type ?? 'unknown',
       })
       setInsights(prev =>

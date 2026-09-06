@@ -106,7 +106,11 @@ export default function RootLayout({
             <OfflineIndicator />
           </SignedIn>
           <MetaPixel pixelId={env.NEXT_PUBLIC_META_PIXEL_ID} />
-          <MarketingConsentBanner enabled={Boolean(env.NEXT_PUBLIC_META_PIXEL_ID)} />
+          <MarketingConsentBanner
+            enabled={Boolean(env.NEXT_PUBLIC_META_PIXEL_ID || env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN)}
+            hasAnalytics={Boolean(env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN)}
+            hasMarketing={Boolean(env.NEXT_PUBLIC_META_PIXEL_ID)}
+          />
           <Analytics />
           <SpeedInsights />
         </body>

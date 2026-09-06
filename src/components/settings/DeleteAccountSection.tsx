@@ -1,6 +1,7 @@
 'use client'
 
 import { useClerk } from '@clerk/nextjs'
+import { resetPostHogUser } from '@/lib/posthog-client'
 import { AlertTriangle, Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
@@ -26,6 +27,7 @@ export default function DeleteAccountSection() {
         const data = await res.json().catch(() => ({}))
         throw new Error(data.error || 'Αποτυχία διαγραφής.')
       }
+      resetPostHogUser()
       try {
         await signOut()
       } catch {

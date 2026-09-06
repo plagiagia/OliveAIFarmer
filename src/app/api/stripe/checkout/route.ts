@@ -9,7 +9,7 @@ const STRIPE_NOT_CONFIGURED_MSG =
   'Το Stripe δεν είναι ρυθμισμένο. Προσθέστε έγκυρο STRIPE_SECRET_KEY από το Stripe Dashboard στο .env.local και κάντε restart τον dev server.'
 
 // POST /api/stripe/checkout
-// Body: { plan: 'GROWER', interval?: 'year' | 'month', returnUrl?: string }
+// Body: { plan: 'GROWER', interval?: 'year' | 'month', returnUrl?: string, analyticsConsent?: 'granted' | 'denied' }
 // Annual is the promoted default; monthly is offered as a fallback.
 export async function POST(req: NextRequest) {
   const { userId } = await auth()
@@ -27,10 +27,11 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
   }
-  const { plan, interval, returnUrl } = body as {
+  const { plan, interval, returnUrl, analyticsConsent } = body as {
     plan: Plan
     interval?: BillingInterval
     returnUrl?: string
+    analyticsConsent?: 'granted' | 'denied'
   }
 
   if (plan !== 'GROWER') {
@@ -95,9 +96,15 @@ export async function POST(req: NextRequest) {
         userId: user.id,
         clerkId: userId,
         plan,
+        posthogConsent: analyticsConsent === 'granted' ? 'granted' : 'denied',
       },
       subscription_data: {
-        metadata: { userId: user.id, clerkId: userId, plan },
+        metadata: {
+          userId: user.id,
+          clerkId: userId,
+          plan,
+          posthogConsent: analyticsConsent === 'granted' ? 'granted' : 'denied',
+        },
       },
     })
 
