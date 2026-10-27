@@ -3,8 +3,6 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import {
-  getAnalyticsConsent,
-  setAnalyticsConsent,
   getMarketingConsent,
   setMarketingConsent,
   type MarketingConsent,
@@ -12,32 +10,23 @@ import {
 
 interface MarketingConsentBannerProps {
   enabled: boolean
-  hasAnalytics: boolean
   hasMarketing: boolean
 }
 
 export default function MarketingConsentBanner({
   enabled,
-  hasAnalytics,
   hasMarketing,
 }: MarketingConsentBannerProps) {
   const [marketingConsent, setMarketingChoice] = useState<MarketingConsent | null>(null)
-  const [analyticsConsent, setAnalyticsChoice] = useState<MarketingConsent | null>(null)
-  const [analyticsEnabled, setAnalyticsEnabled] = useState(false)
   const [marketingEnabled, setMarketingEnabled] = useState(false)
 
   useEffect(() => {
     const currentMarketingConsent = getMarketingConsent()
-    const currentAnalyticsConsent = getAnalyticsConsent()
     setMarketingChoice(currentMarketingConsent)
-    setAnalyticsChoice(currentAnalyticsConsent)
     setMarketingEnabled(currentMarketingConsent === 'granted')
-    setAnalyticsEnabled(currentAnalyticsConsent === 'granted')
   }, [])
 
-  const hasPendingConsent =
-    (hasMarketing && marketingConsent === null) ||
-    (hasAnalytics && analyticsConsent === null)
+  const hasPendingConsent = hasMarketing && marketingConsent === null
 
   if (!enabled || !hasPendingConsent) return null
 
@@ -47,23 +36,13 @@ export default function MarketingConsentBanner({
       setMarketingConsent(consent)
       setMarketingChoice(consent)
     }
-    if (hasAnalytics) {
-      const consent = analyticsEnabled ? 'granted' : 'denied'
-      setAnalyticsConsent(consent)
-      setAnalyticsChoice(consent)
-    }
   }
 
   const rejectOptional = () => {
-    setAnalyticsEnabled(false)
     setMarketingEnabled(false)
     if (hasMarketing) {
       setMarketingConsent('denied')
       setMarketingChoice('denied')
-    }
-    if (hasAnalytics) {
-      setAnalyticsConsent('denied')
-      setAnalyticsChoice('denied')
     }
   }
 
@@ -75,25 +54,13 @@ export default function MarketingConsentBanner({
     >
       <div className="mx-auto flex max-w-5xl flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <p className="max-w-3xl text-sm leading-relaxed text-gray-700">
-          Χρησιμοποιούμε προαιρετικές τεχνολογίες για τη βελτίωση της υπηρεσίας και τη μέτρηση διαφημίσεων. Επιλέξτε
-          ξεχωριστά τι επιτρέπετε.{' '}
+          Χρησιμοποιούμε προαιρετικές τεχνολογίες για τη μέτρηση διαφημίσεων. Επιλέξτε αν τις επιτρέπετε.{' '}
           <Link href="/legal/privacy" className="font-medium text-olive-700 underline">
             Πολιτική απορρήτου
           </Link>
         </p>
         <div className="flex shrink-0 flex-col gap-3 sm:min-w-72">
           <div className="space-y-2 text-sm text-gray-700">
-            {hasAnalytics && (
-              <label className="flex items-start gap-2">
-                <input
-                  type="checkbox"
-                  checked={analyticsEnabled}
-                  onChange={(event) => setAnalyticsEnabled(event.target.checked)}
-                  className="mt-0.5 h-4 w-4 accent-olive-700"
-                />
-                <span>PostHog analytics για βελτίωση της υπηρεσίας</span>
-              </label>
-            )}
             {hasMarketing && (
               <label className="flex items-start gap-2">
                 <input

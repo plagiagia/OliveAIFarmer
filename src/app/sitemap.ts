@@ -9,6 +9,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'weekly',
       priority: 1,
     },
+    { url: `${siteUrl}/about`, changeFrequency: 'monthly', priority: 0.5 },
+    { url: `${siteUrl}/imerologio-elaiwna`, changeFrequency: 'monthly', priority: 0.8 },
     {
       url: `${siteUrl}/pricing`,
       changeFrequency: 'monthly',

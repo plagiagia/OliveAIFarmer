@@ -47,7 +47,7 @@ const FEATURES = [
     icon: FileText,
     chip: 'bg-blue-100 text-blue-700',
     title: 'PDF ημερολόγιο για ΟΣΔΕ & λογιστή',
-    desc: 'Εξαγωγή του ημερολογίου αγρού έτοιμη για επιδοτήσεις, ελέγχους και φορολογικά — με ένα κλικ.',
+    desc: 'Εξαγωγή των καταγραφών σας σε PDF για τον γεωπόνο ή τον λογιστή σας. Ελέγξτε τις απαιτήσεις του φορέα πριν το υποβάλετε.',
   },
   {
     icon: Sparkles,
@@ -207,28 +207,27 @@ export default function LandingPage() {
     <div className="min-h-screen bg-white">
       {/* ── NAV ── */}
       <nav className="sticky top-0 z-50 border-b border-gray-100 bg-white/80 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-3">
           <Link href="/" className="flex items-center gap-2">
             <BrandLogo size="md" priority />
             <span className="text-xl font-bold text-olive-800">OliveIQ</span>
           </Link>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <Link
-              href="#pricing"
-              onClick={handlePricingClick}
-              className="hidden text-sm text-gray-600 hover:text-olive-700 sm:block"
+              href="/pricing"
+              className="inline-flex min-h-[44px] items-center text-sm text-gray-600 hover:text-olive-700"
             >
               Τιμολόγηση
             </Link>
             <Link
               href="/sign-in"
-              className="rounded-xl border border-olive-200 px-4 py-2 text-sm font-medium text-olive-700 hover:bg-olive-50 transition-colors"
+              className="rounded-xl border border-olive-200 px-2 py-2 text-sm font-medium text-olive-700 sm:px-4 hover:bg-olive-50 transition-colors"
             >
               Σύνδεση
             </Link>
             <Link
               href="/sign-up"
-              className="rounded-xl bg-olive-700 px-4 py-2 text-sm font-medium text-white hover:bg-olive-800 transition-colors"
+              className="rounded-xl bg-olive-700 px-2 py-2 text-sm font-medium text-white sm:px-4 hover:bg-olive-800 transition-colors"
             >
               Ξεκινήστε Δωρεάν
             </Link>
@@ -273,8 +272,7 @@ export default function LandingPage() {
             </span>
           </h1>
           <p className="mx-auto mb-10 max-w-2xl text-xl text-gray-600">
-            Παρακολουθήστε λιπάνσεις, ψεκασμούς, συγκομιδή και κόστος ελαιολάδου σε ένα
-            μέρος. Ειδοποιήσεις δάκου, ψηφιακό ημερολόγιο αγρού, AI γεωπόνος — από οπουδήποτε.
+            Το OliveIQ είναι εφαρμογή διαχείρισης ελαιώνα και ψηφιακό ημερολόγιο αγρού. Καταγράψτε εργασίες και συγκομιδές από το κινητό και δείτε έσοδα και έξοδα, ακόμη κι όταν είστε μακριά από το χωράφι.
           </p>
           <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <Link
@@ -339,7 +337,7 @@ export default function LandingPage() {
             Γιατί οι παραγωγοί επιλέγουν το OliveIQ
           </h2>
           <p className="mx-auto mb-12 max-w-xl text-center text-gray-600">
-            Όλα όσα χρειάζεται ο ελαιώνας σας — σε μία εφαρμογή.
+            Δείτε αν ο ελαιώνας σας βγάζει χρήματα και ελέγξτε εγκαίρως τον δάκο, πριν κινδυνεύσει η συγκομιδή.
           </p>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map((item) => (
@@ -371,7 +369,7 @@ export default function LandingPage() {
         />
         <div className="relative mx-auto max-w-4xl px-4 text-center">
           <p className="mb-10 text-lg text-gray-600">
-            Χτισμένο από παραγωγό Χαλκιδικής · Σχεδιασμένο για τους{' '}
+            Χτισμένο από τον Δημήτριο Γιαννούλη, παραγωγό Χαλκιδικής · Σχεδιασμένο για τους{' '}
             <strong>450.000 ελαιοπαραγωγούς</strong> της Ελλάδας
           </p>
           <div className="grid gap-6 sm:grid-cols-3">
@@ -416,7 +414,7 @@ export default function LandingPage() {
             href="/sign-up"
             className="inline-flex items-center gap-2 rounded-2xl bg-white px-8 py-4 text-lg font-bold text-olive-800 shadow-lg hover:bg-olive-50 transition-colors"
           >
-            Ξεκινήστε Τώρα <ChevronRight className="h-5 w-5" />
+            Ξεκινήστε Δωρεάν <ChevronRight className="h-5 w-5" />
           </Link>
         </div>
       </section>
@@ -429,6 +427,10 @@ export default function LandingPage() {
         </div>
         <p>© {new Date().getFullYear()} OliveIQ · Χαλκιδική, Ελλάδα</p>
         <div className="mt-3 flex flex-wrap justify-center gap-x-6 gap-y-2">
+          <Link href="/pricing" className="hover:text-olive-700">Τιμολόγηση</Link>
+          <Link href="/imerologio-elaiwna" className="hover:text-olive-700">Ημερολόγιο ελαιώνα</Link>
+          <Link href="/about" className="hover:text-olive-700">Σχετικά</Link>
+          <Link href="/demo" className="hover:text-olive-700">Δείτε παραδείγματα</Link>
           <Link href="/sign-in" className="hover:text-olive-700">Σύνδεση</Link>
           <Link href="/sign-up" className="hover:text-olive-700">Εγγραφή</Link>
           <Link href="/legal/privacy" className="hover:text-olive-700">Πολιτική Απορρήτου</Link>

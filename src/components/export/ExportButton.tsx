@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { Download, FileSpreadsheet, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { capturePostHogEvent } from '@/lib/posthog-client'
 
 interface ExportButtonProps {
   onExport: () => void | Promise<void>
@@ -30,7 +29,7 @@ export function ExportButton({
     setIsExporting(true)
     try {
       await onExport()
-      capturePostHogEvent('data_exported')
+
     } catch (error) {
       console.error('Export failed:', error)
     } finally {
@@ -94,7 +93,7 @@ export function ExportDropdown({
     setIsOpen(false)
     try {
       await exportFn()
-      capturePostHogEvent('data_exported')
+
     } catch (error) {
       console.error('Export failed:', error)
     } finally {

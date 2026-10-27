@@ -36,7 +36,6 @@ export default function PrivacyPage() {
           <li><strong>Πληρωμές:</strong> τα στοιχεία της κάρτας σας δεν αποθηκεύονται από εμάς. Διαχειρίζονται αποκλειστικά από την υπηρεσία Stripe.</li>
           <li><strong>Δεδομένα AI Γεωπόνου:</strong> το σχετικό περιεχόμενο του ελαιώνα σας (εργασίες, συγκομιδές, καιρός) αποστέλλεται στην OpenAI για τη δημιουργία προτάσεων. Καταγράφουμε τη συνολική χρήση tokens για έλεγχο κόστους.</li>
           <li><strong>Τεχνικά cookies και δεδομένα χρήσης:</strong> απαραίτητα cookies σύνδεσης από το Clerk. Χρησιμοποιούμε το Vercel Web Analytics και το Vercel Speed Insights για στατιστικά επισκεψιμότητας και μέτρηση απόδοσης. Το Meta Pixel για μέτρηση διαφημίσεων ενεργοποιείται μόνο μετά από συγκατάθεση.</li>
-          <li><strong>Product analytics:</strong> με ξεχωριστή συγκατάθεση χρησιμοποιούμε το PostHog Cloud EU για να κατανοούμε τη χρήση και να βελτιώνουμε την Υπηρεσία. Ενδέχεται να συλλέγονται στοιχεία συσκευής και προγράμματος περιήγησης, σελίδες και λειτουργίες που χρησιμοποιούνται, χρονικές σημάνσεις, analytics events και διαγνωστικά σφαλμάτων. Μετά τη σύνδεση, τα events μπορούν να συνδεθούν με το αναγνωριστικό Clerk, το όνομα και το email σας. Δεν αποστέλλουμε ονόματα ελαιώνων, συντεταγμένες ή ελεύθερο κείμενο μέσω των custom events.</li>
         </ul>
       </section>
 
@@ -71,7 +70,6 @@ export default function PrivacyPage() {
           <li><strong>OpenWeatherMap</strong> — δέχεται μόνο γεωγραφικές συντεταγμένες, χωρίς προσωπικά δεδομένα.</li>
           <li><strong>Mapbox</strong> (ΗΠΑ) — εμφάνιση χαρτών.</li>
           <li><strong>Vercel Inc.</strong> (ΗΠΑ, φιλοξενία EU region) — φιλοξενία εφαρμογής, Web Analytics και Speed Insights.</li>
-          <li><strong>PostHog Inc.</strong> (PostHog Cloud EU, φιλοξενία στη Φρανκφούρτη) — product analytics και διαγνωστικά σφαλμάτων, μόνο μετά από συγκατάθεση. Το PostHog λειτουργεί ως εκτελών την επεξεργασία για τους σχετικούς σκοπούς.</li>
           <li><strong>Meta Platforms Ireland Limited</strong> — μέτρηση απόδοσης διαφημίσεων, μόνο όταν έχει δοθεί συγκατάθεση.</li>
         </ul>
       </section>
@@ -84,11 +82,6 @@ export default function PrivacyPage() {
           εκτός όπου η νομοθεσία απαιτεί διατήρηση (π.χ. φορολογικά παραστατικά
           συνδρομών για 5 έτη).
         </p>
-        <p>
-          Τα δεδομένα product analytics στο PostHog διατηρούνται σύμφωνα με τη ρύθμιση retention του έργου PostHog. Η
-          συγκατάθεση μπορεί να ανακληθεί οποτεδήποτε από τις{' '}
-          <a href="/legal/privacy-settings" className="text-olive-700 underline">ρυθμίσεις απορρήτου</a>.
-        </p>
       </section>
 
       <section>
@@ -100,18 +93,14 @@ export default function PrivacyPage() {
           <li><strong>Διαγραφής</strong> («δικαίωμα στη λήθη»).</li>
           <li><strong>Φορητότητας</strong> — εξαγωγή σε μορφή CSV από το dashboard.</li>
           <li><strong>Εναντίωσης</strong> στην επεξεργασία.</li>
-          <li><strong>Ανάκλησης συγκατάθεσης</strong> για product analytics και διαφημιστικά cookies, χωρίς να επηρεάζεται η νομιμότητα της προηγούμενης επεξεργασίας.</li>
+          <li><strong>Ανάκλησης συγκατάθεσης</strong> για διαφημιστικά cookies, χωρίς να επηρεάζεται η νομιμότητα της προηγούμενης επεξεργασίας.</li>
           <li><strong>Καταγγελίας</strong> στην Αρχή Προστασίας Δεδομένων Προσωπικού Χαρακτήρα (<a href="https://www.dpa.gr" className="text-olive-700 underline" target="_blank" rel="noopener noreferrer">dpa.gr</a>).</li>
         </ul>
         <p>
           Για να ασκήσετε οποιοδήποτε δικαίωμα, επικοινωνήστε μαζί μας στο{' '}
           <a href="mailto:hello@oliveiq.gr" className="text-olive-700 underline">hello@oliveiq.gr</a>.
         </p>
-        <p>
-          Για αίτημα διαγραφής δεδομένων που έχουν ήδη σταλεί στο PostHog, γράψτε στο{' '}
-          <a href="mailto:hello@oliveiq.gr" className="text-olive-700 underline">hello@oliveiq.gr</a>{' '}
-          με θέμα «Διαγραφή δεδομένων analytics». Θα διαχειριστούμε το αίτημα σύμφωνα με τη διαδικασία διαγραφής του PostHog.
-        </p>
+        <p>Για δεδομένα που συλλέχθηκαν παλαιότερα από υπηρεσίες analytics, μπορείτε να ζητήσετε διαγραφή στο <a href="mailto:hello@oliveiq.gr" className="text-olive-700 underline">hello@oliveiq.gr</a>.</p>
       </section>
 
       <section>

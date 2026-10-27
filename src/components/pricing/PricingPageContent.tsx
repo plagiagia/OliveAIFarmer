@@ -54,7 +54,7 @@ export default function PricingPageContent() {
           </Link>
         </SignedOut>
 
-        <PricingComparison />
+        <PricingComparison headingLevel="h1" />
       </div>
     </div>
   )

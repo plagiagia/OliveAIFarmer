@@ -20,6 +20,7 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://oliveiq.gr'),
   title: 'OliveIQ — Ο ελαιώνας σας, πάντα υπό έλεγχο',
   description:
     'Παρακολουθήστε λιπάνσεις, ψεκασμούς, συγκομιδή και κόστος ελαιολάδου σε ένα μέρος. Ειδοποιήσεις δάκου, AI γεωπόνος, ημερολόγιο αγρού.',
@@ -38,11 +39,13 @@ export const metadata: Metadata = {
       'Παρακολουθήστε λιπάνσεις, ψεκασμούς, συγκομιδή και κόστος ελαιολάδου σε ένα μέρος. Ειδοποιήσεις δάκου, AI γεωπόνος, ημερολόγιο αγρού.',
     url: 'https://oliveiq.gr',
     siteName: 'OliveIQ',
+    images: ['/images/hero-landscape.png'],
     locale: 'el_GR',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
+    images: ['/images/hero-landscape.png'],
     title: 'OliveIQ — Ο ελαιώνας σας, πάντα υπό έλεγχο',
     description:
       'Παρακολουθήστε λιπάνσεις, ψεκασμούς, συγκομιδή και κόστος ελαιολάδου σε ένα μέρος. Ειδοποιήσεις δάκου, AI γεωπόνος, ημερολόγιο αγρού.',
@@ -107,8 +110,7 @@ export default function RootLayout({
           </SignedIn>
           <MetaPixel pixelId={env.NEXT_PUBLIC_META_PIXEL_ID} />
           <MarketingConsentBanner
-            enabled={Boolean(env.NEXT_PUBLIC_META_PIXEL_ID || env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN)}
-            hasAnalytics={Boolean(env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN)}
+            enabled={Boolean(env.NEXT_PUBLIC_META_PIXEL_ID)}
             hasMarketing={Boolean(env.NEXT_PUBLIC_META_PIXEL_ID)}
           />
           <Analytics />

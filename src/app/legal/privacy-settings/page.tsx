@@ -2,7 +2,7 @@ import TrackingConsentSettings from '@/components/analytics/TrackingConsentSetti
 
 export const metadata = {
   title: 'Ρυθμίσεις Απορρήτου — OliveIQ',
-  description: 'Διαχειριστείτε τις προαιρετικές ρυθμίσεις analytics και διαφημιστικών cookies.',
+  description: 'Διαχειριστείτε τις προαιρετικές ρυθμίσεις διαφημιστικών cookies.',
 }
 
 export default function PrivacySettingsPage() {
@@ -15,7 +15,7 @@ export default function PrivacySettingsPage() {
 
       <p>
         Τα απαραίτητα cookies και οι λειτουργίες της εφαρμογής παραμένουν ενεργά. Από εδώ μπορείτε να αλλάξετε
-        οποτεδήποτε τη συγκατάθεσή σας για τα προαιρετικά analytics και τα διαφημιστικά cookies.
+        οποτεδήποτε τη συγκατάθεσή σας για τα διαφημιστικά cookies.
       </p>
 
       <TrackingConsentSettings />

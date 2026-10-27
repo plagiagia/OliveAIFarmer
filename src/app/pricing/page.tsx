@@ -1,4 +1,5 @@
 import PricingPageContent from '@/components/pricing/PricingPageContent'
+import ProductSchema from '@/components/pricing/ProductSchema'
 
 export const metadata = {
   title: 'Τιμολόγηση — OliveIQ',
@@ -6,5 +7,5 @@ export const metadata = {
 }
 
 export default function PricingPage() {
-  return <PricingPageContent />
+  return <><ProductSchema /><PricingPageContent /></>
 }

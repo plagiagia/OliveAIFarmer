@@ -2,7 +2,6 @@
 
 import { BarChart3, Calculator, Calendar, CheckCircle, Edit, Euro, TreePine, Wheat, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { capturePostHogEvent } from '@/lib/posthog-client'
 
 interface HarvestCreateModalProps {
   isOpen: boolean
@@ -249,11 +248,7 @@ export default function HarvestCreateModal({
       if (response.ok) {
         const responseData = await response.json()
         console.log('✅ Success response:', responseData)
-        capturePostHogEvent('harvest_saved', {
-          action: editingHarvest ? 'updated' : harvestMode === 'complete' ? 'completed' : 'created',
-          harvest_mode: harvestMode,
-          has_price: Boolean(formData.pricePerKg || formData.pricePerTon),
-        })
+
         onSuccess()
         onClose()
         // Reset form

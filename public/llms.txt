@@ -1,0 +1,8 @@
+# OliveIQ
+
+OliveIQ είναι ψηφιακό ημερολόγιο και εφαρμογή διαχείρισης ελαιώνα.
+
+- Αρχική: https://oliveiq.gr/
+- Ημερολόγιο ελαιώνα: https://oliveiq.gr/imerologio-elaiwna
+- Τιμές: https://oliveiq.gr/pricing
+- Σχετικά: https://oliveiq.gr/about

@@ -9,7 +9,6 @@ import Link from 'next/link'
 import { useState } from 'react'
 import ProPreview from './ProPreview'
 import { trackProductEvent } from '@/lib/product-events'
-import { capturePostHogEvent } from '@/lib/posthog-client'
 
 const FREE_HIGHLIGHTS = [
   '1 ελαιώνας',
@@ -29,15 +28,17 @@ const PRO_HIGHLIGHTS = [
 interface PricingComparisonProps {
   showHeader?: boolean
   className?: string
+  headingLevel?: 'h1' | 'h2'
 }
 
-export default function PricingComparison({ showHeader = true, className = '' }: PricingComparisonProps) {
+export default function PricingComparison({ showHeader = true, className = '', headingLevel = 'h2' }: PricingComparisonProps) {
   const { isSignedIn } = useAuth()
   const { plan: currentPlan, isLoading, upgrade } = usePlan()
   const [interval, setInterval] = useState<BillingInterval>('year')
   const [busy, setBusy] = useState(false)
   const [upgradeError, setUpgradeError] = useState<string | null>(null)
 
+  const Heading = headingLevel
   const pro = PLANS.GROWER
   const isFreeCurrent = Boolean(isSignedIn && !isLoading && currentPlan === 'FREE')
   const isProCurrent = Boolean(isSignedIn && !isLoading && currentPlan === 'GROWER')
@@ -46,7 +47,7 @@ export default function PricingComparison({ showHeader = true, className = '' }:
     setUpgradeError(null)
     setBusy(true)
     trackProductEvent('UpgradeStarted', { interval, surface: 'pricing' })
-    capturePostHogEvent('subscription_checkout_started', { billing_interval: interval })
+
     try {
       const result = await upgrade('GROWER', interval)
       if (!result.ok) setUpgradeError(result.error)
@@ -60,7 +61,7 @@ export default function PricingComparison({ showHeader = true, className = '' }:
       <div className="mx-auto max-w-3xl px-4">
         {showHeader && (
           <div className="mb-10 text-center">
-            <h2 className="mb-4 text-3xl font-bold text-gray-900">Οργανώστε τη φροντίδα και το κόστος των ελαιώνων σας</h2>
+            <Heading className="mb-4 text-3xl font-bold text-gray-900">Οργανώστε τη φροντίδα και το κόστος των ελαιώνων σας</Heading>
             <p className="text-gray-600">
               Ξεκινήστε με το δωρεάν ημερολόγιο. Προσθέστε παρακολούθηση και εξατομικευμένες προτάσεις με το Pro.
             </p>
@@ -195,8 +196,13 @@ export default function PricingComparison({ showHeader = true, className = '' }:
             )}
           </div>
         </div>
+        <p className="mt-4 text-center text-sm text-gray-600">Για νέα συνδρομή ισχύει δικαίωμα υπαναχώρησης 14 ημερών. <Link href="/legal/terms" className="text-olive-700 underline">Όροι χρήσης</Link></p>
         <ProPreview />
         <div className="mt-6 space-y-3 text-sm text-gray-600">
+          <details className="rounded-xl border border-gray-200 p-4"><summary className="cursor-pointer font-semibold text-gray-900">Τι περιέχει το PDF για τον ΟΣΔΕ;</summary><p className="mt-3">Περιλαμβάνει στοιχεία ελαιώνα, εργασίες, κόστος και συγκομιδές που καταγράψατε. Ελέγξτε με τον γεωπόνο ή τον φορέα σας τις απαιτήσεις πριν το υποβάλετε· η αποδοχή δεν είναι εγγυημένη.</p></details>
+          <details className="rounded-xl border border-gray-200 p-4"><summary className="cursor-pointer font-semibold text-gray-900">Τι γίνεται με τα δεδομένα μου;</summary><p className="mt-3">Η υπηρεσία είναι πιλοτική και τα δεδομένα φιλοξενούνται στη Neon στην ΕΕ. Μπορείτε να ζητήσετε διαγραφή του λογαριασμού σας· δείτε την <Link href="/legal/privacy" className="underline">πολιτική απορρήτου</Link> για προθεσμίες και εξαιρέσεις.</p></details>
+          <details className="rounded-xl border border-gray-200 p-4"><summary className="cursor-pointer font-semibold text-gray-900">Τι γίνεται αν προσθέσω δεύτερο ελαιώνα;</summary><p className="mt-3">Το δωρεάν πλάνο περιλαμβάνει έναν ελαιώνα. Για περισσότερους μπορείτε να αναβαθμίσετε σε Pro από τις ρυθμίσεις.</p></details>
+          <details className="rounded-xl border border-gray-200 p-4"><summary className="cursor-pointer font-semibold text-gray-900">Πώς λειτουργεί ο AI Γεωπόνος;</summary><p className="mt-3">Χρησιμοποιεί διαθέσιμα στοιχεία καιρού, εργασιών και συγκομιδών για προτάσεις. Δεν αντικαθιστά επιτόπιο έλεγχο ή συμβουλή γεωπόνου. Τα σχετικά δεδομένα αποστέλλονται στην OpenAI· δείτε την <Link href="/legal/privacy" className="underline">πολιτική απορρήτου</Link>.</p></details>
           <details className="rounded-xl border border-gray-200 p-4"><summary className="cursor-pointer font-semibold text-gray-900">Τι χρειάζομαι για να αξιοποιήσω το Pro;</summary><p className="mt-3 leading-relaxed">Ορίστε τη θέση του ελαιώνα για τον καιρό και τις εκτιμήσεις κινδύνου. Ενεργοποιήστε τις ειδοποιήσεις στις ρυθμίσεις της συσκευής σας. Για το κόστος παραγωγής, καταγράψτε έξοδα και συγκομιδές.</p></details>
           <details className="rounded-xl border border-gray-200 p-4"><summary className="cursor-pointer font-semibold text-gray-900">Μπορώ να ξεκινήσω δωρεάν;</summary><p className="mt-3 leading-relaxed">Ναι. Ένας ελαιώνας, καιρός, δραστηριότητες και συγκομιδές παραμένουν διαθέσιμα στο δωρεάν πλάνο, χωρίς κάρτα.</p></details>
         </div>

@@ -2,7 +2,6 @@
 
 import type { BillingInterval, Plan, PlanConfig } from '@/lib/plans'
 import { getPlanConfig, hasFeature } from '@/lib/plans'
-import { getAnalyticsConsent } from '@/lib/tracking-consent'
 import { useEffect, useState } from 'react'
 
 interface PlanState {
@@ -74,7 +73,6 @@ export function usePlan() {
         body: JSON.stringify({
           plan,
           interval,
-          analyticsConsent: getAnalyticsConsent() === 'granted' ? 'granted' : 'denied',
         }),
       })
       const data = (await res.json()) as { url?: string; error?: string }
