@@ -253,10 +253,11 @@ export default function LandingPage() {
           <Image
             src="/images/hero-landscape.png"
             alt=""
-            fill
+            width={1024}
+            height={576}
             priority
             sizes="100vw"
-            className="object-cover object-bottom"
+            className="absolute inset-0 h-full w-full object-cover object-bottom"
           />
         </div>
 

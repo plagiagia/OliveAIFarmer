@@ -1,7 +1,7 @@
 import { SignUp } from '@clerk/nextjs'
 import Link from 'next/link'
 
-export const metadata = {
+export const metadata = { alternates: { canonical: '/sign-up' },
   title: 'Εγγραφή — OliveIQ',
 }
 

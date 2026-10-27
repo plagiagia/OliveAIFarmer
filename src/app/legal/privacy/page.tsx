@@ -1,4 +1,4 @@
-export const metadata = {
+export const metadata = { alternates: { canonical: '/legal/privacy' },
   title: 'Πολιτική Απορρήτου — OliveIQ',
   description: 'Πώς συλλέγουμε, χρησιμοποιούμε και προστατεύουμε τα προσωπικά σας δεδομένα.',
 }

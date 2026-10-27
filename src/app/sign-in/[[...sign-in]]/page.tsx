@@ -1,6 +1,6 @@
 import { SignIn } from '@clerk/nextjs'
 
-export const metadata = {
+export const metadata = { alternates: { canonical: '/sign-in' },
   title: 'Σύνδεση — OliveIQ',
 }
 

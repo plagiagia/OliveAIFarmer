@@ -1,4 +1,4 @@
-export const metadata = {
+export const metadata = { alternates: { canonical: '/legal/imprint' },
   title: 'Επικοινωνία — OliveIQ',
   description: 'Στοιχεία επικοινωνίας και ταυτοποίησης της OliveIQ.',
 }

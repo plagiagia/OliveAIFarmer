@@ -1,4 +1,4 @@
-export const metadata = {
+export const metadata = { alternates: { canonical: '/legal/terms' },
   title: 'Όροι Χρήσης — OliveIQ',
   description: 'Οι όροι και προϋποθέσεις χρήσης της υπηρεσίας OliveIQ.',
 }

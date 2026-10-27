@@ -20,7 +20,7 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://oliveiq.gr'),
+  metadataBase: new URL('https://www.oliveiq.gr'),
   title: 'OliveIQ — Ο ελαιώνας σας, πάντα υπό έλεγχο',
   description:
     'Παρακολουθήστε λιπάνσεις, ψεκασμούς, συγκομιδή και κόστος ελαιολάδου σε ένα μέρος. Ειδοποιήσεις δάκου, AI γεωπόνος, ημερολόγιο αγρού.',
@@ -37,15 +37,15 @@ export const metadata: Metadata = {
     title: 'OliveIQ — Ο ελαιώνας σας, πάντα υπό έλεγχο',
     description:
       'Παρακολουθήστε λιπάνσεις, ψεκασμούς, συγκομιδή και κόστος ελαιολάδου σε ένα μέρος. Ειδοποιήσεις δάκου, AI γεωπόνος, ημερολόγιο αγρού.',
-    url: 'https://oliveiq.gr',
+    url: 'https://www.oliveiq.gr',
     siteName: 'OliveIQ',
-    images: ['/images/hero-landscape.png'],
+    images: [{ url: '/opengraph-image', width: 1200, height: 630 }],
     locale: 'el_GR',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    images: ['/images/hero-landscape.png'],
+    images: [{ url: '/opengraph-image', width: 1200, height: 630 }],
     title: 'OliveIQ — Ο ελαιώνας σας, πάντα υπό έλεγχο',
     description:
       'Παρακολουθήστε λιπάνσεις, ψεκασμούς, συγκομιδή και κόστος ελαιολάδου σε ένα μέρος. Ειδοποιήσεις δάκου, AI γεωπόνος, ημερολόγιο αγρού.',
@@ -84,6 +84,13 @@ export default function RootLayout({
           <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes, viewport-fit=cover" />
           <link rel="icon" href="/images/logo-monogram.png" type="image/png" />
           <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Organization',
+            name: 'OliveIQ',
+            url: 'https://www.oliveiq.gr',
+            logo: 'https://www.oliveiq.gr/images/logo-monogram.png',
+          }) }} />
         </head>
         <body className={`${inter.className} greek-font antialiased`}>
           {/* Show auth page only when signed out */}
@@ -98,7 +105,7 @@ export default function RootLayout({
                 <div className="flex justify-between items-center h-16">
                   <Link href="/dashboard" className="flex items-center space-x-2 sm:space-x-3 text-olive-800 hover:text-olive-900 transition-colors">
                     <BrandLogo size="lg" />
-                    <h1 className="text-lg sm:text-xl font-bold truncate">OliveIQ</h1>
+                    <span className="text-lg sm:text-xl font-bold truncate">OliveIQ</span>
                   </Link>
                   <UserMenuButton />
                 </div>

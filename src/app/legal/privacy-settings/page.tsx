@@ -1,6 +1,6 @@
 import TrackingConsentSettings from '@/components/analytics/TrackingConsentSettings'
 
-export const metadata = {
+export const metadata = { alternates: { canonical: '/legal/privacy-settings' },
   title: 'Ρυθμίσεις Απορρήτου — OliveIQ',
   description: 'Διαχειριστείτε τις προαιρετικές ρυθμίσεις διαφημιστικών cookies.',
 }
