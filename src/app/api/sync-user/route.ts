@@ -1,10 +1,13 @@
 import { createUser, getUserByClerkId, getUserByClerkIdBasic } from '@/lib/db'
 import { auth, currentUser } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
+import { analytics } from '@heycatch/sdk'
+
+analytics.init({ projectKey: 'hck_pk_TOCwVTZV7fGo7VB-dPr-jEZA4YZEHpr-' })
 
 export const dynamic = 'force-dynamic'
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
     const { userId } = await auth()
     
@@ -32,6 +35,13 @@ export async function POST() {
         firstName: clerkUser.firstName,
         lastName: clerkUser.lastName,
       })
+
+      await analytics.setIdentity(userId, {
+        email: clerkUser.emailAddresses.find((email) => email.id === clerkUser.primaryEmailAddressId)?.emailAddress,
+        name: [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(' ') || undefined,
+        plan: 'FREE',
+      }, { signup_date: new Date(clerkUser.createdAt).toISOString() })
+      await analytics.trackEvent('signup_completed', {}, { userId, request })
       
       console.log('✅ New user created in database:', basicUser?.email)
     } else {

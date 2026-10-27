@@ -26,6 +26,7 @@
   "dependencies": {
     "@clerk/nextjs": "^6.39.3",
     "@ducanh2912/next-pwa": "^10.2.9",
+    "@heycatch/sdk": "^0.8.3",
     "@mapbox/mapbox-gl-geocoder": "^5.0.3",
     "@prisma/client": "^5.22.0",
     "@stripe/stripe-js": "^9.5.0",

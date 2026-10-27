@@ -6,6 +6,7 @@ import { Inter } from 'next/font/google'
 import { env } from '@/env'
 import './globals.css'
 import MarketingConsentBanner from '@/components/analytics/MarketingConsentBanner'
+import HeyCatchIdentity from '@/components/analytics/HeyCatchIdentity'
 import MetaPixel from '@/components/analytics/MetaPixel'
 import { OfflineIndicator } from '@/components/ui/OfflineIndicator'
 import BrandLogo from '@/components/ui/BrandLogo'
@@ -116,6 +117,7 @@ export default function RootLayout({
             <OfflineIndicator />
           </SignedIn>
           <MetaPixel pixelId={env.NEXT_PUBLIC_META_PIXEL_ID} />
+          <HeyCatchIdentity />
           <MarketingConsentBanner
             enabled={Boolean(env.NEXT_PUBLIC_META_PIXEL_ID)}
             hasMarketing={Boolean(env.NEXT_PUBLIC_META_PIXEL_ID)}

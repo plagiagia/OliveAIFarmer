@@ -6,6 +6,9 @@ import { stripe } from '@/lib/stripe'
 import { headers } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 import type Stripe from 'stripe'
+import { analytics } from '@heycatch/sdk'
+
+analytics.init({ projectKey: 'hck_pk_TOCwVTZV7fGo7VB-dPr-jEZA4YZEHpr-' })
 
 // POST /api/stripe/webhook
 // Stripe sends events here. We use it to keep Subscription records in sync.
@@ -118,6 +121,14 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   })
 
   await reconcileFarmActivationForUser(userId, plan)
+  const clerkId = session.metadata?.clerkId ?? (await prisma.user.findUnique({
+    where: { id: userId },
+    select: { clerkId: true },
+  }))?.clerkId
+  if (clerkId) {
+    await analytics.setIdentity(clerkId, { plan })
+    await analytics.trackEvent('subscription_started', { plan }, { userId: clerkId })
+  }
 }
 
 async function handleSubscriptionUpdated(stripeSubscription: Stripe.Subscription) {
