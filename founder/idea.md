@@ -1,0 +1,7 @@
+# OliveIQ (repo name OliveAIFarmer; README still calls it OliveLog / ΕλαιοLog)
+
+- What it is: a Greek-language field logbook web app (installable PWA) for olive growers: groves on a map, activities and costs, harvests and mill deliveries, a "my year" profit view, olive-fly (δάκος) risk alerts by push notification, a PDF field logbook (Ημερολόγιο Αγρού) for ΟΣΔΕ/OPEKEPE paperwork and accountants, weather, and an OpenAI-powered "AI Γεωπόνος" (agronomist) assistant.
+- Who it is for: Greek olive grove owners, starting with small family groves (the brand doc's reference customer has about 200 trees); Mediterranean growers (Italy, Spain, Cyprus, Portugal) later. The brand doc also mentions mills (ελαιουργεία) managing dozens of growers, but the current pricing has no mill tier.
+- What it sells, at what price: freemium. Free: 1 grove, logbook, harvests, weather. Pro: €49 a year (promoted) or €6 a month, adding δάκος alerts, AI Γεωπόνος, unlimited groves, cost-per-litre reporting and the PDF logbook export. Billing through Stripe.
+- Where and how: online, Greece first. Web app/PWA at oliveiq.gr (planned domain), Greek-only UI. Acquisition channels not decided yet.
+- Budget and constraints: not stated. Built and run by the founder (solo developer as far as the repo shows). Already built: the app, Stripe billing, the push-alert cron, a /demo page and analytics events for the signup-to-upgrade funnel. No live user, revenue or retention numbers have been shared.
