@@ -1,0 +1,222 @@
+[
+ {
+  "id": "P001",
+  "name": "Hana",
+  "age": 60,
+  "segment": "Family olive grower (part-time, about 100-400 trees, also has another job or a pension)",
+  "income": 22000,
+  "behaviour": "Paper and memory",
+  "behaviour_how": "Keeps work and costs in a notebook or in their head; has never paid for an app.",
+  "objection": "I don't have time to type every job into an app",
+  "habit": "you talk about prices and δάκος with others at the καφενείο"
+ },
+ {
+  "id": "P002",
+  "name": "Jasper",
+  "age": 40,
+  "segment": "Agronomist or ΚΥΔ consultant who keeps diaries and files ΟΣΔΕ for 50-300 growers",
+  "income": 21000,
+  "behaviour": "Subsidy-driven",
+  "behaviour_how": "Decides tools and practices by what the ΚΑΠ eco-schemes pay for.",
+  "objection": "The ΔΑΟΚ and the agronomist already tell me when there is δάκος",
+  "habit": "in spring the ΟΣΔΕ filing season takes over your weeks"
+ },
+ {
+  "id": "P003",
+  "name": "Yusuf",
+  "age": 71,
+  "segment": "Family olive grower (part-time, about 100-400 trees, also has another job or a pension)",
+  "income": 14000,
+  "behaviour": "Already uses another tool",
+  "behaviour_how": "Already pays for or uses something like gaiasense, CropApp or OliveSuite, or the ΚΥΔ's own software.",
+  "objection": "I already use another app or the ΚΥΔ's software",
+  "habit": "you talk about prices and δάκος with others at the καφενείο"
+ },
+ {
+  "id": "P004",
+  "name": "Esme",
+  "age": 55,
+  "segment": "Agronomist or ΚΥΔ consultant who keeps diaries and files ΟΣΔΕ for 50-300 growers",
+  "income": 28000,
+  "behaviour": "Already uses another tool",
+  "behaviour_how": "Already pays for or uses something like gaiasense, CropApp or OliveSuite, or the ΚΥΔ's own software.",
+  "objection": "Will OPEKEPE or my accountant actually accept this PDF?",
+  "habit": "you work from a small office in town and drive out to clients' groves"
+ },
+ {
+  "id": "P005",
+  "name": "Pablo",
+  "age": 69,
+  "segment": "Family olive grower (part-time, about 100-400 trees, also has another job or a pension)",
+  "income": 13000,
+  "behaviour": "Already uses another tool",
+  "behaviour_how": "Already pays for or uses something like gaiasense, CropApp or OliveSuite, or the ΚΥΔ's own software.",
+  "objection": "Another subscription, for a crop that pays once a year",
+  "habit": "you go to the grove at weekends and during harvest in November-December"
+ },
+ {
+  "id": "P006",
+  "name": "Grace",
+  "age": 70,
+  "segment": "Family olive grower (part-time, about 100-400 trees, also has another job or a pension)",
+  "income": 15000,
+  "behaviour": "Paper and memory",
+  "behaviour_how": "Keeps work and costs in a notebook or in their head; has never paid for an app.",
+  "objection": "Who is behind this, and will it still exist next year?",
+  "habit": "in spring the ΟΣΔΕ filing season takes over your weeks"
+ },
+ {
+  "id": "P007",
+  "name": "Adrian",
+  "age": 67,
+  "segment": "Family olive grower (part-time, about 100-400 trees, also has another job or a pension)",
+  "income": 26000,
+  "behaviour": "Paper and memory",
+  "behaviour_how": "Keeps work and costs in a notebook or in their head; has never paid for an app.",
+  "objection": "Is it certified for the eco-scheme (31.6)? If not, it's useless for my clients",
+  "habit": "you talk about prices and δάκος with others at the καφενείο"
+ },
+ {
+  "id": "P008",
+  "name": "Leah",
+  "age": 54,
+  "segment": "Agronomist or ΚΥΔ consultant who keeps diaries and files ΟΣΔΕ for 50-300 growers",
+  "income": 29000,
+  "behaviour": "Paper and memory",
+  "behaviour_how": "Keeps work and costs in a notebook or in their head; has never paid for an app.",
+  "objection": "Who is behind this, and will it still exist next year?",
+  "habit": "you work from a small office in town and drive out to clients' groves"
+ },
+ {
+  "id": "P009",
+  "name": "Lena",
+  "age": 41,
+  "segment": "Agronomist or ΚΥΔ consultant who keeps diaries and files ΟΣΔΕ for 50-300 growers",
+  "income": 38000,
+  "behaviour": "Price-tight",
+  "behaviour_how": "Counts every euro after a bad harvest or low oil price; cancels anything not clearly paying back.",
+  "objection": "Who is behind this, and will it still exist next year?",
+  "habit": "you deliver olives to the local mill and keep the slips in a drawer"
+ },
+ {
+  "id": "P010",
+  "name": "Mason",
+  "age": 36,
+  "segment": "Family olive grower (part-time, about 100-400 trees, also has another job or a pension)",
+  "income": 19000,
+  "behaviour": "Trusts neighbours and ΔΑΟΚ",
+  "behaviour_how": "Sprays for δάκος when the ΔΑΟΚ programme or the neighbours do; learns about tools at the καφενείο.",
+  "objection": "Will OPEKEPE or my accountant actually accept this PDF?",
+  "habit": "you go to the grove at weekends and during harvest in November-December"
+ },
+ {
+  "id": "P011",
+  "name": "Fatima",
+  "age": 42,
+  "segment": "Agronomist or ΚΥΔ consultant who keeps diaries and files ΟΣΔΕ for 50-300 growers",
+  "income": 23000,
+  "behaviour": "Leans on the agronomist or cooperative",
+  "behaviour_how": "Lets the consultant, the cooperative or the mill handle records and paperwork.",
+  "objection": "The ΔΑΟΚ and the agronomist already tell me when there is δάκος",
+  "habit": "you go to the grove at weekends and during harvest in November-December"
+ },
+ {
+  "id": "P012",
+  "name": "Priya",
+  "age": 35,
+  "segment": "Agronomist or ΚΥΔ consultant who keeps diaries and files ΟΣΔΕ for 50-300 growers",
+  "income": 30000,
+  "behaviour": "Tech-comfortable",
+  "behaviour_how": "Uses a smartphone for everything, tries new apps, uses e-banking and myAADE without help.",
+  "objection": "I don't have time to type every job into an app",
+  "habit": "you check the weather on your phone every morning"
+ },
+ {
+  "id": "P013",
+  "name": "Arjun",
+  "age": 65,
+  "segment": "Full-time olive producer (about 1,000-3,000 trees, oil is the main income)",
+  "income": 64000,
+  "behaviour": "Leans on the agronomist or cooperative",
+  "behaviour_how": "Lets the consultant, the cooperative or the mill handle records and paperwork.",
+  "objection": "Who is behind this, and will it still exist next year?",
+  "habit": "you deliver olives to the local mill and keep the slips in a drawer"
+ },
+ {
+  "id": "P014",
+  "name": "Maeve",
+  "age": 56,
+  "segment": "Family olive grower (part-time, about 100-400 trees, also has another job or a pension)",
+  "income": 20000,
+  "behaviour": "Subsidy-driven",
+  "behaviour_how": "Decides tools and practices by what the ΚΑΠ eco-schemes pay for.",
+  "objection": "I already use another app or the ΚΥΔ's software",
+  "habit": "you deliver olives to the local mill and keep the slips in a drawer"
+ },
+ {
+  "id": "P015",
+  "name": "Isla",
+  "age": 61,
+  "segment": "Full-time olive producer (about 1,000-3,000 trees, oil is the main income)",
+  "income": 34000,
+  "behaviour": "Tech-comfortable",
+  "behaviour_how": "Uses a smartphone for everything, tries new apps, uses e-banking and myAADE without help.",
+  "objection": "Who is behind this, and will it still exist next year?",
+  "habit": "you work from a small office in town and drive out to clients' groves"
+ },
+ {
+  "id": "P016",
+  "name": "Ines",
+  "age": 59,
+  "segment": "Full-time olive producer (about 1,000-3,000 trees, oil is the main income)",
+  "income": 27000,
+  "behaviour": "Price-tight",
+  "behaviour_how": "Counts every euro after a bad harvest or low oil price; cancels anything not clearly paying back.",
+  "objection": "Will OPEKEPE or my accountant actually accept this PDF?",
+  "habit": "you deliver olives to the local mill and keep the slips in a drawer"
+ },
+ {
+  "id": "P017",
+  "name": "Andre",
+  "age": 49,
+  "segment": "Full-time olive producer (about 1,000-3,000 trees, oil is the main income)",
+  "income": 50000,
+  "behaviour": "Trusts neighbours and ΔΑΟΚ",
+  "behaviour_how": "Sprays for δάκος when the ΔΑΟΚ programme or the neighbours do; learns about tools at the καφενείο.",
+  "objection": "Who is behind this, and will it still exist next year?",
+  "habit": "in spring the ΟΣΔΕ filing season takes over your weeks"
+ },
+ {
+  "id": "P018",
+  "name": "Harper",
+  "age": 30,
+  "segment": "Family olive grower (part-time, about 100-400 trees, also has another job or a pension)",
+  "income": 27000,
+  "behaviour": "Leans on the agronomist or cooperative",
+  "behaviour_how": "Lets the consultant, the cooperative or the mill handle records and paperwork.",
+  "objection": "Is it certified for the eco-scheme (31.6)? If not, it's useless for my clients",
+  "habit": "you talk about prices and δάκος with others at the καφενείο"
+ },
+ {
+  "id": "P019",
+  "name": "Daniel",
+  "age": 28,
+  "segment": "Family olive grower (part-time, about 100-400 trees, also has another job or a pension)",
+  "income": 20000,
+  "behaviour": "Leans on the agronomist or cooperative",
+  "behaviour_how": "Lets the consultant, the cooperative or the mill handle records and paperwork.",
+  "objection": "I already use another app or the ΚΥΔ's software",
+  "habit": "you go to the grove at weekends and during harvest in November-December"
+ },
+ {
+  "id": "P020",
+  "name": "Talia",
+  "age": 62,
+  "segment": "Full-time olive producer (about 1,000-3,000 trees, oil is the main income)",
+  "income": 52000,
+  "behaviour": "Tech-comfortable",
+  "behaviour_how": "Uses a smartphone for everything, tries new apps, uses e-banking and myAADE without help.",
+  "objection": "I already use another app or the ΚΥΔ's software",
+  "habit": "you check the weather on your phone every morning"
+ }
+]

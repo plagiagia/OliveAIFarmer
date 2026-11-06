@@ -1,0 +1,13 @@
+{
+  "id": "P012",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "convenience",
+  "reason": "I'd open it on my phone out of curiosity, but it's built for one grower with their own groves, not for me keeping diaries for 150 clients. I'm not retyping every spraying and fertilising job for each of them by hand when my current spreadsheets and ΚΥΔ software already do the ΟΣΔΕ part.",
+  "objection": "I don't have time to type every job into an app, and nothing here says it handles many clients, bulk entry or imports, or that the PDF Ημερολόγιο Αγρού actually matches what the ΟΣΔΕ checks accept.",
+  "would_change_my_mind": "A consultant version where I manage all my growers under one account, enter one job for many parcels at once, and export diaries in the exact format the ΟΣΔΕ inspections accept. That would save me hours and I'd pay without thinking.",
+  "price_too_cheap": 10,
+  "price_cheap": 30,
+  "price_expensive": 150,
+  "price_too_expensive": 400
+}

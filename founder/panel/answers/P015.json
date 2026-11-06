@@ -1,0 +1,13 @@
+{
+  "id": "P015",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "The money is nothing for me, but I'm not moving years of field diaries for several groves into an app made by one unnamed developer. I'd put one grove on the free version and watch it through a season before paying.",
+  "objection": "Who is behind this, and will it still exist next year? If one person stops paying the server, my records and my ΟΣΔΕ paperwork go with it.",
+  "would_change_my_mind": "A named person or registered company behind it, plus a guarantee that I can export all my data (diary, costs, harvests) to Excel or PDF any time, even if I cancel.",
+  "price_too_cheap": 10,
+  "price_cheap": 25,
+  "price_expensive": 90,
+  "price_too_expensive": 160
+}

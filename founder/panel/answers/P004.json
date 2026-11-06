@@ -1,0 +1,13 @@
+{
+  "id": "P004",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "I already keep my clients' diaries and file ΟΣΔΕ in the ΚΥΔ software and my other tool, and moving 150 growers into a new app built for one farmer at a time is weeks of work for no clear gain. Nothing here says it handles many clients, AFM per grower, or exports that plug into what I already file.",
+  "objection": "Will OPEKEPE, an inspector or my clients' accountants actually accept this PDF diary? And it's one independent developer: if he disappears in two years, my clients' records go with him.",
+  "would_change_my_mind": "A consultant plan with a multi-client view, bulk export in the format the ΚΥΔ software imports, and written confirmation (or a colleague's experience) that the PDF passed an OPEKEPE check.",
+  "price_too_cheap": 15,
+  "price_cheap": 40,
+  "price_expensive": 150,
+  "price_too_expensive": 300
+}

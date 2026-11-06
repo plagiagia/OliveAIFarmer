@@ -1,0 +1,13 @@
+{
+  "id": "P018",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "The cooperative and the agronomist already keep my records and file the ΟΣΔΕ, so I don't need to type my jobs into an app after work. For δάκος I hear what's going on at the καφενείο and the cooperative tells us when to spray.",
+  "objection": "Nothing says it's certified or accepted for the eco-scheme (31.6) or that my consultant will take its PDF. If the ΚΥΔ won't use it, it's just more work for me, from a developer nobody I know has heard of.",
+  "would_change_my_mind": "If my agronomist or the cooperative told me they accept OliveIQ's field diary for ΟΣΔΕ and the eco-scheme and asked me to use it.",
+  "price_too_cheap": 5,
+  "price_cheap": 15,
+  "price_expensive": 35,
+  "price_too_expensive": 60
+}

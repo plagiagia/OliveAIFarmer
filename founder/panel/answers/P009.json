@@ -1,0 +1,13 @@
+{
+  "id": "P009",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "I keep diaries for a couple of hundred growers; I can't move their records into an app made by one developer I've never heard of and then find out next year it's gone or the PDF isn't accepted. The free tier with one grove tells me nothing about how it handles my real workload.",
+  "objection": "Who is behind this and will it still exist next season? If it disappears, I'm the one explaining to 200 growers why their diary is missing during ΟΣΔΕ.",
+  "would_change_my_mind": "A consultant version where I can manage many growers' groves under one account, with a full data export, and proof that ΚΥΔ or other agronomists already submit its Ημερολόγιο Αγρού without problems.",
+  "price_too_cheap": 10,
+  "price_cheap": 30,
+  "price_expensive": 90,
+  "price_too_expensive": 150
+}

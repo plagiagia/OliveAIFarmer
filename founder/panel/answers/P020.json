@@ -1,0 +1,13 @@
+{
+  "id": "P020",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "My ΚΥΔ already files my ΟΣΔΕ and I already keep my records in another app, so I don't need a third place to type the same jobs and costs. I might try the free version out of curiosity, but I wouldn't pay just to move everything over.",
+  "objection": "It's one independent developer. If he stops, my years of records go with him, and my ΚΥΔ won't take his PDF over their own software anyway.",
+  "would_change_my_mind": "If the δάκος alerts proved accurate for my area over a season, or my ΚΥΔ accepted the PDF diary directly so I could stop paying them for that part.",
+  "price_too_cheap": 10,
+  "price_cheap": 30,
+  "price_expensive": 90,
+  "price_too_expensive": 150
+}

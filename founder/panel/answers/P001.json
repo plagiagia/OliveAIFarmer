@@ -1,0 +1,13 @@
+{
+  "id": "P001",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "I've kept my grove in my notebook and my head for thirty years and it works. I'm not going to sit and type every spraying and every bag of fertiliser into a phone after a day in the field.",
+  "objection": "I don't have time to type every job into an app, and the δάκος warnings I get from the neighbours at the καφενείο and the cooperative already, for free.",
+  "would_change_my_mind": "If my nephew or the agronomist who files my ΟΣΔΕ set it up for me and it saved me the fee or the trouble with the paperwork, I might try the free one.",
+  "price_too_cheap": 5,
+  "price_cheap": 15,
+  "price_expensive": 30,
+  "price_too_expensive": 49
+}

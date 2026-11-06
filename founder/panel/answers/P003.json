@@ -1,0 +1,13 @@
+{
+  "id": "P003",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "The ΚΥΔ already does my ΟΣΔΕ and keeps the diary through their software, and I hear about δάκος from the γεωπόνος and the men at the καφενείο. With my pension I'm not paying €49 for a second app that does what someone already does for me.",
+  "objection": "I already have the ΚΥΔ's system and they file for me; one developer alone, what happens to my records if he stops next year?",
+  "would_change_my_mind": "If my ΚΥΔ told me to use it and it saved me their fee, or if my grandson set it up and the free version alone kept the δάκος alerts.",
+  "price_too_cheap": 5,
+  "price_cheap": 15,
+  "price_expensive": 30,
+  "price_too_expensive": 50
+}

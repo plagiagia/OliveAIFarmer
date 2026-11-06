@@ -1,0 +1,37 @@
+{
+  "business": "OliveIQ: a Greek-language olive-grove logbook web app with δάκος alerts and an OPEKEPE-ready PDF",
+  "target": "People in Greece who keep (or must keep) records for olive groves: family growers with a few hundred trees, full-time olive producers, and the agronomists / ΚΥΔ consultants who keep field diaries and file ΟΣΔΕ for many growers. All money is in euros.",
+  "where": "Greece: Peloponnese (Messinia, Lakonia), Crete, Western Greece",
+  "age": [28, 72],
+  "segments": [
+    {"name": "Family olive grower (part-time, about 100-400 trees, also has another job or a pension)", "share": 0.45, "income": [12000, 30000]},
+    {"name": "Full-time olive producer (about 1,000-3,000 trees, oil is the main income)", "share": 0.25, "income": [25000, 70000]},
+    {"name": "Agronomist or ΚΥΔ consultant who keeps diaries and files ΟΣΔΕ for 50-300 growers", "share": 0.30, "income": [20000, 50000]}
+  ],
+  "behaviours": [
+    {"name": "Paper and memory", "share": 0.20, "how": "Keeps work and costs in a notebook or in their head; has never paid for an app."},
+    {"name": "Leans on the agronomist or cooperative", "share": 0.18, "how": "Lets the consultant, the cooperative or the mill handle records and paperwork."},
+    {"name": "Already uses another tool", "share": 0.15, "how": "Already pays for or uses something like gaiasense, CropApp or OliveSuite, or the ΚΥΔ's own software."},
+    {"name": "Tech-comfortable", "share": 0.15, "how": "Uses a smartphone for everything, tries new apps, uses e-banking and myAADE without help."},
+    {"name": "Price-tight", "share": 0.12, "how": "Counts every euro after a bad harvest or low oil price; cancels anything not clearly paying back."},
+    {"name": "Subsidy-driven", "share": 0.10, "how": "Decides tools and practices by what the ΚΑΠ eco-schemes pay for."},
+    {"name": "Trusts neighbours and ΔΑΟΚ", "share": 0.10, "how": "Sprays for δάκος when the ΔΑΟΚ programme or the neighbours do; learns about tools at the καφενείο."}
+  ],
+  "objections": [
+    "I don't have time to type every job into an app",
+    "The ΔΑΟΚ and the agronomist already tell me when there is δάκος",
+    "Will OPEKEPE or my accountant actually accept this PDF?",
+    "Is it certified for the eco-scheme (31.6)? If not, it's useless for my clients",
+    "Another subscription, for a crop that pays once a year",
+    "I already use another app or the ΚΥΔ's software",
+    "Who is behind this, and will it still exist next year?"
+  ],
+  "habits": [
+    "you go to the grove at weekends and during harvest in November-December",
+    "you deliver olives to the local mill and keep the slips in a drawer",
+    "in spring the ΟΣΔΕ filing season takes over your weeks",
+    "you check the weather on your phone every morning",
+    "you talk about prices and δάκος with others at the καφενείο",
+    "you work from a small office in town and drive out to clients' groves"
+  ]
+}

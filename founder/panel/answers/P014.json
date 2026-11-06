@@ -1,0 +1,13 @@
+{
+  "id": "P014",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "The ΚΥΔ already does my ΟΣΔΕ and keeps what it needs, and my mill slips sit in the drawer where they always have. I might try the free one grove out of curiosity, but I'm not paying €49 for something my consultant already handles.",
+  "objection": "Nothing here says it gets me a single euro more from the eco-schemes, and the ΚΥΔ won't take a diary from some app made by one developer they've never heard of.",
+  "would_change_my_mind": "If my ΚΥΔ told me they accept this diary and it helps me qualify for an eco-scheme payment, so it pays for itself.",
+  "price_too_cheap": 5,
+  "price_cheap": 15,
+  "price_expensive": 30,
+  "price_too_expensive": 50
+}
